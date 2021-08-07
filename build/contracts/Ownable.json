@@ -54,16 +54,16 @@
       "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.8.0+commit.c7dfd78e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/Users/rafaelmendoza/Desktop/Blockchain/Project/basicCoin/contracts/Ownable.sol\":\"Ownable\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/rafaelmendoza/Desktop/Blockchain/Project/basicCoin/contracts/Ownable.sol\":{\"keccak256\":\"0x2d08df93dc07b44c7975b15f9ac45915b509f27f3ebe979676678b3db2442fa8\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://86cc17b8eb540e115c6f1997f51d7c98bdba02527c383320ad82bb826cc09c93\",\"dweb:/ipfs/QmeU89fFAVHvrt4bBPt66QJhBW73u339L31PiR5u2buiXH\"]}},\"version\":1}",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.0+commit.c7dfd78e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/Users/rafaelmendoza/Desktop/Blockchain/Project/basicCoin-public/contracts/Ownable.sol\":\"Ownable\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/rafaelmendoza/Desktop/Blockchain/Project/basicCoin-public/contracts/Ownable.sol\":{\"keccak256\":\"0x2d08df93dc07b44c7975b15f9ac45915b509f27f3ebe979676678b3db2442fa8\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://86cc17b8eb540e115c6f1997f51d7c98bdba02527c383320ad82bb826cc09c93\",\"dweb:/ipfs/QmeU89fFAVHvrt4bBPt66QJhBW73u339L31PiR5u2buiXH\"]}},\"version\":1}",
   "bytecode": "0x",
   "deployedBytecode": "0x",
   "immutableReferences": {},
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity 0.8.0;\n\nabstract contract Ownable {\n    address private _owner;\n\n    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);\n\n    constructor() {\n        _setOwner(msg.sender);\n    }\n\n    function owner() public view virtual returns (address) {\n        return _owner;\n    }\n\n    modifier onlyOwner() {\n        require(owner() == msg.sender, \"Ownable: caller is not the owner\");\n        _;\n    }\n\n    function renounceOwnership() public virtual onlyOwner {\n        _setOwner(address(0));\n    }\n\n    function transferOwnership(address newOwner) public virtual onlyOwner {\n        require(newOwner != address(0), \"Ownable: new owner is the zero address\");\n        _setOwner(newOwner);\n    }\n\n    function _setOwner(address newOwner) private {\n        address oldOwner = _owner;\n        _owner = newOwner;\n        emit OwnershipTransferred(oldOwner, newOwner);\n    }\n}\n",
-  "sourcePath": "/Users/rafaelmendoza/Desktop/Blockchain/Project/basicCoin/contracts/Ownable.sol",
+  "sourcePath": "/Users/rafaelmendoza/Desktop/Blockchain/Project/basicCoin-public/contracts/Ownable.sol",
   "ast": {
-    "absolutePath": "/Users/rafaelmendoza/Desktop/Blockchain/Project/basicCoin/contracts/Ownable.sol",
+    "absolutePath": "/Users/rafaelmendoza/Desktop/Blockchain/Project/basicCoin-public/contracts/Ownable.sol",
     "exportedSymbols": {
       "Ownable": [
         209
@@ -1192,7 +1192,7 @@
     "src": "33:910:2"
   },
   "legacyAST": {
-    "absolutePath": "/Users/rafaelmendoza/Desktop/Blockchain/Project/basicCoin/contracts/Ownable.sol",
+    "absolutePath": "/Users/rafaelmendoza/Desktop/Blockchain/Project/basicCoin-public/contracts/Ownable.sol",
     "exportedSymbols": {
       "Ownable": [
         209
@@ -2326,7 +2326,7 @@
   },
   "networks": {},
   "schemaVersion": "3.2.3",
-  "updatedAt": "2021-08-07T15:21:07.494Z",
+  "updatedAt": "2021-08-07T18:55:39.997Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},
