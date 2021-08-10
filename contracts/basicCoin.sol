@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+
 pragma solidity 0.8.0;
 
 import "./IERC20.sol";
@@ -41,6 +41,9 @@ contract basicCoin is IERC20, Ownable {
     }
 
     function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
+
+      //Add _beforeTransfer logic via hook
+        _beforeTransfer(sender, recipient, amount);
         _transfer(msg.sender, recipient, amount);
         return true;
     }
@@ -59,6 +62,9 @@ contract basicCoin is IERC20, Ownable {
         address recipient,
         uint256 amount
     ) public virtual override returns (bool) {
+
+      //Add _beforeTransfer logic via hook
+        _beforeTransfer(sender, recipient, amount);
         _transfer(sender, recipient, amount);
 
         uint256 currentAllowance = _allowances[sender][msg.sender];
@@ -103,36 +109,6 @@ contract basicCoin is IERC20, Ownable {
         emit Transfer(sender, recipient, amount);
     }
 
-    function mint(address account, uint256 amount) external virtual onlyOwner {
-      _mint(account, amount);
-    }
-
-    function burn(address account, uint256 amount) external virtual onlyOwner {
-      _burn(account, amount);
-    }
-
-    function _mint(address account, uint256 amount) internal virtual {
-        require(account != address(0), "ERC20: mint to the zero address");
-
-        _totalSupply += amount;
-        _balances[account] += amount;
-        emit Transfer(address(0), account, amount);
-
-    }
-
-    function _burn(address account, uint256 amount) internal virtual {
-        require(account != address(0), "ERC20: burn from the zero address");
-
-        uint256 accountBalance = _balances[account];
-        require(accountBalance >= amount, "ERC20: burn amount exceeds balance");
-        unchecked {
-            _balances[account] = accountBalance - amount;
-        }
-        _totalSupply -= amount;
-
-        emit Transfer(account, address(0), amount);
-    }
-
     function _approve(
         address owner,
         address spender,
@@ -144,4 +120,10 @@ contract basicCoin is IERC20, Ownable {
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }
+
+    function _beforeTransfer(address sender, address recipient, uint256 amount) {
+        //before transfer custom logic. Placeholder
+    }
+
+
   }
