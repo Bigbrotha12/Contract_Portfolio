@@ -6,14 +6,15 @@ contract tokenRedistribution is IERC20 {
 
   /**
     * @notice Private variables required to track reflection balance, fees,
-    * and standard balances. _reflectPct is the percentage of transaction
-    * amount to be redistributed to token holders.
+    * and standard balances:
+    * _reflectPct is the percentage of transaction amount to be redistributed
+    * to token holders.
     * _scaledBalance holds token balance for addresses included in fee
     * redistribution (balances are scaled up by reflection coefficient).
     * _neutralBalance holds token balance for addresses excluded from fee
     * redistribution.
     * _isExcluded will track address excluded from fee redistribution.
-    * _excluded array allows us to iterate over _isExcluded mapping.
+    * _excluded array allows us to iterate over _isExcluded accounts.
     * MAX constant is maximum value allowed for unint256 (to be used for
     * initial reflection coefficient calculation).
     * _neutralSupply is total token supply without scaling.
@@ -21,7 +22,7 @@ contract tokenRedistribution is IERC20 {
    **/
 
 
-  uint256 private _reflectPct;
+
   mapping (address => uint256) private _scaledBalance;
   mapping (address => uint256) private _neutralBalance;
   mapping (address => bool) private _isExcluded;
@@ -29,8 +30,10 @@ contract tokenRedistribution is IERC20 {
 
   uint256 private constant MAX = ~uint256(0);
   uint256 private constant = _neutralSupply = 1000000 * 10**9; // 1 million
+  uint256 private _scaledSupply = = (MAX - (MAX % _neutralSupply));
   string private _name;
   string private _symbol;
+  uint8 private _reflectPct = 10;
   uint8 private _decimals = 9;
 
   /**
@@ -40,7 +43,7 @@ contract tokenRedistribution is IERC20 {
     * whenever balanceOf()function is called.
    **/
 
-  constructor(string memory name_, string memory symbol_, uint256 init_supply) {
+  constructor(string memory name_, string memory symbol_) {
       _name = name_;
       _symbol = symbol_;
       _scaledBalance[msg.sender] = _scaledSupply;
@@ -77,6 +80,7 @@ contract tokenRedistribution is IERC20 {
       if (_excluded[i] == account) {
         _excluded[i] = _excluded[_excluded.length - 1];
         _excluded.pop();
+        _isExcluded[account] = false;
         _scaledBalance[account] = _neutralBalance * _getRate();
         break;
       }
@@ -86,6 +90,7 @@ contract tokenRedistribution is IERC20 {
   function excludeAccount(address account) external onlyOwner() {
     require(!_isExcluded[account], "Account already excluded");
     _excluded.push(account);
+    _isExcluded[account] = true;
     _neutralBalance[account] = _scaledBalance[account] / _getRate();
   }
 
@@ -97,7 +102,7 @@ contract tokenRedistribution is IERC20 {
 
   function balanceOf(address account) public view virtual override returns (uint256) {
       if (_isExcluded[account]) return _neutralBalance[account];
-      require(_scaledBalance[account] < _scaledSupply, "scaled balance must be lower than total scaled supply");
+      require(_scaledBalance[account] < _scaledSupply, "Scaled balance must be lower than total scaled supply");
       return _scaledBalance[account] / _getRate();
   }
 
@@ -154,6 +159,7 @@ contract tokenRedistribution is IERC20 {
 
   function _transferStandard(address sender, address recipient, uint256 neutralAmount) private {
         (uint256 scaledAmount, uint256 scaledTransferAmount, uint256 scaledFee, uint256 neutralTransferAmount, uint256 neutralFee) = _getValues(neutralAmount);
+        require(_scaledBalance[sender] >= scaledAmount, "Insufficient funds for transaction");
         _scaledBalance[sender] = _scaledBalance[sender] - scaledAmount;
         _scaledBalance[recipient] = _scaledBalance[recipient] + scaledTransferAmount;
         _reflectFee(scaledFee, neutralFee);
@@ -162,6 +168,7 @@ contract tokenRedistribution is IERC20 {
 
     function _transferToExcluded(address sender, address recipient, uint256 neutralAmount) private {
         (uint256 scaledAmount, uint256 scaledTransferAmount, uint256 scaledFee, uint256 neutralTransferAmount, uint256 neutralFee) = _getValues(neutralAmount);
+        require(_scaledBalance[sender] >= scaledAmount, "Insufficient funds for transaction");
         _scaledBalance[sender] = _scaledBalance[sender] - scaledAmount;
         _neutralBalance[recipient] = _neutralBalance[recipient] + neutralFeeTransferAmount;
         _scaledBalance[recipient] = _scaledBalance[recipient] + scaledTransferAmount);
@@ -171,6 +178,7 @@ contract tokenRedistribution is IERC20 {
 
     function _transferFromExcluded(address sender, address recipient, uint256 neutralAmount) private {
        (uint256 scaledAmount, uint256 scaledTransferAmount, uint256 scaledFee, uint256 neutralTransferAmount, uint256 neutralFee) = _getValues(neutralAmount);
+       require(_neutralBalance[sender] >= neutralAmount, "Insufficient funds for transaction");
        _neutralBalance[sender] = _neutralBalance[sender] - neutralAmount;
        _scaledBalance[sender] = _scaledBalance[sender] - scaledAmount;
        _scaledBalance[recipient] = _scaledBalance[recipient] + scaledTransferAmount;
@@ -180,6 +188,7 @@ contract tokenRedistribution is IERC20 {
 
    function _transferBothExcluded(address sender, address recipient, uint256 neutralAmount) private {
         (uint256 scaledAmount, uint256 scaledTransferAmount, uint256 scaledFee, uint256 scaledTransferAmount, uint256 scaledFee) = _getValues(neutralAmount);
+        require(_neutralBalance[sender] >= neutralAmount, "Insufficient funds for transaction");
         _neutralBalance[sender] = _neutralBalance[sender] - neutralAmount;
         _scaledBalance[sender] = _scaledBalance[sender] - scaledAmount;
         _neutralBalance[recipient] = _neutralBalance[recipient] + neutralTransferAmount;
