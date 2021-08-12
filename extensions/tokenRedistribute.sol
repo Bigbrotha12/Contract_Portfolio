@@ -50,6 +50,7 @@ contract tokenRedistribution is IERC20 {
       _name = name_;
       _symbol = symbol_;
       _scaledBalance[msg.sender] = _scaledSupply;
+      _neutralBalance[msg.sender] = _neutralSupply;
       emit Transfer(address(0), msg.sender, _neutralSupply);
   }
 
@@ -79,9 +80,13 @@ contract tokenRedistribution is IERC20 {
     * contracts where token liquidity pools are kept should be excluded from
     * receiving redistributions. Likewise, centralized exchange accounts are
     * another set of accounts which should be excluded.
+    *
+    * Note: including a previously excluded account will award account all fee reflections
+    * it would have been entitled to since it was excluded, at the cost of existing holders reflections.
+    * Re-including account should only be used to fix mistaken exclusions.
    **/
 
-  function _includeAccount(address account) external {
+  function includeAccount(address account) external {
     require(_isExcluded[account], "Account already included");
     for (uint256 i = 0; i < _excluded.length; i++) {
       if (_excluded[i] == account) {
@@ -96,8 +101,9 @@ contract tokenRedistribution is IERC20 {
 
   function excludeAccount(address account) external {
     require(!_isExcluded[account], "Account already excluded");
-    _excluded.push(account);
+    require(balanceOf(account) < _neutralSupply, "Cannot exclude total supply");
      _neutralBalance[account] = balanceOf(account);
+     _excluded.push(account);
     _isExcluded[account] = true;
   }
 
@@ -226,12 +232,18 @@ contract tokenRedistribution is IERC20 {
   }
 
   function _getRate() private view returns(uint256) {
-     (uint256 scaledSupply, uint256 neutralSupply) = _getCurrentSupply();
+     (uint256 scaledSupply, uint256 neutralSupply) = _getIncludedSupply();
      return scaledSupply / neutralSupply;
  }
 
- function _getCurrentSupply() private view returns(uint256, uint256) {
-    return (_scaledSupply, _neutralSupply);
+ function _getIncludedSupply() private view returns(uint256, uint256) {
+    uint256 inclScaledSupply = _scaledSupply;
+    uint256 inclNeutralSupply = _neutralSupply;
+    for(uint256 i = 0; i < _excluded.length; i++) {
+        inclScaledSupply = inclScaledSupply - _scaledBalance[_excluded[i]];
+        inclNeutralSupply = inclNeutralSupply - _neutralBalance[_excluded[i]];
+    }
+    return (inclScaledSupply, inclNeutralSupply);
 }
 
   function allowance(address owner, address spender) public view virtual override returns (uint256) {
