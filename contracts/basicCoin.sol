@@ -1,7 +1,7 @@
 
 pragma solidity 0.8.0;
 
-import "./IERC20.sol";
+import "../Interfaces/IERC20.sol";
 import "./Ownable.sol";
 
 contract basicCoin is IERC20, Ownable {
@@ -17,7 +17,9 @@ contract basicCoin is IERC20, Ownable {
     constructor(string memory name_, string memory symbol_, uint256 init_supply) {
         _name = name_;
         _symbol = symbol_;
-        _mint(msg.sender, init_supply*(10**18));
+        _totalSupply = init_supply*(10**18));
+        _balances[msg.sender] = _totalSupply;
+        emit Transfer(address(0), msg.sender, _totalSupply);
     }
 
     function name() public view returns (string memory) {
