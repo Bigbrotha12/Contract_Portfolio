@@ -17,6 +17,7 @@ contract AutoLP is IERC20, Ownable {
     IUniswapV2Router private immutable router02 = IUniswapV2Router(routerAddress);
     address private PairAddress;
     uint256 private minTokenforLP;
+    bool private inSwap = false;
 
     constructor(string memory name_, string memory symbol_, uint256 initSupply) {
         _name = name_;
@@ -55,14 +56,41 @@ contract AutoLP is IERC20, Ownable {
 
     function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
 
-      //Add _beforeTransfer logic via hook
+      // _beforeTransfer contains requirements prior to transfer
         _beforeTransfer(sender, recipient, amount);
 
         uint256 LPfee = amount * 10 / 100;   // 10% for liquidity pool
         uint256 toTransfer = amount - LPfee;
         takeLiquidity(LPfee);
-
         _transfer(msg.sender, recipient, toTransfer);
+        return true;
+    }
+
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) public virtual override returns (bool) {
+
+        // _beforeTransfer contains requirements prior to transfer
+        _beforeTransfer(sender, recipient, amount);
+
+        // check if this is a contract-related transfer for adding liquidity or
+        // user transfer
+        if(!inSwap) {
+          uint256 toTransfer = amount - LPfee;
+          takeLiquidity(LPfee);
+          _transfer(msg.sender, recipient, toTransfer);
+        } else {
+          _transfer(sender, recipient, amount);
+        }
+
+        uint256 currentAllowance = _allowances[sender][msg.sender];
+        require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
+        unchecked {
+            _approve(sender, msg.sender, currentAllowance - amount);
+        }
+
         return true;
     }
 
@@ -83,14 +111,23 @@ contract AutoLP is IERC20, Ownable {
       uint256 remainder = balance - half;
       uint256 receivedETH = getETH(half);
 
-      router02.addLiquidityETH(
+      // Prevent liquidity provision loop
+      inSwap = true;
+
+      router02.addLiquidityETH {value: receivedETH}(
         address(this),
-        uint amountTokenDesired,
-        uint amountTokenMin,
-        uint amountETHMin,
-        address to,
+        remainder,
+        0,
+        0,
+        address(this),
         block.timestamp
         )
+
+        inSwap = false;
+    }
+
+    function holdLP(uint256 _LPfee) private {
+      _balances[address(this)] = _balances[address(this)] + _LPfee;
     }
 
     function getETH(uint256 amount) private returns(uint256){
@@ -102,17 +139,34 @@ contract AutoLP is IERC20, Ownable {
        path[0] = address(this);
        path[1] = router02.WETH();
 
+       // Prevent liquidity provision loop
+       inSwap = true;
+
        router02.swapExactTokensForETHSupportingFeeOnTransferTokens(
-         amount,  // number of tokens to swap
-         0,       // minumum amount of ETH required, any amount
-         path,    // token pair path as array of token address
-         address(this), // contract to hold LP tokens
-         block.timestamp // deadline, 1 block
+         amount,          // number of tokens to swap
+         0,               // minumum amount of ETH required, any amount
+         path,            // token pair path as array of token address
+         address(this),   // contract to hold LP tokens
+         block.timestamp  // deadline, 1 block
          );
+
+         inSwap = false;
 
       uint256 endingBalance = address(this).balance;
 
       return (initialBalance - endingBalance);
+    }
+
+    function _transfer(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) internal virtual {
+
+        _balances[sender] = _balances[sender] - amount;
+        _balances[recipient] = _balances[recipient] + amount;
+
+        emit Transfer(sender, recipient, amount);
     }
 
   }
