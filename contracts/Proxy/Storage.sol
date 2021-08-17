@@ -21,7 +21,7 @@ contract Storage {
     mapping(string => uint256) internal _uint256;
     mapping(string => int256) internal _int256;
     mapping(string => bool) internal _bool;
-    mapping(string => bytes256) internal _bytes256;
+    mapping(string => bytes32) internal _bytes32;
     mapping(string => address) internal _address;
     mapping(string => string) internal _string;
 
@@ -29,7 +29,7 @@ contract Storage {
     mapping(string => uint256[]) internal _uint256Array;
     mapping(string => int256[]) internal _int256Array;
     mapping(string => bool[]) internal _boolArray;
-    mapping(string => bytes256[]) internal _bytes256Array;
+    mapping(string => bytes32[]) internal _bytes32Array;
     mapping(string => address[]) internal _addressArray;
     mapping(string => string[]) internal _stringArray;
 
@@ -37,7 +37,7 @@ contract Storage {
     mapping(string => mapping(address => uint256)) internal _uint256AddressMap;
     mapping(string => mapping(address => int256)) internal _int256AddressMap;
     mapping(string => mapping(address => bool)) internal _boolAddressMap;
-    mapping(string => mapping(address => bytes256)) internal _bytes256AddressMap;
+    mapping(string => mapping(address => bytes32)) internal _bytes32AddressMap;
     mapping(string => mapping(address => address)) internal _addressAddressMap;
     mapping(string => mapping(address => string)) internal _stringAddressMap;
 
@@ -45,7 +45,7 @@ contract Storage {
     mapping(string => mapping(string => uint256)) internal _uint256StringMap;
     mapping(string => mapping(string => int256)) internal _int256StringMap;
     mapping(string => mapping(string => bool)) internal _boolStringMap;
-    mapping(string => mapping(string => bytes256)) internal _bytes256StringMap;
+    mapping(string => mapping(string => bytes32)) internal _bytes32StringMap;
     mapping(string => mapping(string => address)) internal _addressStringMap;
     mapping(string => mapping(string => string)) internal _stringStringMap;
 

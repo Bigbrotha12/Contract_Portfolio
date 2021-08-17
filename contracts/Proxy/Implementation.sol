@@ -8,16 +8,17 @@ pragma solidity ^0.8.0;
 
 contract Implementation is Storage, Ownable {
 
-  _bool["Initialized"] = false;
-  _uint256["Balance"] = 0;
-
   // Initialization function takes the place of a constructor since contract
   // logic implemented inside a constructor is not retained within contract
   // bytecode. Initialization function should only run once and only once.
+  // NOTE: Because Initialization functions are used instead of constructors,
+  // you must make sure to call the Initialization function for base contracts.
+
   function Initialization(address _owner) public {
     require(!_bool["Initialized"], "Contract already initialized");
 
     transferOwnership(_owner);
+    _uint256["Balance"] = 0;
     _bool["Initialized"] = true;
   }
 
