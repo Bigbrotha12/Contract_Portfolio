@@ -7,7 +7,7 @@ abstract contract Ownable {
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
-    constructor() {
+    constructor() public {
         _setOwner(msg.sender);
     }
 
