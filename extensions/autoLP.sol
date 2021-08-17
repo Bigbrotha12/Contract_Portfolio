@@ -15,7 +15,7 @@ contract AutoLP is IERC20, Ownable {
     string private _symbol;
     address private immutable routerAddress = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
     IUniswapV2Router private immutable router02 = IUniswapV2Router(routerAddress);
-    address private PairAddress;
+    address public PairAddress;
     uint256 private minTokenforLP;
     bool private inSwap = false;
 
@@ -29,6 +29,8 @@ contract AutoLP is IERC20, Ownable {
         // create Uniswap Pair contracts
         PairAddress = IUniswapV2Factory(router02.factory())
             .createPair(address(this), router02.WETH());
+
+      }
     }
 
     //Allows contract to receive ETH
@@ -109,11 +111,11 @@ contract AutoLP is IERC20, Ownable {
       // Break LPfee balance into two halves. One half to be converted to ETH
       uint256 half = balance / 2;
       uint256 remainder = balance - half;
-      uint256 receivedETH = getETH(half);
 
       // Prevent liquidity provision loop
       inSwap = true;
 
+      uint256 receivedETH = getETH(half);
       router02.addLiquidityETH {value: receivedETH}(
         address(this),
         remainder,
@@ -139,9 +141,6 @@ contract AutoLP is IERC20, Ownable {
        path[0] = address(this);
        path[1] = router02.WETH();
 
-       // Prevent liquidity provision loop
-       inSwap = true;
-
        router02.swapExactTokensForETHSupportingFeeOnTransferTokens(
          amount,          // number of tokens to swap
          0,               // minumum amount of ETH required, any amount
@@ -149,8 +148,6 @@ contract AutoLP is IERC20, Ownable {
          address(this),   // contract to hold LP tokens
          block.timestamp  // deadline, 1 block
          );
-
-         inSwap = false;
 
       uint256 endingBalance = address(this).balance;
 
