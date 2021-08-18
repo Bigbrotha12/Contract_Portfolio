@@ -18,21 +18,21 @@ Following the popular OpenZeppelin ERC20 template, contracts/Token/basicCoin.sol
 
 Got an idea or request for an extension? Let me know!
 
-## Interfaces
+### Interfaces
 
 Common interfaces to useful Ethereum smart contracts. Among these are:
 - BandReferenceData, AggregatorV3, ChainlinkClient, and VRFConsumerBase to allow contract to query oracles
 - IERC20 for standard token interaction
 - UniswapRouter and Factory for creating liquidity pools and automatic swaps.
 
-## Proxy
+### Proxy
 
 Set of contract templates to allow for upgradeable smart contracts following the Proxy/Implementation pattern. For a quick introduction to proxy contracts, see:
 https://blog.openzeppelin.com/proxy-patterns/
 
 Storage.sol serves as a base contract for Proxy/Implementation contracts and uses mappings for storage slot management to allow for dynamic definition of variables within implementation contract and protect proxy contract from storage collisions.
 
-## Others...
+### Others...
 
 I have also included a simple Crowdsale and Airdrop contract based off OpenZeppelin designs. I will continue working and adding new smart contracts so feel free to check back.
 
