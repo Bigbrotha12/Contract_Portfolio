@@ -28,7 +28,7 @@ Common interfaces to useful Ethereum smart contracts. Among these are:
 ## Proxy
 
 Set of contract templates to allow for upgradeable smart contracts following the Proxy/Implementation pattern. For a quick introduction to proxy contracts, see:
-![preview](https://blog.openzeppelin.com/proxy-patterns/)
+https://blog.openzeppelin.com/proxy-patterns/
 
 ## Contact me
 
