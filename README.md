@@ -8,20 +8,27 @@ This repository serves as reference point for useful smart contract templates, l
 
 Following the popular OpenZeppelin ERC20 template, contracts/Token/basicCoin.sol implements ERC20 token ready for deployment on to mainnet. Template allows for easy customization and extensions. Current contract extensions are:
 
-| extension                                             | Description                                                       |
-| ----------------------------------------------------- | :---------------------------------------------------------------- |
-| Minting/burning                                       | Allows administrator or algorithm to create or destroy tokens                                                                                                                      |
-| -                                                     | ✓ Multi-language                                                  |
-| -                                                     | ✓ Dark/Light Mode 🌓                                              |
-| -                                                     | ✓ [More components](https://minimals.cc/components)               |
-| -                                                     | ✓ TypeScript version                                              |
-| -                                                     | ✓ Design files (Figma & Sketch)                                   |
+| Extension                       | Description                                                                     |
+| ------------------------------- | :------------------------------------------------------------------------------ |
+| Minting/burning                 | Allows administrator or algorithm to create/destroy tokens                      |
+| Burn-on-Transaction             | Makes token deflationary as a % of every transaction is destroyed               |
+| Oracle Request                  | Allows your token to react to external data and make API calls                  |
+| Gasless staking                 | Pioneered by reflect.finance, this distributes % of transaction to token holders|
+| Auto-liquidity                  | Allows for % of transaction to be added to liquidity pools automatically        |
 
-1. Minting and burning tokens to specific address
-2. Redistributing tokens to existing holders on transaction (gasless staking)
-3. Redirecting transaction fees into liquidity pools (WIP)
+Got an idea or request for an extension? Let me know!
 
-I'm always open for new suggestions and extension to add.
+## Interfaces
+
+Common interfaces to useful Ethereum smart contracts. Among these are:
+- BandReferenceData, AggregatorV3, ChainlinkClient, and VRFConsumerBase to allow contract to query oracles
+- IERC20 for standard token interaction
+- UniswapRouter and Factory for creating liquidity pools and automatic swaps.
+
+## Proxy
+
+Set of contract templates to allow for upgradeable smart contracts following the Proxy/Implementation pattern. For a quick introduction to proxy contracts, see:
+![preview](https://blog.openzeppelin.com/proxy-patterns/)
 
 ## Contact me
 
