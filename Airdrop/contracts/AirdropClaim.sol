@@ -11,10 +11,10 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 contract AirdropClaim {
   using SafeERC20 for IERC20;
 
-  bytes32 private immutable merkleRoot;
-  address private immutable owner;
-  IERC20 private immutable airdropToken;
-  uint256 private immutable deadline;
+  bytes32 private merkleRoot;
+  address private owner;
+  IERC20 private airdropToken;
+  uint256 private deadline;
   mapping(address => bool) private hasClaimed;
 
 
