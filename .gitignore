@@ -9,3 +9,5 @@ package-lock.json
 package.json
 truffle-config.js
 .secret
+DS_Store
+
