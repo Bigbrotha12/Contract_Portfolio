@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity >=0.8.0 <0.9.0;
 
-import "@openzeppelin/contracts/interfaces/IERC20.sol";
-import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol"; 
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol"; 
+import "../../node_modules/@openzeppelin/contracts/interfaces/IERC20.sol";
+import "../../node_modules/@openzeppelin/contracts/utils/cryptography/MerkleProof.sol"; 
+import "../../node_modules/@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol"; 
 
 /// @title AirdropClaim
 /// @notice Allows user to claim ERC20 token if part of Merkle Tree within
@@ -11,25 +11,24 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 contract AirdropClaim {
   using SafeERC20 for IERC20;
 
-  bytes32 public merkleRoot;
-  address public owner;
-  IERC20 public airdropToken;
-  uint256 public deadline;
-  mapping(address => bool) public hasClaimed;
-
-
-  /// @notice Creates a new AirdropClaim contract
-  // @param _merkleRoot of claimees
-  // @param _tokenAddress address of token to be airdropped
-  // @param _deadline number of blocks airdrop will be active
-  constructor(bytes32 _merkleRoot, address _tokenAddress, uint256 _deadline) {
-    merkleRoot = _merkleRoot; //_merkleRoot;               // Updates Merkle root
-    airdropToken = IERC20(_tokenAddress);   // Sets airdrop token
-    deadline = block.number + _deadline;     // Sets deadline for claiming
-    owner = msg.sender;                     // Sets owner
-  }
+  bytes32 public merkleRoot;                    // Root of tree containing valid address
+  address public owner;                         // Contract administrator
+  IERC20 public airdropToken;                   // Token to be claimed
+  uint256 public deadline;                      // Number of blocks airdrop will be active
+  mapping(address => bool) public hasClaimed;   // Records if user has already claimed
 
   event Claimed(address indexed to, uint256 amount);
+
+  /// @notice Creates a new AirdropClaim contract
+  /// @param _merkleRoot of claimees
+  /// @param _tokenAddress address of token to be airdropped
+  /// @param _deadline number of blocks airdrop will be active
+  constructor(bytes32 _merkleRoot, address _tokenAddress, uint256 _deadline) {
+    merkleRoot = _merkleRoot;                
+    airdropToken = IERC20(_tokenAddress);   
+    deadline = block.number + _deadline;  
+    owner = msg.sender;                     
+  }
 
   /// @notice Allows user to claim token if address is part of merkle tree
   /// @dev A valid claim should revert if contract has insufficient funds
