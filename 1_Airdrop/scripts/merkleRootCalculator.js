@@ -1,4 +1,3 @@
-const AirdropRecipients = require("./airdropData.json");
 const Web3 = require("web3-utils");
 
 function createLeaves(airdrop) { 
@@ -13,7 +12,10 @@ function createLeaves(airdrop) {
     return leaves.sort(); 
 }
 
-// console.log(createLeaves(AirdropRecipients.airdropRecipient));
+function getLeafAtIndex(index, airdrop) {
+    if(index >= airdrop.length) return 0; // invalid index
+    return Web3.soliditySha3(airdrop[index]['to'], airdrop[index]['amount']); 
+}
 
 function calculateMerkleRoot(_leaves) { 
     let nodes = [];
@@ -32,25 +34,6 @@ function calculateMerkleRoot(_leaves) {
     } else {
         return nodes; 
     }
-}
-
-// let leaves = createLeaves(AirdropRecipients.airdropRecipient); 
-// console.log(calculateMerkleRoot(leaves));
-
-function getLeafAtIndex(index, airdrop) {
-    if(index >= airdrop.length) return 0; // invalid index
-    return Web3.soliditySha3(airdrop[index]['to'], airdrop[index]['amount']); 
-}
-
-function reduceMerkle(_leaves) {
-    let nodes = [];
-    
-    for(i = 0; i<=_leaves.length / 2; i+=2)
-    {
-        let hash = Web3.soliditySha3(_leaves[i], _leaves[i+1]); nodes.push(hash);
-    }
-    
-    return nodes.sort(); 
 }
 
 function calculateProof(leaf, leaves) { 
@@ -78,6 +61,22 @@ function calculateProof(leaf, leaves) {
     return proof; 
 }
 
-// let leaves = createLeaves(AirdropRecipients.airdropRecipient); 
-// let leaf = getLeafAtIndex(2, AirdropRecipients.airdropRecipient); 
-/// console.log(calculateProof(leaf, leaves));
+function reduceMerkle(_leaves) {
+    let nodes = [];
+    
+    for(i = 0; i<=_leaves.length / 2; i+=2)
+    {
+        let hash = Web3.soliditySha3(_leaves[i], _leaves[i+1]); nodes.push(hash);
+    }
+    
+    return nodes.sort(); 
+}
+
+module.export = {
+    calculateProof,
+    calculateMerkleRoot,
+    createLeaves,
+    getLeafAtIndex
+}
+
+

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity >=0.8.0 <0.9.0;
 
-import "Contract_Portfolio/node_modules/@openzeppelin/contracts/interfaces/IERC20.sol";
-import "Contract_Portfolio/node_modules/@openzeppelin/contracts/utils/cryptography/MerkleProof.sol"; 
-import "Contract_Portfolio/node_modules/@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol"; 
+import "@openzeppelin/contracts/interfaces/IERC20.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol"; 
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol"; 
 
 /// @title AirdropClaim
 /// @notice Allows user to claim ERC20 token if part of Merkle Tree within
@@ -66,6 +66,8 @@ contract AirdropClaim {
     airdropToken.safeTransferFrom(msg.sender, address(this), _amount);
   }
 
+  //----------------------------- RESTRICTED FUNCTIONS ---------------------------
+  
   /// @notice Allows owner to recover unclaimed ERC20 tokens deposited to contract 
   /// after airdrop deadline
   function recoverERC20() external {
