@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity 0.8.9;
 
-import "./ERC721.sol";
-import "./IERC20.sol";
+import "Contract_Portfolio/node_modules/@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "Contract_Portfolio/node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./CommonStorage.sol";
 
+/// @title Familiar Implementation
+/// @notice NFT contract implementation
 contract FamiliarImpl is CommonStorage, ERC721 {
     using Strings for uint256;
     using Bytes for bytes;
 
     function init(bytes[] calldata initData_) external onlyOwner {
-        // New implementation only sets name, symbol, and rootURI for NFT
         _name = string(initData_[1]);
         _symbol = string(initData_[2]);
         _rootURI = string(initData_[3]);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import "../../node_modules/@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
+import "Contract_Portfolio/node_modules/@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 
 contract TestCoordinator is VRFCoordinatorV2Interface {
       /**
@@ -133,6 +133,6 @@ contract TestCoordinator is VRFCoordinatorV2Interface {
    * @param to - Where to send the remaining LINK to
    */
   function cancelSubscription(uint64 subId, address to) external {
-    
+
   }
 }

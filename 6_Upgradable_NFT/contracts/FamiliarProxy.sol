@@ -2,16 +2,14 @@
 
 pragma solidity 0.8.9;
 
-import "./Ownable.sol";
-import "./Proxy.sol";
+import "Contract_Portfolio/node_modules/@openzeppelin/contracts/proxy/Proxy.sol";
+import "./CommonStorage.sol";
 
-contract FamiliarProxy is Proxy, CommonStorage, Ownable {
+contract FamiliarProxy is Proxy, CommonStorage {
 
-    /*
-    constructor(address imx_) {
-        _imx = imx_;
+    modifier onlyOwner() {
+        _;
     }
-    */
 
     /* Initial initData_
      * [0] = "1.0.0"              - version

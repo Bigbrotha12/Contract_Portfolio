@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import "../../node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "Contract_Portfolio/node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 /// @title AirdropToken
 /// @notice Simple ERC20 token with default functionality
 contract AirdropToken is ERC20 {
+
+//--------------------  CONSTRUCTOR ----------------------------------------
 
     /// @notice Creates a new ERC20 token contract
     /// @param _name of token
