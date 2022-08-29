@@ -44,12 +44,22 @@ contract IBC_Bridge is EIP712X {
     /// @param _name           of current contract
     /// @param _version        of contract being deployed.
     /// @param _target         NFT contract to handle mints/burns
+    /// @param _minter         approved Oracle relayer address
     constructor(string memory _name, string memory _version, address _target, address _minter) EIP712(_name, _version) {
       MESSAGE_TYPE_HASH = keccak256(
         "Transaction(address receiver,uint256 receivingChainId,uint256 tokenId, uint256 nonce)"
       );
       NFT = TestNFT(_target);
       MINTER = _minter;
+    }
+
+    // DEBUG
+    function getChainId() public view returns(uint256){
+      return block.chainid;
+    }
+    
+    function getAddress() public view returns(address){
+      return address(this);
     }
 
     //-------------------- MUTATIVE FUNCTIONS ----------------------------------

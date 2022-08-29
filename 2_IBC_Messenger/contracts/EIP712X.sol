@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 /// @notice generic and must be extended to specific application needs.
 /// @dev  IBC_Bridge Message Struct:
 /// @dev  {
-/// @dev    prefix: "\x19Ethereum Signed Message:\n32",
+/// @dev    type: "\x19Ethereum Signed Message:\n32",
 /// @dev    message: {
 /// @dev      domain: {
 /// @dev        type: EIP712Domain,
