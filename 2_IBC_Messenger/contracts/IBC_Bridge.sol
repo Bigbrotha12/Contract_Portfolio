@@ -53,7 +53,8 @@ contract IBC_Bridge is EIP712X {
       MINTER = _minter;
     }
 
-    // DEBUG
+    //-------------------- VIEW FUNCTIONS ----------------------------------
+
     function getChainId() public view returns(uint256){
       return block.chainid;
     }
@@ -67,9 +68,10 @@ contract IBC_Bridge is EIP712X {
     /// @notice Initiates data bridge to another chain.
     /// @dev Captures the user request data to be relayed to another blockchain. 
     /// @dev Data is captured by relayer via emitted event. Domain hash needs to match 
-    /// @dev domain for receiving chain, NOT this contract's domain.
+    /// @dev domain for receiving chain, NOT this contract's domain. Request must
+    /// @dev be sent by NFT owner.
     /// @param _receiver          Address of the receiving account.
-    /// @param _tokenId           ID number of the NFT to be minted.
+    /// @param _tokenId           ID number of the NFT to be sent.
     /// @param _receivingChainId  ID of the destination blockchain.
     function dataSend(
       address _receiver, 
@@ -77,7 +79,8 @@ contract IBC_Bridge is EIP712X {
       uint256 _receivingChainId
     ) external returns (bool) {
         bytes32 destinationDomain = getDomainHash(_receivingChainId);
-        require(destinationDomain != 0, "EIP712X: Unregistered Domain");
+        require(destinationDomain != 0, "IBC_Bridge: Unregistered Domain");
+        require(NFT.ownerOf(_tokenId) == msg.sender, "IBC_Bridge: Unauthorized transfer");
 
         uint256 nonce_ = nonce[msg.sender][block.chainid][_receivingChainId]++;
 
@@ -92,18 +95,18 @@ contract IBC_Bridge is EIP712X {
     /// @dev input to verify that provided parameters have not been tampered and 
     /// @dev signature has not been reused.
     /// @param _receiver          Address of NFT receiving account.
-    /// @param _tokenId           ID number of the NFT collection to be minted.
     /// @param _sendingChainId    ID of the origin chain.
+    /// @param _tokenId           ID of NFT to be minted.
     /// @param _signature         Signature for verification.
     function dataReceive(
       address _receiver, 
-      uint256 _tokenId, 
       uint256 _sendingChainId, 
+      uint256 _tokenId,
       bytes calldata _signature
     ) external returns (bool) {
 
       uint256 nonce_ = nonce[msg.sender][_sendingChainId][block.chainid]++;
-      bytes32 structHash = buildStructHash(_receiver, _tokenId, block.chainid, nonce_);
+      bytes32 structHash = buildStructHash(_receiver, block.chainid, _tokenId, nonce_);
       bytes32 digest = getPrefixedDataHash(structHash);
       address signer = digest.recover(_signature);
       require(signer == MINTER, "ECDSA: Signature Verification Failed");
