@@ -21,6 +21,8 @@ contract IBC_Bridge is EIP712X {
     address public immutable MINTER;
     mapping(address => mapping(uint256 => mapping(uint256 => uint256))) public nonce;
     TestNFT public immutable NFT;
+    string public name;
+    string public version;
 
     //----------------------- EVENTS -------------------------------------------
 
@@ -51,6 +53,8 @@ contract IBC_Bridge is EIP712X {
       );
       NFT = TestNFT(_target);
       MINTER = _minter;
+      name = _name; 
+      version = _version;
     }
 
     //-------------------- VIEW FUNCTIONS ----------------------------------
@@ -61,6 +65,14 @@ contract IBC_Bridge is EIP712X {
     
     function getAddress() public view returns(address){
       return address(this);
+    }
+
+    function getName() public view returns(string memory){
+      return name;
+    }
+
+    function getVersion() public view returns(string memory){
+      return version;
     }
 
     //-------------------- MUTATIVE FUNCTIONS ----------------------------------
