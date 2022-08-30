@@ -1,9 +1,9 @@
 //SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import "Contract_Portfolio/node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "Contract_Portfolio/node_modules/@openzeppelin/contracts/access/Ownable.sol";
-import "Contract_Portfolio/node_modules/@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 
 /// @title A Fee on Transfer token with automatic reflections to holders.
 /// @notice Token contract inheriting ERC20 standard with basic access
@@ -11,7 +11,7 @@ import "Contract_Portfolio/node_modules/@openzeppelin/contracts/security/Pausabl
 /// @notice Fee on Transfer distributed among marketing wallet, acquisition wallets,
 /// @notice and all token holders (via reflections) on Buy / Sell transactions
 /// @notice only. Wallet-to-wallet transfers do not incur a fee on transfer.
-contract FeeOnTransfer is ERC20, Pausable, Ownable {
+contract ReflectToken is ERC20, Pausable, Ownable {
 
   struct FeeValues {
         uint256 Amount;
@@ -134,15 +134,15 @@ contract FeeOnTransfer is ERC20, Pausable, Ownable {
   /// @dev inclusive of reflections, by reflection rate.
   /// @param _rAmount             amount to be scaled down by reflection rate.
   function tokenFromReflection(uint256 _rAmount) public view returns(uint256) {
-    require(rAmount <= rTotal, "Amount must be less than total supply");
+    require(_rAmount <= rTotal, "Amount must be less than total supply");
     uint256 currentRate =  _getRate();     
-    return rAmount / currentRate;
+    return _rAmount / currentRate;
   }
 
   /// @notice Allows checking whether an account has been excluded from
   /// @notice receiving reflection distributions.
   /// @param _account              address to be checked if excluded from reflections.
-  function isExcluded(address _account) public view returns (bool) {
+  function isExcludedAct(address _account) public view returns (bool) {
     return isExcluded[_account];
   }
 
@@ -174,8 +174,8 @@ contract FeeOnTransfer is ERC20, Pausable, Ownable {
     uint256 _tAmount,
     MarketSide _side
     ) private view returns (
-      FeeValues memory tValues,
-      FeeValues memory rValues
+      FeeValues memory,
+      FeeValues memory
       ) {
 
       uint256 currentRate =  _getRate();
@@ -206,7 +206,7 @@ contract FeeOnTransfer is ERC20, Pausable, Ownable {
     tValues.Amount = _tAmount;
     tValues.ReflectFee = _tAmount * feeReflect / 100;
     tValues.MarketingFee = _tAmount * feeMarketing / 100;
-    tValues.AcquisitionFee = tAmount * feeAcquisition / 100;
+    tValues.AcquisitionFee = _tAmount * feeAcquisition / 100;
     tValues.TransferAmount =
       tValues.Amount
       - tValues.ReflectFee
@@ -339,21 +339,21 @@ contract FeeOnTransfer is ERC20, Pausable, Ownable {
       FeeValues memory rValues
     ) = _getValues(_tAmount, _side);
 
-    if(isExcluded[sender]){
-      tOwned[sender] -= tValues.Amount;
-      rOwned[sender] -= rValues.Amount;
+    if(isExcluded[_sender]){
+      tOwned[_sender] -= tValues.Amount;
+      rOwned[_sender] -= rValues.Amount;
     } else {
-      rOwned[sender] -= rValues.Amount;
+      rOwned[_sender] -= rValues.Amount;
     }
 
-    if(isExcluded[recipient]){
-      tOwned[recipient] += tValues.TransferAmount;
-      rOwned[recipient] += rValues.TransferAmount;
+    if(isExcluded[_recipient]){
+      tOwned[_recipient] += tValues.TransferAmount;
+      rOwned[_recipient] += rValues.TransferAmount;
     } else {
-      rOwned[recipient] += rValues.TransferAmount;
+      rOwned[_recipient] += rValues.TransferAmount;
     }
       
-    emit Transfer(sender, recipient, tValues.TransferAmount);
+    emit Transfer(_sender, _recipient, tValues.TransferAmount);
 
     if(_side != MarketSide.NONE){
       _reflectFee(rValues.ReflectFee, tValues.ReflectFee);
@@ -364,12 +364,12 @@ contract FeeOnTransfer is ERC20, Pausable, Ownable {
         } else {
           rOwned[marketingWallet] += rValues.MarketingFee;
         }
-        emit Transfer(sender, marketingWallet, tValues.MarketingFee);
+        emit Transfer(_sender, marketingWallet, tValues.MarketingFee);
       }
 
       if(tValues.AcquisitionFee > 0) {
         _acquisitionWalletAlloc(
-          sender, tValues.AcquisitionFee,
+          _sender, tValues.AcquisitionFee,
           rValues.AcquisitionFee
           );
       }
@@ -386,8 +386,8 @@ contract FeeOnTransfer is ERC20, Pausable, Ownable {
     uint256 _tAmount,
     uint256 _rAmount
     ) private {
-    uint256 _tAllocation = tAmount / acquisitionWallets.length;
-    uint256 _rAllocation = rAmount / acquisitionWallets.length;
+    uint256 _tAllocation = _tAmount / acquisitionWallets.length;
+    uint256 _rAllocation = _rAmount / acquisitionWallets.length;
 
     for(uint i = 0; i < acquisitionWallets.length; i++){
       if(isExcluded[acquisitionWallets[i]]){
@@ -396,7 +396,7 @@ contract FeeOnTransfer is ERC20, Pausable, Ownable {
       } else {
         rOwned[acquisitionWallets[i]] += _rAllocation;
       }
-      emit Transfer(sender, acquisitionWallets[i], _tAllocation);
+      emit Transfer(_sender, acquisitionWallets[i], _tAllocation);
     }
   }
 
@@ -418,7 +418,7 @@ contract FeeOnTransfer is ERC20, Pausable, Ownable {
   /// @param _exchangePair         DEX liquidity pool
   function setExchange(address _exchangePair) external onlyOwner {
     require(!isExchange[_exchangePair], "FeeOnTransfer: Address already Exchange");
-    isExchange[exchangePair] = true;
+    isExchange[_exchangePair] = true;
   }
 
   /// @notice Removes an exchange pair address from fee collection.
@@ -471,22 +471,22 @@ contract FeeOnTransfer is ERC20, Pausable, Ownable {
 
   /// @notice Changes the reflection, marketing, and acquisition fee
   /// @notice percentages to be deducted from {SELL} transaction type.
-  /// @param _reflectFee is the new reflection fee percentage.
-  /// @param _marketingFee is the new marketing fee percentage.
-  /// @param _acquisitionFee is the new acquisition fee percentage.
+  /// @param _reflectFees is the new reflection fee percentage.
+  /// @param _marketingFees is the new marketing fee percentage.
+  /// @param _acquisitionFees is the new acquisition fee percentage.
   function setSellFees(
-    uint8 _reflectFee,
-    uint8 _marketingFee,
-    uint8 _acquisitionFee
+    uint8 _reflectFees,
+    uint8 _marketingFees,
+    uint8 _acquisitionFees
     ) external onlyOwner {
     require(
-      reflectFee + marketingFee + acquisitionFee < 100,
+      _reflectFees + _marketingFees + _acquisitionFees < 100,
       "FeeOnTransfer: Total fee percentage must be less than 100%"
     );
 
-    sellFeeReflect = _reflectFee;
-    sellFeeMarketing = _marketingFee;
-    sellFeeAcquisition = _acquisitionFee;
+    sellFeeReflect = _reflectFees;
+    sellFeeMarketing = _marketingFees;
+    sellFeeAcquisition = _acquisitionFees;
   }
 
   /// @notice Removes address from receiving future reflection distributions.
