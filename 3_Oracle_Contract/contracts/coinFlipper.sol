@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import "Contract_Portfolio/node_modules/@openzeppelin/contracts/access/Ownable.sol";
-import "Contract_Portfolio/node_modules/@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
-import "Contract_Portfolio/node_modules/@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
+
+struct Player {
+  uint256 balance;
+  bool awaitingQuery;
+}
 
 /// @title CoinFlipper
 /// @notice Operates a coin-flipping gambling game using Chainlink
@@ -12,29 +17,19 @@ contract CoinFlipper is Ownable, VRFConsumerBaseV2 {
 
   //------------------ STATE VARIABLES ---------------------------------------
 
-  VRFCoordinatorV2Interface COORDINATOR;              // Chainlink coordinator interface
-  uint64 subscriptionId;                              // Chainlink account
-  uint256 private pot;                                // Contract balance
-  uint256 private committedPot;                       // Balance of pot claimable by players
-  mapping(uint256 => address) private playerQuery;    // Oracle query for each player
-  mapping(address => uint) private playerOutcome;     // Win/loss outcome for each player
-  mapping(address => uint) private playerBalance;     // Bet placed by each player
-  mapping(address => bool) private awaitingQuery;     // Players awaiting response from oracle
+  VRFCoordinatorV2Interface COORDINATOR;             // Chainlink coordinator interface
+  uint64 subscriptionId;                             // Chainlink account
+  uint256 public reservedBalance;                    // Contract balance reserved for players
+  mapping(uint256 => address) public playerQuery;    // Oracle query for each player
+  mapping(address => Player) public players;         // Players data
   
   //----------------------- EVENTS -------------------------------------------
 
-  event betPlaced(
-    address indexed _from, 
-    uint256 _amount
-  );                                                  // Emitted after player places bet
-  event logNewQuery(
-    address indexed _player,
-    uint256 _id
-  );                                                  // Emitted after each oracle query is sent
-  event randomNumber(
-    uint256 indexed _id, 
-    uint256 _result
-  );                                                  // Emitted after oracle responds
+  event betPlaced(address indexed _from, uint256 _amount);   // Emitted after player places bet
+  event betPaidOut(address indexed _to, uint256 _amount);    // Emitted after player withdraws balance
+  event logNewQuery(address indexed _player,uint256 _id);    // Emitted after each oracle query is sent
+  event randomNumber(uint256 indexed _id, uint256 _result);  // Emitted after oracle responds
+  event fundsReceived(address indexed _sender, uint256 _amount); // Emitted after receiving funding
 
   //--------------------  CONSTRUCTOR ----------------------------------------
 
@@ -43,25 +38,30 @@ contract CoinFlipper is Ownable, VRFConsumerBaseV2 {
   /// @param _subscriptionId      Chainlink subscription
   /// @param _vrfCoordinator      Address of Chainlink oracle coordinator
   constructor(uint64 _subscriptionId, address _vrfCoordinator) VRFConsumerBaseV2(_vrfCoordinator) {
-  COORDINATOR = VRFCoordinatorV2Interface(_vrfCoordinator);
-  subscriptionId = _subscriptionId;
+    COORDINATOR = VRFCoordinatorV2Interface(_vrfCoordinator);
+    subscriptionId = _subscriptionId;
   }
 
   //------------------------ VIEWS -------------------------------------------
 
   /// @notice Returns player's current ether balance.
-  function getBalance() public view returns(uint256){
-    return playerBalance[msg.sender];
+  function getPlayerBalance(address _player) public view returns(uint256){
+    return players[_player].balance;
   }
 
   /// @notice Returns current balance of contract.
-  function getPot() public view returns (uint256){
-    return pot;
+  function getBalance() public view returns (uint256){
+    return address(this).balance;
   }
 
   /// @notice Returns current balance of contract claimable by players.
-  function getCommitedPot() public view returns (uint256){
-    return committedPot;
+  function getReservedBalance() public view returns (uint256){
+    return reservedBalance;
+  }
+
+  /// @notice Returns current free balance of contract.
+  function getFreeBalance() public view returns (uint256){
+    return address(this).balance - reservedBalance;
   }
 
   //-------------------- MUTATIVE FUNCTIONS ----------------------------------
@@ -71,41 +71,41 @@ contract CoinFlipper is Ownable, VRFConsumerBaseV2 {
   /// @dev Balance to be added to be determined by transaction value.
   function placeBet() external payable {
     require(msg.value >= 0.1 ether, "CoinFlipper: Minimum bet is 0.1 ETH");
-    require(!awaitingQuery[msg.sender], "CoinFlipper: Coin flip in progress");
+    require(!players[msg.sender].awaitingQuery, "CoinFlipper: Coin flip in progress");
 
-    playerBalance[msg.sender] += msg.value;
-    pot += msg.value;
-    committedPot += msg.value;
+    players[msg.sender].balance += msg.value;
+    reservedBalance += msg.value;
 
     emit betPlaced(msg.sender, msg.value);
   }
 
-  /// @notice Allows player to withdraw their winnings from the contracts pot.
+  /// @notice Allows player to withdraw their winnings from the contracts.
   /// @notice Amount to be withdrawn must be less than or equal to the player's balance.
   /// @notice Players may not withdraw bet while awaiting for Oracle query.
-  /// @param _amount              ether value to be paid to player.
+  /// @param _amount ether value to be paid to player.
   function payOut(uint _amount) external {
-    require(_amount <= playerBalance[msg.sender]);
-    require(!awaitingQuery[msg.sender]);
+    require(_amount <= players[msg.sender].balance, "CoinFlipper: Invalid withdraw amount");
+    require(!players[msg.sender].awaitingQuery, "CoinFlipper: Coin flip in progress");
 
-    playerBalance[msg.sender] -= _amount;
-    pot -= _amount;
-    committedPot -= _amount;
+    players[msg.sender].balance -= _amount;
+    reservedBalance -= _amount;
 
-    payable(msg.sender).transfer(_amount);
+    payable(msg.sender).call{value: _amount}("");
+    emit betPaidOut(msg.sender, _amount);
   }
 
   /// @notice Issues query to oracle for a random number.
   /// @dev User must have placed bet of atleast 0.1 ether and cannot make another 
   /// @dev request while awaiting query.
-  function startCoinFlip() external payable {
-    require(playerBalance[msg.sender] <= ((pot - committedPot) / 2),"CoinFlipper: Insufficient balance to cover bet");
-    require(playerBalance[msg.sender] >= 0.1 ether, "CoinFlipper: Bet required");
-    require(!awaitingQuery[msg.sender],"CoinFlipper: Previous coin flip still pending");
-
-    awaitingQuery[msg.sender] = true;
-    committedPot += playerBalance[msg.sender];         //Reserve pot balance in case player wins.
-    assert(pot >= committedPot);
+  function startCoinFlip() external {
+    require(!players[msg.sender].awaitingQuery,"CoinFlipper: Coin flip in progress");
+    uint256 bet = players[msg.sender].balance;
+    require(bet >= 0.1 ether, "CoinFlipper: Bet required");
+    uint256 freeBalance = getFreeBalance();
+    require(bet <= (freeBalance / 2),"CoinFlipper: Insufficient balance to cover bet");
+    
+    players[msg.sender].awaitingQuery = true;
+    reservedBalance += bet;                            //Reserve balance in case player wins.
 
     // Chainlink query parameters
     bytes32 keyHash =                                  // Chainlink gas lane
@@ -127,52 +127,37 @@ contract CoinFlipper is Ownable, VRFConsumerBaseV2 {
 
   /// @notice Oracle callback function with response. Determine the win/lose 
   /// @notice result for the given player.
+  /// @dev Ensure no external calls are made in fullfilment of query
   /// @param _queryId of request being answered.
   /// @param _randomWords resulting random numbers.
   function fulfillRandomWords(uint256 _queryId, uint256[] memory _randomWords) internal override {
     address player = playerQuery[_queryId];       
-    require(awaitingQuery[player]);
+    require(players[player].awaitingQuery, "CoinFlipper: Unsolicited query");   // Prevent fulfillment of invalid or cancelled queries
     
     uint256 result = _randomWords[0] % 2;     
-    playerOutcome[player] = result;
-    emit randomNumber(_queryId, result);
-
-    uint256 outcome = playerOutcome[player];
-    if(outcome == 1) {
-      playerBalance[player] *= 2;
+    uint256 balance = players[player].balance;
+    if(result == 1) {
+      players[player].balance = (balance * 2);
     }
     else {
-      committedPot -= (playerBalance[player]*2);
-      playerBalance[player] = 0;
+      reservedBalance -= (balance * 2);
+      players[player].balance = 0;
     }
-    awaitingQuery[player] = false;
+    players[player].awaitingQuery = false;
+
+    emit randomNumber(_queryId, result);
   } 
+
+  fallback() external payable {
+    emit fundsReceived(msg.sender, msg.value);
+  }
       
   //----------------------------- RESTRICTED FUNCTIONS ---------------------------
 
-    /// @notice Adds ether balance to the contract.
-    function addPot() external payable onlyOwner {
-      pot += msg.value;
-    }
-
     /// @notice Removes ether balance from the contract not claimable by players.
-    /// @param _amount is balance to be withdrawn from contract.
-    function removePot(uint _amount) external onlyOwner {
-      require(_amount <= (pot - committedPot));
-
-      pot -= _amount;
-
-      payable(msg.sender).transfer(_amount);
-    }
-
-    /// @notice Unlocks player funds in case of oracle failure.
-    /// @dev For emergency recovery only. Introduces potential attack vector
-    /// @dev where VRF oracle witholds undesirable random number results
-    /// @dev and request funds rescue due to 'failure'
-    /// @param _player address impacted by oracle failure.
-    /// @param _queryId failed query to be eliminated.
-    function unlockPlayer(address _player, uint256 _queryId) external onlyOwner {
-       awaitingQuery[_player] = false;
-       playerQuery[_queryId] = address(0);
+    function removeBalance() external onlyOwner {
+      uint256 freeBalance = getFreeBalance();
+ 
+      payable(msg.sender).call{value: freeBalance}("");
     }
 }
