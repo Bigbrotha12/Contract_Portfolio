@@ -10,7 +10,7 @@ contract('ERC20 functionality', accounts => {
     let bal = await instance.balanceOf(accounts[0]);
     let supply = await instance.totalSupply();
     let expectBal = supply / 100 * 95;
-    assert(bal - expectBal == 0, "Account one did not recieve 95% of the supply");
+    assert(bal - expectBal == 0, "Account one did not receive 95% of the supply");
   });
 
   it("should transfer 30 tokens to second account", async () => {
