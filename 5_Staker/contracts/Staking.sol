@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import "Contract_Portfolio/node_modules/@openzeppelin/contracts/access/Ownable.sol";
-import "Contract_Portfolio/node_modules/@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "Contract_Portfolio/node_modules/@openzeppelin/contracts/security/Pausable.sol";
-import "Contract_Portfolio/node_modules/@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /// @title Staking
 /// @notice Provides basic DeFi staking capabilities
@@ -51,14 +51,14 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
 //------------------------ VIEWS -------------------------------------------
 
     /// @notice Returns total number of staked tokens
-    function totalSupply() external view returns (uint256) {
+    function totalStakedSupply() external view returns (uint256) {
         return totalSupply;
     }
 
     /// @notice Returns user staked token balance
-    /// @param account        Address of user to check staked token balance.
-    function balanceOf(address account) external view returns (uint256) {
-        return balances[account];
+    /// @param _account        Address of user to check staked token balance.
+    function balanceOf(address _account) external view returns (uint256) {
+        return balances[_account];
     }
 
     /// @notice Returns staking rewards earned: current reward + earned but
@@ -77,12 +77,12 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
 
     /// @notice Allows user to deposit incentivized tokens to earn reward.
     /// @notice Function is non-reentrant and can be paused by admin.
-    /// @dev Function does not check that 'amount' deposited is actually
+    /// @dev Function does not check that '_amount' deposited is actually
     /// @dev received by contract (due to fee-on-transfer, or error), hence contract deployer
     /// @dev must ensure stake token does not implement such features.
     /// @param _amount          Number of stake tokens to be deposited
     function stake(uint256 _amount) external nonReentrant whenNotPaused {
-        require(stakeToken.balanceOf(msg.sender) >= amount, "Staking: Insufficient balance");
+        require(stakeToken.balanceOf(msg.sender) >= _amount, "Staking: Insufficient balance");
 
         calculateReward(msg.sender);
         totalSupply += _amount;
@@ -94,14 +94,15 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
 
     /// @notice Allows user to withdraw incentivized tokens + reward.
     /// @notice Function is non-reentrant and cannot be paused by admin.
-    /// @param _amount          Number of stake tokens to be withdrawn.
-    function withdraw(uint256 _amount) external nonReentrant {
-        require(balances[msg.sender] >= amount, "Staking: Insufficient balance");
+    function withdraw() external nonReentrant {
+        uint256 amount = balances[msg.sender];
+        require(amount > 0, "Staking: Insufficient balance");
 
         calculateReward(msg.sender);
-        totalSupply -= _amount;
-        balances[msg.sender] -= _amount;
-        stakeToken.safeTransfer(msg.sender, _amount);
+        totalSupply -= amount;
+        balances[msg.sender] -= amount;
+
+        stakeToken.safeTransfer(msg.sender, amount);
         uint256 reward = rewards[msg.sender];
         if (reward != 0) {
             rewards[msg.sender] = 0;
@@ -109,14 +110,14 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
             emit RewardPaid(msg.sender, reward);
         }
 
-        emit Withdrawn(msg.sender, _amount);
+        emit Withdrawn(msg.sender, amount);
     }
 
     /// @notice Allows user to withdraw their deposited tokens in case of failure.
     /// @dev Fail-safe to ensure users are able to withdraw stake tokens.
     /// @param _amount          Number of stake tokens to be withdrawn.
     function safeWithdraw(uint256 _amount) external nonReentrant {
-        require(balances[msg.sender] >= amount, "Staking: Insufficient balance");
+        require(balances[msg.sender] >= _amount, "Staking: Insufficient balance");
 
         calculateReward(msg.sender);
         totalSupply -= _amount;
