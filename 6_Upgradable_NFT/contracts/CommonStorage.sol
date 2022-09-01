@@ -27,6 +27,7 @@ abstract contract CommonStorage {
     // Maintain proxy administration and routing data
     address internal admin;
     bool internal initializing;
+    mapping(address => bool) internal initialized;
     mapping(address => address) internal callRouting;
     mapping(address => string) internal version;
 

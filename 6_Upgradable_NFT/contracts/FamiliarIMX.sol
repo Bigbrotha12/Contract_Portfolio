@@ -28,7 +28,7 @@ contract FamiliarIMX is CommonStorage, ERC165, ERC721, Mintable {
     //-------------------- MUTATIVE FUNCTIONS ----------------------------------
 
     function _mintFor(address _to, uint256 _id, bytes memory _blueprint) internal override {
-        blueprints[id] = _blueprint;
+        blueprints[_id] = _blueprint;
         _safeMint(_to, _id);
     }
 }
