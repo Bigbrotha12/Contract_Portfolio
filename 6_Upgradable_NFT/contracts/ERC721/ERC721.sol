@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts (last updated v4.7.0) (token/ERC721/ERC721.sol)
 pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -14,11 +13,12 @@ import "../CommonStorage.sol";
  * @dev Implementation of https://eips.ethereum.org/EIPS/eip-721[ERC721] Non-Fungible Token Standard, including
  * the Metadata extension, but not including the Enumerable extension, which is available separately as
  * {ERC721Enumerable}.
+ *
+ * Custom ERC721 implementation based on 
+ * OpenZeppelin Contracts (last updated v4.7.0) (token/ERC721/ERC721.sol).
+ * Storage pattern for upgradable proxy requires no state variables
+ * defined in logic contract.
  */
- /// ERC721 Implementation
- /// Based on OpenZeppelin Contracts (last updated v4.7.0) (token/ERC721/ERC721.sol).
- /// Storage pattern used for upgradable proxy requires no state variables
- /// defined in logic contract.
 contract ERC721 is CommonStorage, ERC165, IERC721, IERC721Metadata {
     using Address for address;
     using Strings for uint256;

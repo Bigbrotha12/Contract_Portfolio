@@ -12,6 +12,8 @@ import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 /// @dev than CommonStorage must not declare any state variables
 contract FamiliarIMX is CommonStorage, ERC165, ERC721, Mintable {
 
+    //----------------------- VIEW FUNCTIONS -----------------------------------
+
      /**
      * @dev See {IERC165-supportsInterface}.
      */
@@ -23,8 +25,10 @@ contract FamiliarIMX is CommonStorage, ERC165, ERC721, Mintable {
             super.supportsInterface(interfaceId);
     }
 
-    function _mintFor(address to, uint256 id, bytes memory blueprint) internal override {
-        blueprints[id] = blueprint;
-        _safeMint(to, id);
+    //-------------------- MUTATIVE FUNCTIONS ----------------------------------
+
+    function _mintFor(address _to, uint256 _id, bytes memory _blueprint) internal override {
+        blueprints[id] = _blueprint;
+        _safeMint(_to, _id);
     }
 }

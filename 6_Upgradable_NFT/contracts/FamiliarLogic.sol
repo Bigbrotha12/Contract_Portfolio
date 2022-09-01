@@ -14,6 +14,8 @@ import "./Library/Bytes.sol";
 contract FamiliarLogic is CommonStorage, ERC165, ERC721, IInitializable {
     using Bytes for bytes;
 
+    //----------------------- VIEW FUNCTIONS -----------------------------------
+
      /**
      * @dev See {IERC165-supportsInterface}.
      */
@@ -23,23 +25,32 @@ contract FamiliarLogic is CommonStorage, ERC165, ERC721, IInitializable {
             super.supportsInterface(interfaceId);
     }
 
-    function getTokenBlueprint(uint256 tokenId) external view returns (string memory) {
-        return string(blueprints[tokenId]); 
+    /// @notice Returns the NFT data associated with given token ID
+    /// @param _tokenId     of token data being queried.
+    function getTokenBlueprint(uint256 _tokenId) external view returns (string memory) {
+        return string(blueprints[_tokenId]); 
     }
 
+    /// @notice Returns URI of given token's image data
+    /// @param _tokenId     of token data being queried.
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
 
         string memory familiarId = blueprints[tokenId].substring(0,4);
         string memory baseURI = _baseURI();
 
-        return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, familiarId, ".png")) : "";
+        return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, "/Images/", familiarId, ".png")) : "";
     }
 
     function _baseURI() internal view override returns (string memory) {
         return rootURI;
     }
+
+    //-------------------- MUTATIVE FUNCTIONS ----------------------------------
     
+    /// @notice Allows initialization of NFT core data by proxy upgrader.
+    /// @dev Only callable from within proxy's upgradeAndInit function and only once.
+    /// @param _data    received from proxy upgrade function
     function init(bytes[] calldata _data) external {
         require(initializing, "FamiliarLogic: Unauthorized initialization");
         names = string(_data[1]);

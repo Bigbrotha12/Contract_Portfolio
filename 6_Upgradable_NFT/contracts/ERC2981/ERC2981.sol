@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts (last updated v4.7.0) (token/common/ERC2981.sol)
 pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
@@ -19,6 +18,11 @@ import "../CommonStorage.sol";
  * voluntarily pay royalties together with sales, but note that this standard is not yet widely supported.
  *
  * _Available since v4.5._
+ *
+ * Custom ERC2981 implementation based on 
+ * OpenZeppelin Contracts (last updated v4.7.0) (token/common/ERC2981.sol).
+ * Storage pattern for upgradable proxy requires no state variables
+ * defined in logic contract.
  */
 abstract contract ERC2981 is CommonStorage, IERC2981 {
 
