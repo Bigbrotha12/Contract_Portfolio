@@ -1,46 +1,62 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity >=0.8.0 <0.9.0;
 
-pragma solidity 0.8.9;
-
-import "Contract_Portfolio/node_modules/@openzeppelin/contracts/proxy/Proxy.sol";
+import "@openzeppelin/contracts/proxy/Proxy.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "./CommonStorage.sol";
 
 contract FamiliarProxy is Proxy, CommonStorage {
 
-    modifier onlyOwner() {
-        _;
+    constructor(address[] memory _routingConfig) {
+        admin = _routingConfig[0];
+        callRouting[_routingConfig[0]] = _routingConfig[1];
+        imx = _routingConfig[2];
+        callRouting[_routingConfig[2]] = _routingConfig[3];
+        callRouting[address(0)] = _routingConfig[4];
+        version[_routingConfig[4]] = "1.0.0";
     }
 
-    /* Initial initData_
-     * [0] = "1.0.0"              - version
-     * [1] = "Familiars"          - name
-     * [2] = "FML"                - symbol
-     * [3] = "https://dweb.link/ipfs/QmULobYqseNeVckNXSQEWaoX7MHn8HH9RZGhi8kpXVKrKL/Images/"
-     */
-    function init(address impl_, bytes[] calldata initData_) external onlyOwner {
-        require(!_initStatus[impl_], "Proxy: Contract already initialized");
-
-        _initStatus[impl_] = true;
-        setImplementation(impl_);
-        _version[impl_] = string(initData_[0]);
-
-        (bool success, ) = impl_.delegatecall(abi.encodeWithSignature("init(bytes[])", initData_));
-        assert(success);
+    function getVersion() external ifAdmin returns (string memory) {
+        return version[callRouting[address(0)]];
     }
 
-    function getVersion() external view returns (string memory) {
-        return _version[_implementation()];
+    function changeRouting(address _sender, address _target) external ifAdmin {
+        callRouting[_sender] = _target;
+    }
+
+    function upgradeAndInit(IERC165 _impl, bytes[] calldata _initData) external ifAdmin {
+        require(!initializing, "Proxy: Initialization in progress");
+        bool validTarget = 
+            _impl.supportsInterface(0xcca9cbe6) && 
+            _impl.supportsInterface(0x80ac58cd) && 
+            _impl.supportsInterface(0x5b5e139f);
+        require(validTarget, "Proxy: Invalid upgrade target");
+
+        initializing = true;
+        callRouting[address(0)] = address(_impl);
+        version[address(_impl)] = string(_initData[0]);
+
+        (bool success, ) = address(_impl).delegatecall(abi.encodeWithSignature("init(bytes[])", _initData));
+        require(success, "Proxy: Initialization failed");
+
+        initializing = false;
+    }
+
+    function changeAdmin(address _newAdmin) external ifAdmin {
+        admin = _newAdmin;
     }
 
     function _implementation() internal view override returns (address) {
-        return _address["implAddress"];
+        address route = callRouting[msg.sender];
+        if(route == address(0)) return callRouting[address(0)];
+        return route;
     }
 
-    function setImplementation(address implementation_) public onlyOwner {
-        _address["implAddress"] = implementation_;
-    }
-
-    function setRootURI(string calldata newURI) public onlyOwner {
-        _rootURI = newURI;
+    modifier ifAdmin() {
+        if (msg.sender == admin) {
+            _;
+        } else {
+            _fallback();
+        }
     }
 }
