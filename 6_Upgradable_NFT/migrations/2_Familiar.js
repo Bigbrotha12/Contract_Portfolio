@@ -14,13 +14,11 @@ module.exports = async function (deployer, network, accounts) {
     accounts[0],
     (await FamiliarAdmin.deployed()).address,
     accounts[1],
-    (await FamiliarIMX.deployed()).address,
-    (await FamiliarLogic.deployed()).address
+    (await FamiliarIMX.deployed()).address
   ]
   // constructor(address[] memory _routingConfig) 
   // Layout: [0] = admin, [1] = admin contract
   //         [2] = imx,   [3] = imx contract
-  //         [4] = logic contract
   await deployer.deploy(FamiliarProxy, routeConfig);
 
 };

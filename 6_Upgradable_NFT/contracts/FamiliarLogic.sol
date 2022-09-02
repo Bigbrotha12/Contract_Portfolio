@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity >=0.8.9;
 
 import "./ERC721/ERC721.sol";
+import "./ERC2981/ERC2981.sol";
 import "./CommonStorage.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "./IInitializable.sol";
@@ -11,7 +12,7 @@ import "./Library/Bytes.sol";
 /// @notice Contract implementation for NFT users
 /// @dev Logic implementation or base contracts other 
 /// @dev than CommonStorage must not declare any state variables
-contract FamiliarLogic is CommonStorage, ERC165, ERC721, IInitializable {
+contract FamiliarLogic is CommonStorage, ERC165, ERC721, ERC2981, IInitializable {
     using Bytes for bytes;
 
     //----------------------- VIEW FUNCTIONS -----------------------------------
@@ -19,15 +20,18 @@ contract FamiliarLogic is CommonStorage, ERC165, ERC721, IInitializable {
      /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721, ERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721, ERC165, IERC165) returns (bool) {
         return
             interfaceId == type(IInitializable).interfaceId ||
+            interfaceId == type(IERC2981).interfaceId ||
             super.supportsInterface(interfaceId);
     }
 
     /// @notice Returns the NFT data associated with given token ID
     /// @param _tokenId     of token data being queried.
     function getTokenBlueprint(uint256 _tokenId) external view returns (string memory) {
+        require(_exists(_tokenId), "ERC721Metadata: URI query for nonexistent token");
+
         return string(blueprints[_tokenId]); 
     }
 
