@@ -1,41 +1,22 @@
 # Smart Contract Portfolio
 
-This repository serves as reference point for useful smart contract templates, libraries, and interfaces. Contracts are based off existing smart contracts, OpenZeppelin libraries, and own development. Feel free to make use of these template or propose any improvement.
+This repository serves as reference point for base smart contract apps which can be extended to production applications. Each section is designed to showcase different technologies and target industries in the web3 space.
 
 ## Content
 
-### ERC20 Token Template
+### DeFi: Merkle Airdrop
 
-Following the popular OpenZeppelin ERC20 template, contracts/Token/basicCoin.sol implements ERC20 token ready for deployment on to mainnet. Template allows for easy customization and extensions. Current contract extensions are:
+Merkle airdrops are the next iteration of airdrop contracts and are designed to be more gas-efficient and practical than original airdrop
+implementations. The main different with Merkle airdrop is that token aidrops are claimed by users rather automatically sent to them. Hence
+gas cost is paid by the users rather than the sponsoring company. The contract uses merkle tree structure and proofs to verify each user's
+claim of the airdrop and ensures none are paid more than once.
 
-| Extension                       | Description                                                                     |
-| ------------------------------- | :------------------------------------------------------------------------------ |
-| Minting/burning                 | Allows administrator or algorithm to create/destroy tokens                      |
-| Burn-on-Transaction             | Makes token deflationary as a % of every transaction is destroyed               |
-| Oracle Request                  | Allows your token to react to external data and make API calls                  |
-| Gasless staking                 | Pioneered by reflect.finance, this distributes % of transaction to token holders|
-| Auto-liquidity                  | Allows for % of transaction to be added to liquidity pools automatically        |
+### Infrastructure: Interblockchain Bridge Gateway
 
-Got an idea or request for an extension? Let me know!
+### GameFi: Oracle-enabled Gambling dApp
 
-### Interfaces
+### DeFi: ERC20 with Fee-on-Transfer and Reflection Mechanics
 
-Common interfaces to useful Ethereum smart contracts. Among these are:
-- BandReferenceData, AggregatorV3, ChainlinkClient, and VRFConsumerBase to allow contract to query oracles
-- IERC20 for standard token interaction
-- UniswapRouter and Factory for creating liquidity pools and automatic swaps.
+### DeFi: Staking Application for ERC20 Tokens
 
-### Proxy
-
-Set of contract templates to allow for upgradeable smart contracts following the Proxy/Implementation pattern. For a quick introduction to proxy contracts, see:
-https://blog.openzeppelin.com/proxy-patterns/
-
-Storage.sol serves as a base contract for Proxy/Implementation contracts and uses mappings for storage slot management to allow for dynamic definition of variables within implementation contract and protect proxy contract from storage collisions.
-
-### Others...
-
-I have also included a simple Crowdsale and Airdrop contract based off OpenZeppelin designs. I will continue working and adding new smart contracts so feel free to check back.
-
-## Contact me
-
-Email me at firechain.contact@gmail.com
+### GameFi: Upgradable-Proxy NFT Application with Interface to IMX L2 ZK-Rollup
