@@ -48,7 +48,7 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
         stakeToken = IERC20(_stakingToken);
     }
 
-//------------------------ VIEWS -------------------------------------------
+//------------------- VIEW FUNCTIONS ----------------------------------------
 
     /// @notice Returns total number of staked tokens
     function totalStakedSupply() external view returns (uint256) {
