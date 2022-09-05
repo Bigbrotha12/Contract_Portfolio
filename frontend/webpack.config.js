@@ -11,7 +11,7 @@ module.exports = {
     entry: path.resolve(__dirname, "./src/index.tsx"),
     mode: "development",
     resolve: {
-        extensions: [".ts", ".tsx", ".js"],
+        extensions: [".ts", ".tsx", ".js", ".css"],
         fallback: {
             os: require.resolve("os-browserify/browser"),
             https: require.resolve("https-browserify"),
@@ -25,13 +25,23 @@ module.exports = {
         }
     },
     module: {
-        rules: [{
+        rules: [
+        {
             test: /\.(ts|js)x?$/,
             exclude: /node_modules/,
             use: {
                 loader: "babel-loader"
             }
-        }]
+        },
+        {
+            test: /\.css$/,
+            use: [
+                { loader: "style-loader" },
+                { loader: "css-loader", options: { modules: true } },
+                { loader: "css-modules-typescript-loader" }
+            ]
+        }
+        ]
     },
     plugins: [
         htmlPlugin,
