@@ -41,14 +41,18 @@ export default class Web3Wallet {
         }
     }
     changeChain() {
+        if(this.isConnected){
 
+        } else {
+            console.error("You must be connected to provider");
+        }
     }
     disconnect() {
-  
-    }
-    initialize() {
+        if(this.isConnected){
 
-    }
-  
+        } else {
+            console.error("You must be connected to provider");
+        }
+    }  
   }
   
