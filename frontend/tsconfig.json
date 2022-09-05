@@ -1,0 +1,26 @@
+{   
+    "compilerOptions": {
+        "target": "ES5",
+        "module": "ESNext",
+        "moduleResolution": "node",
+        "lib": [
+            "es6",
+            "DOM",
+            "ESNext"
+        ],
+        "noImplicitAny": true,
+        "noImplicitThis": true,
+        "strictNullChecks": true,
+        "jsx": "react-jsx",
+        "noEmit": true,
+        "isolatedModules": true,
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "resolveJsonModule": true,
+        "allowJs": true,
+        "types": ["node", "react", "react-dom"]
+    },
+    "include": ["src/**/*"]
+    
+}
