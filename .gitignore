@@ -4,6 +4,9 @@ build
 #dependencies
 node_modules
 
+#constants
+Constants
+
 #config
 package-lock.json
 package.json
