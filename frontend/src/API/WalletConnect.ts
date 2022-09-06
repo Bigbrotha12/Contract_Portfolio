@@ -16,12 +16,8 @@ async function WalletConnect() {
   if(!provider.connected) {
     // Enable session (triggers QR Code modal)
     // Returns array of accounts available
-    provider.enable()
-    .then(accounts => {
-      console.log(provider);
-      return provider;
-    })
-    .catch(error => alert(error));
+    await provider.enable();
+    return provider;
   } else {
     alert("Already connected");
     console.log("Connected Accounts: ", provider.accounts[0]);

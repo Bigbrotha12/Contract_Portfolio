@@ -1,6 +1,6 @@
 import MetamaskConnect from "./Metamask";
 import WalletConnect from "./WalletConnect";
-import { WalletType } from "../Constants/Web3Enums";
+import { WalletType } from "../Constants/Web3Types";
 
 export default class Web3Wallet {
     constructor() {
@@ -16,7 +16,6 @@ export default class Web3Wallet {
     async connect(wallet: WalletType) {
         switch (wallet) {
             case WalletType.METAMASK:
-                console.log("Triggered Metamask");
                 this.provider = await MetamaskConnect();
                 if(this.provider) {
                     this.walletType = WalletType.METAMASK;
@@ -24,11 +23,10 @@ export default class Web3Wallet {
                     this.account = (this.provider as any).selectedAddress;
                     this.chainId = parseInt((this.provider as any).chainId, 16);
                 } else {
-                    console.error("Connection Error")
+                    console.error("MT: Connection Error");
                 }
                 break;
             case WalletType.WALLETCONNECT:
-                console.log("Triggered WalletConnect");
                 this.provider = await WalletConnect();
                 if(this.provider) {
                     this.walletType = WalletType.WALLETCONNECT;
@@ -36,11 +34,10 @@ export default class Web3Wallet {
                     this.account = (this.provider as any).accounts[0];
                     this.chainId = (this.provider as any).chainId;
                 } else {
-                    console.error("Connection Error")
+                    console.log(this.provider);
                 }
                 break;
             default:
-                console.log("Triggered Default");
                 console.error("Unsupported Wallet Type");
         }
     }

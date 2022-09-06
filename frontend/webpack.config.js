@@ -37,9 +37,15 @@ module.exports = {
             test: /\.css$/,
             use: [
                 { loader: "style-loader" },
-                { loader: "css-loader", options: { modules: true } },
-                { loader: "css-modules-typescript-loader" }
+                { loader: "css-modules-typescript-loader" },
+                { loader: "css-loader", options: { modules: true } }
             ]
+        },
+        {
+            test: /\.svg?$/,
+            use: {
+                loader: "svg-url-loader"
+            }
         }
         ]
     },

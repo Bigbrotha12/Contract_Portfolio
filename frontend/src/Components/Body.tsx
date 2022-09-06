@@ -1,5 +1,12 @@
+import { SetStateAction } from "react";
 
-function Body() {
+interface BodyProps {
+    contractState: {},
+    contractSetting: React.Dispatch<SetStateAction<{}>>
+}
+
+export default function Body(props: BodyProps) {
+
     return ( 
         <div>
             <p> This is the body</p>
@@ -7,4 +14,3 @@ function Body() {
      );
 }
 
-export default Body;

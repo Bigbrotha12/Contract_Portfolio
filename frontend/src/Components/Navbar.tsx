@@ -1,11 +1,14 @@
-import React from 'react'
+import { Divider, Link } from "../Material/Material";
+import styles from "../styling.module.css";
 
 export default function Navbar() {
   return (
-    <div>
-        <a>Home</a>
-        <a>About</a>
-        <a>Github</a>
+    <div className={styles.navbar}>
+        <Link className={styles.navItem} variant="h6" color="primary" underline="hover">Home</Link>
+        <Divider orientation="vertical" flexItem />
+        <Link className={styles.navItem} variant="h6" color="primary" underline="hover">About</Link>
+        <Divider orientation="vertical" flexItem />
+        <Link className={styles.navItem} variant="h6" color="primary" underline="hover">Github</Link>
     </div>
   )
 }
