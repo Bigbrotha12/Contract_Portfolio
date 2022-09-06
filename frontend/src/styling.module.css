@@ -86,3 +86,16 @@
     padding-right: 10px;
     justify-content: flex-end;
 }
+
+.bodyContainer {
+    margin-top: 20px;
+    background-color: aliceblue;
+    padding-left: 20px;
+    padding-right: 20px;
+    height: 600px;
+}
+
+.bodyGrid {
+    height: 100%;
+    align-items: center;
+}
