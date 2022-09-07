@@ -12,7 +12,7 @@ type AppState = {
 
 export default function App() {
     const queryClient = new QueryClient();
-    const [wallet, setWallet] = React.useState({});
+    const [wallet, setWallet] = React.useState(new Web3Wallet);
     const [contract, setContract] = React.useState({});
  
     return (

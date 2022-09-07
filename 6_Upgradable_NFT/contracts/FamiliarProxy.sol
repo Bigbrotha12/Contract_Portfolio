@@ -96,6 +96,14 @@ contract FamiliarProxy is Proxy, CommonStorage {
         emit adminChanged(oldAdmin, _newAdmin);
     }  
 
+    /// @notice Renounces administrator rights forever
+    function renounceAdmin() external ifAdmin {
+        address oldAdmin = admin;
+        admin = address(0);
+        callRouting[oldAdmin] = address(0);
+        emit adminChanged(oldAdmin, address(0));
+    }  
+
     /// @notice Updates routing configuration for special roles
     /// @dev Default routes should only be updated via upgradeAndInit function.
     /// @dev Hence, _sender cannot be address(0).

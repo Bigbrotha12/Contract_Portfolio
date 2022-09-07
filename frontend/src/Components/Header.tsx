@@ -10,18 +10,37 @@ import MetaIcon from "../Icons/metamask-fox.svg";
 import WCIcon from "../Icons/walletconnect.svg";
 
 interface HeaderProps {
-  walletState: {},
-  walletSetting: React.Dispatch<SetStateAction<{}>>
+  walletState: Web3Wallet,
+  walletSetting: React.Dispatch<SetStateAction<Web3Wallet>>
 }
 
 export default function Header(props: HeaderProps) {
   const [modalOpen, setModalOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    props.walletState.provider?.on("connect", handleWeb3Event);           // returns chainId: string
+    props.walletState.provider?.on("accountsChanged", handleWeb3Event);   // returns accounts: Array<string>
+    props.walletState.provider.on("chainChanged", handleWeb3Event);       // returns chainId: string
+    props.walletState.provider.on("disconnect", handleWeb3Event);         // returns void | error
+
+    return (() => {
+      props.walletState.provider.removeListeners("connect", handleWeb3Event);
+      props.walletState.provider.removeListeners("accountsChanged", handleWeb3Event);
+      props.walletState.provider.removeListeners("chainChanged", handleWeb3Event);
+      props.walletState.provider.removeListeners("disconnect", handleWeb3Event);
+    })
+
+  },[props.walletState.provider]);
 
   async function connectWeb3(type: WalletType) {
     let wallets = new Web3Wallet();
     await wallets.connect(type);
     props.walletSetting(wallets);
     setModalOpen(false);
+  }
+
+  function handleWeb3Event(args: any) {
+    console.log(args);
   }
 
   return (

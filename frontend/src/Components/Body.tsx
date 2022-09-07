@@ -1,4 +1,5 @@
 import { SetStateAction } from "react";
+import { Contract } from "../Constants/Web3Types";
 import { Grid, Item, Card, CardHeader, CardContent, Typography } from "../Material/Material";
 import style from "../styling.module.css";
 
