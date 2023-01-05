@@ -8,11 +8,7 @@ node_modules
 Constants
 
 #config
-package-lock.json
-package.json
 truffle-config.js
 .secret
 .env
-env.*
-.DS_Store
-
+**/.DS_Store

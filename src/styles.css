@@ -1,0 +1,18 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+@layer base {
+    html {
+      font-family: Arbutus Slab, Inter, Verdana, sans-serif;
+    }
+}
+
+/*
+Reference Pallette
+Dark - Dark Liver [#484041]
+Primary - Purple Navy [#434371]
+Secondary - Green Sheen [#79AEA3]
+Highlight1 - Light Green [#70EE9C]
+Highlight2 - Green Lizard [#B5F44A]
+*/
