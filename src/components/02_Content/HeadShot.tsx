@@ -5,7 +5,7 @@ import Material from '../../assets/Material';
 export default function HeadShot()
 {
     return (
-        <div className='h-[800px] flex justify-end'>
+        <div className='h-[900px] flex justify-end'>
             <div className='w-full pr-auto pl-[32px] my-auto z-10'>
                 <Material.Typography sx={{fontFamily: 'inherit'}} variant='h3'>
                     I'm Rafael <br /> Mendoza
@@ -14,8 +14,8 @@ export default function HeadShot()
                     and I'm a Blockchain Developer
                 </Material.Typography>
             </div>
-            <div className='absolute w-4/5 z-0'>
-                <img src={FaceShot} />
+            <div className='absolute'>
+                <img src={FaceShot} height='800px' width='800px' />
             </div>
         </div>
     )

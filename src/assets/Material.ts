@@ -26,6 +26,10 @@ import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
 import Avatar from "@mui/material/Avatar";
 import IconButton from "@mui/material/IconButton";
+import TextField from "@mui/material/TextField";
+import FormControl from "@mui/material/FormControl";
+import FormGroup from "@mui/material/FormGroup";
+import InputLabel from "@mui/material/InputLabel";
 
 import ExpandLessRounded from "@mui/icons-material/ExpandLessRounded";
 import ExpandMoreRounded from "@mui/icons-material/ExpandMoreRounded";
@@ -66,6 +70,10 @@ export default {
     CircularProgress,
     Avatar,
     IconButton,
+    TextField,
+    FormControl,
+    FormGroup,
+    InputLabel,
 
     ExpandMoreRounded,
     ExpandLessRounded,

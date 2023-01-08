@@ -1,6 +1,6 @@
-export type LinkButton =
+export type Content =
 {
-    label: string,
-    icon: string | null,
-    link: string | null
+        title: string,
+        icon: string | null,
+        content: string
 }

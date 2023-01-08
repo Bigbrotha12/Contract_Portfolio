@@ -1,15 +1,30 @@
 import React from 'react';
+import Material from '../../assets/Material';
+import { Content } from '../00_Common/Definitions';
 
-export default function Skills()
+export default function Skills(props: { title: string, content: Array<Content> })
 {
     return (
-        <div>
-            <div id="TitleLabel" className='w-full py-[48px]'>
-                Skills and Tech Stack
+        <div className='bg-[#242424] text-white'>
+            <div id="TitleLabel" className='py-[48px] px-auto'>
+                <Material.Typography sx={{ fontFamily: 'inherit', textAlign: 'center' }} variant='h3' >
+                    {props.title}
+                </Material.Typography>
             </div>
 
-            <div className=' bg-[#242424] h-[300px] px-auto'>
-            
+            <div className='py-[48px] px-auto '>
+                <Material.Grid sx={{margin: '0px', paddingX: '10%'} } container spacing={2}>
+                {
+                    props.content.map(content => {
+                        return (
+                            <Material.Grid key={content.title} sm={3}>
+                                {content.title}
+                                {content.content}
+                            </Material.Grid>
+                        )
+                    })
+                }
+                </Material.Grid>
             </div>
         </div>
     )

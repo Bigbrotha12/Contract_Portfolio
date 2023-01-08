@@ -1,57 +1,37 @@
 import React from 'react';
 import Material from '../../assets/Material';
+import { Content } from '../00_Common/Definitions';
 
-export default function Services()
+export default function Services(props: {title: string, content: Array<Content>})
 {
     return (
         <div>
-            <div id='TitleLabel' className='py-[48px] px-auto'>
+            <div id='TitleLabel' className='py-[32px] px-auto'>
                 <Material.Typography sx={{ fontFamily: 'inherit', textAlign: 'center' }} variant='h3' >
-                    I can help you with...
+                    {props.title}
                 </Material.Typography>
             </div>
 
             <div id='ServicesGrid'>
                 <Material.Grid container sx={{margin: '0px', padding: '12px'} } spacing={4}>
-                    <Material.Grid sm={6}>
-                        <Material.Card>
-                            <Material.CardHeader
-                                avatar={<Material.Avatar sx={{ bgColor: 'red' }} />}
-                                title="TITLE ONE"
-                            />
-                            <Material.CardContent>
-                                <Material.Typography>
-                                    ServiceOne Content
-                                </Material.Typography>
-                            </Material.CardContent>
-                        </Material.Card>
-                    </Material.Grid>
-                    <Material.Grid sm={6}>
-                        <Material.Card>
-                            <Material.CardHeader
-                                avatar={<Material.Avatar sx={{ bgColor: 'red' }} />}
-                                title="TITLE ONE"
-                            />
-                            <Material.CardContent>
-                                <Material.Typography>
-                                    ServiceOne Content
-                                </Material.Typography>
-                            </Material.CardContent>
-                        </Material.Card>
-                    </Material.Grid>
-                    <Material.Grid sm={6}>
-                        <Material.Card>
-                            <Material.CardHeader
-                                avatar={<Material.Avatar sx={{ bgColor: 'red' }} />}
-                                title="TITLE ONE"
-                            />
-                            <Material.CardContent>
-                                <Material.Typography>
-                                    ServiceOne Content
-                                </Material.Typography>
-                            </Material.CardContent>
-                        </Material.Card>
-                    </Material.Grid>
+                    {
+                        props.content.map((card) => {
+                            return (
+                                <Material.Grid key={card.title} sm={6}>
+                                    <Material.Card >
+                                        <Material.CardHeader
+                                            avatar={<Material.Avatar sx={{ bgcolor: 'rgb(30,100,80)' }}> </Material.Avatar>}
+                                            titleTypographyProps={{ fontSize: '24px', fontFamily: 'inherit' }}
+                                            title={card.title}
+                                        />
+                                        <Material.CardContent>
+                                            {card.content}
+                                        </Material.CardContent>
+                                    </Material.Card>
+                                </Material.Grid>
+                            )
+                        })
+                    }
                 </Material.Grid>
             </div>
         </div>

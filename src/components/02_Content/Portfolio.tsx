@@ -1,63 +1,32 @@
 import React from 'react';
 import Material from '../../assets/Material';
+import { Link } from 'react-router-dom';
+import { Content } from '../00_Common/Definitions';
 
-export default function Portfolio()
+export default function Portfolio(props: { title: string, content: Array<Content> })
 {
     return (
-        <div>
+        <div className='bg-[#242424] text-white'>
             <div id='TitleLabel' className='w-full py-[48px]'>
                 <Material.Typography sx={{ fontFamily: 'inherit', textAlign: 'center'}} variant='h3'>
-                    My Portfolio
+                    {props.title}
                 </Material.Typography>
             </div>
 
-            <div className=' bg-[#242424] h-[300px] px-auto'>
+            <div className='py-[32px] px-auto'>
                 <div className='m-auto p-[24px] w-[600px] overflow-y-hidden overflow-x-scroll whitespace-nowrap'>
-                    <Material.Card sx={{display: 'inline-block', width: '120px', height: '120px', margin: '12px'}}>
-                        Card 1
-                    </Material.Card>
-                    <Material.Card sx={{display: 'inline-block', width: '120px', height: '120px', margin: '12px'}}>
-                        Card 1
-                    </Material.Card>
-                    <Material.Card sx={{display: 'inline-block', width: '120px', height: '120px', margin: '12px'}}>
-                        Card 1
-                    </Material.Card>
-                    <Material.Card sx={{display: 'inline-block', width: '120px', height: '120px', margin: '12px'}}>
-                        Card 1
-                    </Material.Card>
-                    <Material.Card sx={{display: 'inline-block', width: '120px', height: '120px', margin: '12px'}}>
-                        Card 1
-                    </Material.Card>
-                    <Material.Card sx={{display: 'inline-block', width: '120px', height: '120px', margin: '12px'}}>
-                        Card 1
-                    </Material.Card>
-                    <Material.Card sx={{display: 'inline-block', width: '120px', height: '120px', margin: '12px'}}>
-                        Card 1
-                    </Material.Card>
-                    <Material.Card sx={{display: 'inline-block', width: '120px', height: '120px', margin: '12px'}}>
-                        Card 1
-                    </Material.Card>  
-                    <Material.Card sx={{display: 'inline-block', width: '120px', height: '120px', margin: '12px'}}>
-                        Card 1
-                    </Material.Card>
-                    <Material.Card sx={{display: 'inline-block', width: '120px', height: '120px', margin: '12px'}}>
-                        Card 1
-                    </Material.Card>
-                    <Material.Card sx={{display: 'inline-block', width: '120px', height: '120px', margin: '12px'}}>
-                        Card 1
-                    </Material.Card>
-                    <Material.Card sx={{display: 'inline-block', width: '120px', height: '120px', margin: '12px'}}>
-                        Card 1
-                    </Material.Card>
-                    <Material.Card sx={{display: 'inline-block', width: '120px', height: '120px', margin: '12px'}}>
-                        Card 1
-                    </Material.Card>
-                    <Material.Card sx={{display: 'inline-block', width: '120px', height: '120px', margin: '12px'}}>
-                        Card 1
-                    </Material.Card>
-                    <Material.Card sx={{display: 'inline-block', width: '120px', height: '120px', margin: '12px'}}>
-                        Card 1
-                    </Material.Card>
+                    {
+                        props.content.map(content => {
+                            return (
+                                <Link to={content.content}>
+                                    <Material.Card key={content.title} sx={{ display: 'inline-block', width: '320px', height: '320px', margin: '12px' }}>
+                                        <Material.CardHeader title={content.title} />
+                                        <Material.CardMedia image={content.icon ? content.icon : '' } />
+                                    </Material.Card>
+                                </Link>
+                            )
+                        })
+                    }
                 </div>
             </div>
             
