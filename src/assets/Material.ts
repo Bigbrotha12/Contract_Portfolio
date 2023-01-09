@@ -30,6 +30,9 @@ import TextField from "@mui/material/TextField";
 import FormControl from "@mui/material/FormControl";
 import FormGroup from "@mui/material/FormGroup";
 import InputLabel from "@mui/material/InputLabel";
+import Icon from '@mui/material/Icon';
+import Select from '@mui/material/Select';
+import Modal from '@mui/material/Modal';
 
 import ExpandLessRounded from "@mui/icons-material/ExpandLessRounded";
 import ExpandMoreRounded from "@mui/icons-material/ExpandMoreRounded";
@@ -38,6 +41,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import PlayArrow from "@mui/icons-material/PlayArrow";
 import Close from "@mui/icons-material/Close";
 import MoreVertIcon from '@mui/icons-material/MoreVert'
+import CircleIcon from '@mui/icons-material/Circle';
 
 import styled from '@mui/material/styles/styled';
 
@@ -74,6 +78,9 @@ export default {
     FormControl,
     FormGroup,
     InputLabel,
+    Icon,
+    Select,
+    Modal,
 
     ExpandMoreRounded,
     ExpandLessRounded,
@@ -82,6 +89,7 @@ export default {
     PlayArrow,
     Close,
     MoreVertIcon,
+    CircleIcon,
 
     styled
 }
