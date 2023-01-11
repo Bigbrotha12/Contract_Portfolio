@@ -1,29 +1,58 @@
 import React from 'react';
-import { IndexedCallback } from '../00_Common/Definitions';
+import { AppConnectionData, Network, Contract } from '../00_Common/Definitions';
 import APIStatus from './components/APIStatus';
 import Connector from './components/Connector';
+import TestBalance from './components/TestBalance';
 import Account from './components/Account';
-import Selector from './components/Selector';
+import ContractSelector from './components/ContractSelector';
+import NetworkSelector from './components/NetworkSelector';
+import { Networks, Contracts } from "../00_Common/Networks";
 
-export default function W3Header()
+import { ControllerContext } from '../../state/AppContext';
+import IController from '../../app/IController';
+
+export default function W3Header(props: {connection: AppConnectionData, setConnection: React.Dispatch<React.SetStateAction<AppConnectionData | null>>})
 {
-    const Contractcallback: IndexedCallback = (index: number) =>
-    {
-        console.log('Callback received: ' + index);
+    const controller = React.useContext<IController>(ControllerContext); 
+    
+    const ContractCallback = (contract: Contract) => {
+        console.log('Selected: ' + contract.name);
+        props.setConnection({...props.connection, contract: contract});
     }
 
-    const Networkcallback: IndexedCallback = (index: number) =>
+    const NetworkCallback = (network: Network) => {
+        console.log('Selected: ' + network.name);
+        props.setConnection({ ...props.connection, network: network });
+    }
+
+    async function WalletConnect()
     {
-        console.log('Callback received: ' + index);
+        
+        let address = await controller.RequestConnection();
+        let network = await controller.GetNetwork();
+       
+        console.log(network);
+        if (address && network)
+        {
+            props.setConnection({...props.connection, account: address, network: network});
+            console.log("Connected to account: " + address);
+            console.log("Network ID: " + network.hexID);
+        } else
+        {
+            console.log("Connection error. Account: " + address + "\nNetwork: " + network);    
+        }
     }
 
     return (
-        <div className='flex py-[12px] shadow-md'>
-            <APIStatus />
-            <Selector title='Contract' options={['NFT', 'Bridge', 'ERC20']} callback={Contractcallback} />
+        <div className='bg-white flex py-[12px] shadow-md'>
+            <APIStatus connected={controller.ConnectionStatus() ? true : false} />
+            <ContractSelector title='Contract' selected={props.connection?.contract} options={Contracts} callback={ContractCallback} />
             <div className='m-auto' />
-            <Selector title='Network' options={['Ethereum', 'Binance', 'Goerli']} callback={Networkcallback} />
-            <Account account='0x99C5ED73841f0d652D56e5616e4b2Db6996c9707' />
+            <TestBalance />
+            <NetworkSelector title='Network' selected={props.connection?.network} options={Networks} callback={NetworkCallback} />
+            {
+                props.connection?.account ? <Account account={props.connection.account} /> : <Connector accountConnect={WalletConnect} />
+            }
         </div>
     )
 }

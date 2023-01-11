@@ -25,15 +25,18 @@ contract AirdropClaim {
 
   //--------------------  CONSTRUCTOR ----------------------------------------
 
-  /// @notice Creates a new AirdropClaim contract
-  /// @param _merkleRoot of claimees
-  /// @param _tokenAddress address of token to be airdropped
-  /// @param _deadline number of blocks airdrop will be active
-  constructor(bytes32 _merkleRoot, address _tokenAddress, uint256 _deadline) {
-    merkleRoot = _merkleRoot;                
-    airdropToken = IERC20(_tokenAddress);   
-    deadline = block.number + _deadline;  
-    owner = msg.sender;                     
+  /// notice Creates a new AirdropClaim contract
+  /// param _merkleRoot of claimees
+  /// param _tokenAddress address of token to be airdropped
+  /// param _deadline number of blocks airdrop will be active
+  // constructor(bytes32 _merkleRoot, address _tokenAddress, uint256 _deadline) {
+  //   merkleRoot = _merkleRoot;                
+  //   airdropToken = IERC20(_tokenAddress);   
+  //   deadline = block.number + _deadline;  
+  //   owner = msg.sender;                     
+  // }
+  constructor() {
+                       
   }
 
   //-------------------- MUTATIVE FUNCTIONS ----------------------------------

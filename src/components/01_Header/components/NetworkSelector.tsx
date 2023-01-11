@@ -1,15 +1,18 @@
 import React from 'react';
 import Material from '../../../assets/Material';
-import { IndexedCallback } from '../../00_Common/Definitions';
+import { Network } from '../../00_Common/Definitions';
 
-export default function Selector(props: {title: string, options: Array<string>, callback: IndexedCallback})
-{
-    const [selection, setSelection] = React.useState(0);
-    
+export default function Selector(props: {title: string, selected: {name: string}, options: Array<Network>, callback: (network: Network) => void})
+{ 
+    const [selection, setSelection] = React.useState<number>(0);
     const handleSelection = (event) =>
     {
-        setSelection(event.target.value);
-        props.callback(event.target.value);
+        let index = event.target.value;
+        if (index < props.options.length)
+        {
+            setSelection(index);
+            props.callback(props.options[index]);
+        }
     }
 
     return (
@@ -25,7 +28,7 @@ export default function Selector(props: {title: string, options: Array<string>, 
                     {
                         props.options.map((option, index) => {
                             return (
-                                <Material.MenuItem key={option} value={index}>{option}</Material.MenuItem>
+                                <Material.MenuItem key={option.name} value={index}>{option.name}</Material.MenuItem>
                             )
                         })
                     }

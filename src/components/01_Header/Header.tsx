@@ -9,7 +9,7 @@ export default function Header(props: {items: Array<Content>})
             
             {
                 props.items.map((headerItem, index) => {
-                    return <Material.Link key={index} sx={{ marginTop: 'auto', color: 'white', fontSize: Math.floor(props.items.length / 2) == index ? '32px' : '16px'}} href={headerItem.content || ''} underline='hover' color='primary'>{headerItem.title}</Material.Link>
+                    return <Material.Link key={headerItem.title} sx={{ marginTop: 'auto', color: 'white', fontSize: Math.floor(props.items.length / 2) == index ? '32px' : '16px'}} href={headerItem.content || ''} underline='hover' color='primary'>{headerItem.title}</Material.Link>
                 })
             }
             

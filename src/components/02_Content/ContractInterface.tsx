@@ -1,15 +1,15 @@
 import React from 'react';
 import Material from '../../assets/Material';
+import { ABIItem } from '../00_Common/Definitions';
+import Airdrop from './contractComponents/Airdrop';
 
-export default function ContractInterface()
+export default function ContractInterface(props: { abi: Array<ABIItem> })
 {
     return (
-        <div>
+        <div className='w-full'>
             <Material.Card>
                 <Material.CardHeader title="Contract Interface" />
-                <Material.CardContent>
-                    ABI Interface
-                </Material.CardContent>
+                <Airdrop recipientCount={2} />
             </Material.Card>
         </div>
     )

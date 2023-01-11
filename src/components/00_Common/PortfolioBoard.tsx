@@ -6,7 +6,10 @@ import ContractInterface from '../02_Content/ContractInterface';
 import EventTracker from '../02_Content/EventTracker';
 import { Content } from './Definitions';
 
-export default function PortfolioBoard()
+// ABI
+import Airdrop from '../../../contracts/1_Airdrop/build/contracts/AirdropClaim.json';
+
+export default function PortfolioBoard(props: {connection, setConnection})
 {
     const headerItem: Array<Content> = [
         { title: 'Home', icon: null, content: "" },
@@ -19,12 +22,12 @@ export default function PortfolioBoard()
     ]
     
     return (
-        <div className='w-full'>
+        <div className='w-full min-h-screen bg-[#c5c5c5]'>
             <Header items={headerItem} />
-            <W3Header />
+            <W3Header connection={props.connection} setConnection={props.setConnection} />
             <InfoBanner />
-            <div className='flex justify-center'>
-                <ContractInterface />
+            <div className='flex justify-center w-[80%] mx-auto'>
+                <ContractInterface abi={Airdrop.abi} />
                 <EventTracker />
             </div>
         </div>

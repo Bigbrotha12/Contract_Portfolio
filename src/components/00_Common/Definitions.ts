@@ -5,4 +5,36 @@ export type Content =
         content: string
 }
 
-export type IndexedCallback = (index: number) => void;
+export type ABIItem =
+{
+        name?: string,
+        inputs?: Array<{name: string, type: string}>,
+        outputs?: Array<{name: string, type: string}>,
+        stateMutability?: "view" | "payable" | "nonpayable" | string,
+        type: "function" | "event" | "constructor" | string
+}
+
+export type AppConnectionData =
+{
+        account: string,
+        network: Network,
+        contract: Contract
+}
+
+export type Contract = 
+{
+        name: string,
+        address: string,
+        abi: Array<ABIItem>
+}
+
+export type Network =
+{
+        name: string,
+        id: number,
+        hexID: string,
+        explorer: string,
+        availableContracts: Array<Contract> | null,
+        rpcUrl: string
+}
+       
