@@ -7,11 +7,12 @@ import { ControllerContext } from './state/AppContext';
 import Layout from './components/00_Common/Layout';
 import PortfolioBoard from './components/00_Common/PortfolioBoard';
 import { AppConnectionData } from './components/00_Common/Definitions';
+import { Contracts, Networks } from './components/00_Common/Networks';
 
 export default function App()
 {
     const controller: IController = new AppController();
-    const [connection, setConnection] = React.useState<AppConnectionData | null>(null);
+    const [connection, setConnection] = React.useState<AppConnectionData>({account: '', contract: Contracts[0], network: Networks[0]});
     
     return (
         <div className='flex w-full'>

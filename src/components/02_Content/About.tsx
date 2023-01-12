@@ -2,10 +2,10 @@ import React from 'react';
 import Material from '../../assets/Material';
 import { Content } from '../00_Common/Definitions';
 
-export default function About(props: {title: string, content: Array<Content>})
+export default function About(props: {title: string, id: string, content: Array<Content>})
 {
     return (
-        <div className='py-[100px] px-[16px] min-h-[300px]'>
+        <div className='pt-[80px] pb-[48px] px-[16px] min-h-[300px]' id={props.id}>
             <div id="TitleLabel" className='py-[48px] px-auto'>
                 <Material.Typography sx={{ fontFamily: 'inherit', textAlign: 'center' }} variant='h3'>
                     {props.title}
@@ -19,7 +19,7 @@ export default function About(props: {title: string, content: Array<Content>})
                             return (
                                 <Material.Grid key={card.title} sm={4}>
                                     <Material.Card>
-                                        {card.icon && <Material.CardMedia image={card.icon} />}
+                                        {card.icon && <Material.CardMedia component='img' src={card.icon} />}
                                         <Material.CardContent>{card.content}</Material.CardContent>
                                     </Material.Card>
                                 </Material.Grid>

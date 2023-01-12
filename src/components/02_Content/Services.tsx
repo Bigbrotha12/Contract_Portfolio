@@ -2,11 +2,11 @@ import React from 'react';
 import Material from '../../assets/Material';
 import { Content } from '../00_Common/Definitions';
 
-export default function Services(props: {title: string, content: Array<Content>})
+export default function Services(props: {title: string, id:string, content: Array<Content>})
 {
     return (
-        <div>
-            <div id='TitleLabel' className='py-[32px] px-auto'>
+        <div className='pt-[80px] pb-[48px] px-auto' id={props.id}>
+            <div>
                 <Material.Typography sx={{ fontFamily: 'inherit', textAlign: 'center' }} variant='h3' >
                     {props.title}
                 </Material.Typography>

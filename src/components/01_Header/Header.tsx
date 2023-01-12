@@ -2,10 +2,10 @@ import React from 'react';
 import Material from '../../assets/Material';
 import { Content } from '../00_Common/Definitions';
 
-export default function Header(props: {items: Array<Content>})
+export default function Header(props: { items: Array<Content>, id: string})
 {
     return (
-        <div className='bg-[#242424] text-white py-[12px] flex justify-evenly w-full min-h-[48px]'>
+        <div id={props.id} className='bg-[#242424] text-white py-[12px] flex justify-evenly w-full min-h-[48px] sticky top-0 z-10'>
             
             {
                 props.items.map((headerItem, index) => {

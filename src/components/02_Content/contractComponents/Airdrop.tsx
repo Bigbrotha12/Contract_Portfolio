@@ -6,12 +6,11 @@ import Merkle from '../../../../contracts/1_Airdrop/scripts/merkleRootCalculator
 export default function Airdrop(props: {recipientCount: number})
 {
     const { register, handleSubmit } = useForm();
-    function handleInputSubmit(e: React.FormEventHandler<HTMLFormElement> | any)
+    function handleInputSubmit(data)
     {
-        e.preventDefault();
-        console.log(e);
-        
+        console.log(data);
     }
+    
     function prepareRoot(data)
     {
         let sample = [
@@ -31,7 +30,7 @@ export default function Airdrop(props: {recipientCount: number})
             <Material.CardContent>
                 <>
                 {/* Airdrop Recipients Input + Deployment */}
-                <form className='pb-[12px]' onSubmit={handleSubmit((data) => console.log(data))}>
+                <form className='pb-[12px]' onSubmit={handleSubmit(handleInputSubmit)}>
                 <Material.Typography sx={{paddingTop: '12px'}}>Recipients</Material.Typography>
                 <Material.Divider />
                 {

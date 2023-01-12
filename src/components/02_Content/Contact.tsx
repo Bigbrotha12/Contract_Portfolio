@@ -3,11 +3,11 @@ import { Content } from '../00_Common/Definitions';
 import Material from '../../assets/Material';
 import { width } from '@mui/system';
 
-export default function Contact()
+export default function Contact(props: {id: string})
 {
     return (
-        <div>
-            <div id="TitleLabel" className='py-[48px] px-auto'>
+        <div id={props.id} className='pt-[80px] pb-[48px] px-auto'>
+            <div>
                 <Material.Typography sx={{ fontFamily: 'inherit', textAlign: 'center' }} variant='h3'>
                     Contact Me
                 </Material.Typography>

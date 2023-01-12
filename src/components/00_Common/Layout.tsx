@@ -1,5 +1,7 @@
 import React from 'react';
 import { Content } from './Definitions';
+
+// Components
 import Header from '../01_Header/Header';
 import HeadShot from '../02_Content/HeadShot';
 import Services from '../02_Content/Services';
@@ -9,16 +11,21 @@ import Skills from '../02_Content/Skills';
 import Contact from '../02_Content/Contact';
 import Footer from '../03_Footer/Footer';
 
+// Images
+import AboutImage from '../../assets/images/Andorra.png';
+import DAppImage from '../../assets/images/dapp0.jpeg';
+import CodeImage from '../../assets/images/Solidity.jpeg';
+
 export default function Layout()
 {
     const headerItem: Array<Content> = [
-        { title: 'Home', icon: null, content: "" },
-        { title: 'Services', icon: null, content: "" },
-        { title: 'About', icon: null, content: "" },
-        { title: 'Rafael', icon: null, content: "" },
-        { title: 'Portfolio', icon: null, content: "" },
-        { title: 'Skills', icon: null, content: "" }, 
-        { title: 'Contact', icon: null, content: "" }
+        { title: 'Home', icon: null, content: "#head" },
+        { title: 'Services', icon: null, content: "#services" },
+        { title: 'About', icon: null, content: "#about" },
+        { title: 'Rafael', icon: null, content: "#head" },
+        { title: 'Portfolio', icon: null, content: "#portfolio" },
+        { title: 'Skills', icon: null, content: "#skills" }, 
+        { title: 'Contact', icon: null, content: "#contact" }
     ]
     const servicesContent: Array<Content> = [
         { title: 'Smart Contract Design', icon: null, content: 'I will design, write, and deploy smart contracts for Ethereum, Binance Smart Chain, or other EVM-compatible blockchains according to your user requirement. Smart contracts will be developed in accordance with latest security recommendations' },
@@ -32,36 +39,39 @@ export default function Layout()
         {
             title: 'Card 1', icon: null, content:
                 `Born and raised in the Dominican Republic. I studied in the International Business master program at the University of Florida and worked for a large multinational company as Accountant/Controller for the past 7 years. 
-                Thanks to this I was able to travel and live abroad while learning new cultures and ways of life. So far, I have lived in 5 different countries and visited over 30 different others. If I\'m not coding or traveling, you can find me playing a game of chess with friends over a cup of coffee.`
+                Thanks to this I was able to travel and live abroad while learning new cultures and ways of life. So far, I have lived in 5 different countries and visited over 30 different others. If I\'m not coding or traveling, you can find me playing a board game with friends over a cup of coffee.`
         },
-        { title: 'Card 2', icon: 'picture', content: '' },
+        { title: 'Card 2', icon: AboutImage, content: 'Andorra' },
         {
             title: 'Card 3', icon: null, content:
-                `Once I learned about Blockchain and became involved in the decentralized application space (mainly DeFi), I was intrigued about the possibilities and decided to make a career change into blockchain development. 
-                I have been studying all I can about blockchain technology, DeFi space, and Solidity/Web3 development and began my journey into the industry. I truly believe this technology will revolutionize the way we interact with each other and I want to be a part of that.`
+                "Once I learned about Blockchain and became involved in the decentralized application space (mainly DeFi), I was intrigued about the possibilities and decided to make a career change into blockchain development. \n \
+                I have been studying all I can about blockchain technology, DeFi space, and Solidity/Web3 development and began my journey into the industry. I truly believe this technology will revolutionize the way we interact with each other and I want to be a part of that."
         },
     ]
     const portfolioContent: Array<Content> = [
-        { title: 'ERC20', icon: null, content: ''},
-        { title: 'Bridge', icon: 'picture', content: '' },
+        { title: 'DApp Demo', icon: DAppImage, content: '/portfolio#top'},
+        { title: 'Code Repositories', icon: CodeImage, content: 'https://github.com/Bigbrotha12?tab=repositories' },
         { title: 'NFT', icon: null, content: '' }
     ]
     const skillContent: Array<Content> = [
         { title: 'Typescript', icon: null, content: '' },
-        { title: 'Solidity', icon: 'picture', content: '' },
         { title: 'C#', icon: null, content: '' },
         { title: 'Rust', icon: null, content: '' },
+        { title: 'React', icon: null, content: '' },
+        { title: 'MongoDB', icon: 'picture', content: '' },
+        { title: 'AWS', icon: 'picture', content: '' },
+        { title: 'Solidity', icon: 'picture', content: '' },
     ]
 
     return (
         <div className='w-full'>
-            <Header items={headerItem} />
-            <HeadShot />
-            <Services title='I can help you with...' content={servicesContent} />
-            <About title='About me' content={aboutContent} />
-            <Portfolio title='My Portfolio' content={portfolioContent} />
-            <Skills title='Skills and Tech Stack' content={skillContent} />
-            <Contact />
+            <Header id='top' items={headerItem} />
+            <HeadShot id='head' />
+            <Services title='I can help you with...' id='services' content={servicesContent} />
+            <About title='About me' id='about' content={aboutContent} />
+            <Portfolio title='My Portfolio' id='portfolio' content={portfolioContent} />
+            <Skills title='Skills and Tech Stack' id='skills' content={skillContent} />
+            <Contact id='contact' />
             <Footer />
         </div>
     )

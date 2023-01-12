@@ -1,11 +1,10 @@
 import React from 'react';
 import Material from '../../../assets/Material';
 import { useForm } from 'react-hook-form';
-import NetworkSelector from '../../01_Header/components/NetworkSelector';
 import { Networks } from '../../00_Common/Networks';
 import { AppConnectionData, Network } from '../../00_Common/Definitions';
 
-export default function Bridge()
+export default function Reflect()
 {
     const { register, handleSubmit } = useForm();
     const [targetNetwork, setTargetNetwork] = React.useState<Network>(Networks[0]);
@@ -13,25 +12,27 @@ export default function Bridge()
     {
         console.log(data);
     }
-    function NetworkCallback(network: Network)
-    {
-        setTargetNetwork(network);
-    }
+    
     
     return (
         <Material.Card sx={{margin: "12px"}}>
-            <Material.CardHeader title="Bridge Contract" />
+            <Material.CardHeader title="Reflect Token Contract" />
             <Material.CardContent>
                 <>
-                <form className='pb-[12px]' onSubmit={handleSubmit(handleInputSubmit)}>
-                <Material.Typography sx={{paddingTop: '12px'}}>Token Transfer Bridge</Material.Typography>
+                
+                <Material.Typography sx={{paddingTop: '12px'}}>Reflect Token Offering</Material.Typography>
                 <Material.Divider />
 
+                <Material.Typography sx={{width: '40%', marginY: 'auto'}}>Offering Price: </Material.Typography>
+                <Material.TextField inputProps={{ ...register(`address`) }} fullWidth label='Purchase Amount' />
+                <Material.Button variant='contained' type='submit'>Purchase</Material.Button>
+                <Material.Divider />
+                
+                <Material.Typography sx={{ paddingTop: '12px' }}>Current Reflect Token Balance</Material.Typography>
+                <Material.Typography sx={{paddingTop: '12px'}}>Transfer Tokens</Material.Typography>
                 <Material.TextField inputProps={{ ...register(`address`) }} fullWidth label='Address' />
-                <Material.TextField inputProps={{ ...register(`amount`) }} fullWidth label='Amount' />
-                <NetworkSelector title='Network' selected={targetNetwork} options={Networks} callback={NetworkCallback} />
+                <Material.TextField inputProps={{ ...register(`address`) }} fullWidth label='Amount' />
                 <Material.Button variant='contained' type='submit'>Transfer</Material.Button>
-                </form>
                 </>
                 </Material.CardContent>
         </Material.Card>                
