@@ -15,21 +15,21 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 contract Staking is Ownable, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
 
-//------------------ STATE VARIABLES ---------------------------------------
+    //------------------ STATE VARIABLES ---------------------------------------
 
-    IERC20 public rewardsToken;             // Token to be used as reward
-    IERC20 public stakeToken;               // Token to be incentivized
-    uint256 public endBlock;                // Block number for program end
-    uint256 public blockReward;             // Rate of reward per block
-    uint256 public rewardsDuration;         // Number of blocks for incentive
-    uint256 public lastBlock;               // Last block when called
-    uint256 public accBlockReward;          // Accumulated reward per token
-    uint256 public totalSupply;             // Total number of staked tokens
+    IERC20 public rewardsToken; // Token to be used as reward
+    IERC20 public stakeToken; // Token to be incentivized
+    uint256 public endBlock; // Block number for program end
+    uint256 public blockReward; // Rate of reward per block
+    uint256 public rewardsDuration; // Number of blocks for incentive
+    uint256 public lastBlock; // Last block when called
+    uint256 public accBlockReward; // Accumulated reward per token
+    uint256 public totalSupply; // Total number of staked tokens
     mapping(address => uint256) private userAccBlockReward;
     mapping(address => uint256) private rewards;
     mapping(address => uint256) private balances;
 
-//----------------------- EVENTS -------------------------------------------
+    //----------------------- EVENTS -------------------------------------------
 
     event RewardIncreased(uint256 reward);
     event Staked(address indexed user, uint256 amount);
@@ -37,7 +37,7 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
     event RewardPaid(address indexed user, uint256 reward);
     event DurationUpdated(uint256 newDuration);
 
-//--------------------  CONSTRUCTOR ----------------------------------------
+    //--------------------  CONSTRUCTOR ----------------------------------------
 
     /// @notice Sets the token to be used for staking and token to be given out
     /// @notice as rewards
@@ -48,7 +48,7 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
         stakeToken = IERC20(_stakingToken);
     }
 
-//------------------- VIEW FUNCTIONS ----------------------------------------
+    //------------------- VIEW FUNCTIONS ----------------------------------------
 
     /// @notice Returns total number of staked tokens
     function totalStakedSupply() external view returns (uint256) {
@@ -65,15 +65,21 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
     /// @notice not withdrawn reward
     /// @param _account        Address of user to check reward earned.
     function earned(address _account) public view returns (uint256) {
-      uint256 accReward = accBlockReward;
-      uint256 currentBlock = block.number < endBlock ? block.number : endBlock;
-      if (totalSupply != 0) {
-          accReward += ((currentBlock - lastBlock) * blockReward * 1e18 / totalSupply);
-      }
-        return balances[_account] * (accReward - userAccBlockReward[_account]) / 1e18 + rewards[_account];
+        uint256 accReward = accBlockReward;
+        uint256 currentBlock = block.number < endBlock
+            ? block.number
+            : endBlock;
+        if (totalSupply != 0) {
+            accReward += (((currentBlock - lastBlock) * blockReward * 1e18) /
+                totalSupply);
+        }
+        return
+            (balances[_account] * (accReward - userAccBlockReward[_account])) /
+            1e18 +
+            rewards[_account];
     }
 
-//-------------------- MUTATIVE FUNCTIONS ----------------------------------
+    //-------------------- MUTATIVE FUNCTIONS ----------------------------------
 
     /// @notice Allows user to deposit incentivized tokens to earn reward.
     /// @notice Function is non-reentrant and can be paused by admin.
@@ -82,7 +88,10 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
     /// @dev must ensure stake token does not implement such features.
     /// @param _amount          Number of stake tokens to be deposited
     function stake(uint256 _amount) external nonReentrant whenNotPaused {
-        require(stakeToken.balanceOf(msg.sender) >= _amount, "Staking: Insufficient balance");
+        require(
+            stakeToken.balanceOf(msg.sender) >= _amount,
+            "Staking: Insufficient balance"
+        );
 
         calculateReward(msg.sender);
         totalSupply += _amount;
@@ -117,7 +126,10 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
     /// @dev Fail-safe to ensure users are able to withdraw stake tokens.
     /// @param _amount          Number of stake tokens to be withdrawn.
     function safeWithdraw(uint256 _amount) external nonReentrant {
-        require(balances[msg.sender] >= _amount, "Staking: Insufficient balance");
+        require(
+            balances[msg.sender] >= _amount,
+            "Staking: Insufficient balance"
+        );
 
         calculateReward(msg.sender);
         totalSupply -= _amount;
@@ -130,9 +142,13 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
     /// @dev Returnsrewards earned by users since contract was last called.
     /// @param _account         Address of user to calculate earned rewards
     function calculateReward(address _account) private {
-        uint256 currentBlock = block.number < endBlock ? block.number : endBlock;
+        uint256 currentBlock = block.number < endBlock
+            ? block.number
+            : endBlock;
         if (totalSupply != 0) {
-            accBlockReward += ((currentBlock - lastBlock) * blockReward * 1e18 / totalSupply);
+            accBlockReward += (((currentBlock - lastBlock) *
+                blockReward *
+                1e18) / totalSupply);
         }
         lastBlock = currentBlock;
 
@@ -142,14 +158,14 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
         }
     }
 
-//------------------- RESTRICTED FUNCTIONS ---------------------------------
+    //------------------- RESTRICTED FUNCTIONS ---------------------------------
 
     /// @notice Allows admin to provide funding for staking contract
     /// @dev Only serves as convenience function since there's nothing preventing
     /// @dev admin or other users from depositing tokens directly to contract address.
     /// @param _funds           Amount of reward tokens to be deposited.
     function addFunding(uint256 _funds) external onlyOwner {
-      rewardsToken.safeTransferFrom(msg.sender, address(this), _funds);
+        rewardsToken.safeTransferFrom(msg.sender, address(this), _funds);
     }
 
     /// @notice Allows admin to activate reward distribution for a specified
@@ -157,22 +173,28 @@ contract Staking is Ownable, ReentrancyGuard, Pausable {
     /// @dev Only one incentive program can be active at any given time.
     /// @param _reward          Amount of reward tokens to be distributed.
     /// @param _duration        Number of blocks program will be active.
-    function activateReward(uint256 _reward, uint256 _duration) external onlyOwner {
-      require(
-          block.number >= endBlock,
-          "Staking: Current rewards program must be complete before activating new rewards program"
-      );
+    function activateReward(
+        uint256 _reward,
+        uint256 _duration
+    ) external onlyOwner {
+        require(
+            block.number >= endBlock,
+            "Staking: Current rewards program must be complete before activating new rewards program"
+        );
 
-      rewardsDuration = _duration;
-      calculateReward(address(0));
-      blockReward = _reward / _duration;
-      uint256 balance = rewardsToken.balanceOf(address(this));
-      require(blockReward <= balance / _duration, "Staking: Insufficient reward balance");
-      lastBlock = block.number;
-      endBlock = block.number + _duration;
+        rewardsDuration = _duration;
+        calculateReward(address(0));
+        blockReward = _reward / _duration;
+        uint256 balance = rewardsToken.balanceOf(address(this));
+        require(
+            blockReward <= balance / _duration,
+            "Staking: Insufficient reward balance"
+        );
+        lastBlock = block.number;
+        endBlock = block.number + _duration;
 
-      emit DurationUpdated(_duration);
-      emit RewardIncreased(_reward);
+        emit DurationUpdated(_duration);
+        emit RewardIncreased(_reward);
     }
 
     /// @notice Allows admin pause "stake" function and prevent any future staking.

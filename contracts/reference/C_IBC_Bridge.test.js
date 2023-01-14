@@ -1,10 +1,8 @@
-const IBC_Bridge = artifacts.require("IBC_Bridge");
-const TestNFT = artifacts.require("TestNFT");
-const truffleAssert = require('truffle-assertions');
-//const {constants, expectEvent} = require('@openzeppelin/test-helpers/src/expectEvent');
-const env = require('../contracts/2_IBC_Messenger/test/env');
+import { expect } from 'chai';
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import hre from 'hardhat';
 
-contract("IBC_Bridge", (accounts) => {
+describe("IBC_Bridge", function () {
   // MINTER Wallet
   let MINTER = '0xCea544Feb7B210Eb15B609e6Fbde294f595008Fa';
 

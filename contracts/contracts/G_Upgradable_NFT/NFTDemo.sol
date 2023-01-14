@@ -8,9 +8,10 @@ import "./CommonStorage.sol";
 /// @title FamiliarProxy
 /// @notice Proxy implementation handling contract call forwarding,
 /// @notice access controls, and upgradability logic for Familiar dApp.
-/// @dev Logic implementation or base contracts other
+/// @dev Logic implementation or base contracts other 
 /// @dev than CommonStorage must not declare any state variables
 contract FamiliarProxy is Proxy, CommonStorage {
+
     //----------------------- EVENTS -------------------------------------------
 
     event contractUpgraded(string indexed version, address target);
@@ -23,12 +24,10 @@ contract FamiliarProxy is Proxy, CommonStorage {
 
     /// @notice Sets up the initial routing configuration for the different roles.
     /// @dev Maintains routes for special roles Admin and IMX.
-    /// @param _routingConfig   is address of special roles and target implementations
+    /// @param _routingConfig   is address of special roles and target implementations 
     constructor(address[] memory _routingConfig) {
-        admin = _routingConfig[0];
-        callRouting[_routingConfig[0]] = _routingConfig[1];
-        imx = _routingConfig[2];
-        callRouting[_routingConfig[2]] = _routingConfig[3];
+        admin = _routingConfig[0]; callRouting[_routingConfig[0]] = _routingConfig[1];
+        imx = _routingConfig[2]; callRouting[_routingConfig[2]] = _routingConfig[3];
     }
 
     /// Access control for proxy functions in line with transparent proxy pattern
@@ -50,7 +49,7 @@ contract FamiliarProxy is Proxy, CommonStorage {
 
     function _implementation() internal view override returns (address) {
         address route = callRouting[msg.sender];
-        if (route == address(0)) return callRouting[address(0)];
+        if(route == address(0)) return callRouting[address(0)];
         return route;
     }
 
@@ -66,28 +65,21 @@ contract FamiliarProxy is Proxy, CommonStorage {
     /// @dev First index of initData provide version information.
     /// @param _impl        new ERC165-compliant NFT implementation
     /// @param _initData    data to be passed to new contract for initialization.
-    function upgradeInit(
-        IERC165 _impl,
-        bytes[] calldata _initData
-    ) external ifAdmin {
+    function upgradeInit(IERC165 _impl, bytes[] calldata _initData) external ifAdmin {
         require(!initializing, "Proxy: Initialization in progress");
-        require(
-            !initialized[address(_impl)],
-            "Proxy: Contract already initialized"
-        );
-        bool validTarget = _impl.supportsInterface(0x80ac58cd) && // IERC721
-            _impl.supportsInterface(0x5b5e139f) && // IERC721Metadata
-            _impl.supportsInterface(0x2a55205a) && // IERC2981
-            _impl.supportsInterface(0x459fb2ad); // IInitializable
+        require(!initialized[address(_impl)], "Proxy: Contract already initialized");
+        bool validTarget = 
+            _impl.supportsInterface(0x80ac58cd) &&      // IERC721
+            _impl.supportsInterface(0x5b5e139f) &&      // IERC721Metadata
+            _impl.supportsInterface(0x2a55205a) &&      // IERC2981
+            _impl.supportsInterface(0x459fb2ad);        // IInitializable
         require(validTarget, "Proxy: Invalid upgrade target");
 
         initializing = true;
         callRouting[address(0)] = address(_impl);
         version[address(_impl)] = string(_initData[0]);
 
-        (bool success, ) = address(_impl).delegatecall(
-            abi.encodeWithSignature("init(bytes[])", _initData)
-        );
+        (bool success, ) = address(_impl).delegatecall(abi.encodeWithSignature("init(bytes[])", _initData));
         require(success, "Proxy: Initialization failed");
 
         initialized[address(_impl)] = true;
@@ -102,7 +94,7 @@ contract FamiliarProxy is Proxy, CommonStorage {
         address oldAdmin = admin;
         admin = _newAdmin;
         emit adminChanged(oldAdmin, _newAdmin);
-    }
+    }  
 
     /// @notice Renounces administrator rights forever
     function renounceAdmin() external ifAdmin {
@@ -110,7 +102,7 @@ contract FamiliarProxy is Proxy, CommonStorage {
         admin = address(0);
         callRouting[oldAdmin] = address(0);
         emit adminChanged(oldAdmin, address(0));
-    }
+    }  
 
     /// @notice Updates routing configuration for special roles
     /// @dev Default routes should only be updated via upgradeAndInit function.
@@ -121,5 +113,5 @@ contract FamiliarProxy is Proxy, CommonStorage {
         require(_role != address(0), "Proxy: Improper route change");
         callRouting[_role] = _target;
         emit routingUpdated(_role, _target);
-    }
+    }  
 }
