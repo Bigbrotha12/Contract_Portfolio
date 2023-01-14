@@ -1,22 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity >=0.8.0 <0.9.0;
 
-import "@openzeppelin/contracts/interfaces/IERC20.sol";
+import "./../A_DemoToken/DemoToken.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /// @title AirdropClaim
 /// @notice Allows user to claim ERC20 token if part of Merkle Tree within
 /// owner-specified deadline.
 contract AirdropDemo {
-    using SafeERC20 for IERC20;
 
     //------------------ STATE VARIABLES ---------------------------------------
 
     mapping(address => bytes32) public merkleRoot; // Root of tree containing valid address
     address public owner; // Contract administrator
-    IERC20 public demoToken;
-    mapping(address => bool) public hasClaimed; // Records if user has already claimed
+    DemoToken public demoToken;
+    uint256 public limit;
+    mapping(address => mapping(address => bool)) public hasClaimed; // Records if user has already claimed
 
     //----------------------- EVENTS -------------------------------------------
 
@@ -24,19 +23,22 @@ contract AirdropDemo {
 
     //--------------------  CONSTRUCTOR ----------------------------------------
 
-    /// @notice Creates a new AirdropClaim contract
-    constructor() {
+    /// @notice Creates a new AirdropDemo contract
+    constructor(uint256 _limit, DemoToken _token) {
+        limit = _limit;
+        demoToken = _token;
         owner = msg.sender;
     }
 
     //-------------------- MUTATIVE FUNCTIONS ----------------------------------
 
+    /// @notice Creates a new Airdrop merkle root. Security checks are disabled for Demo.
     function createAirdrop(bytes32 _root) external {
         merkleRoot[msg.sender] = _root;
     }
 
-    function setToken(IERC20 _token) external {
-        require(msg.sender == owner, "AirdropDemo: Unauthorized");
+    function setToken(DemoToken _token) external {
+        require(msg.sender == owner, "AirdropDemo: Unauthorized.");
 
         demoToken = _token;
     }
@@ -53,7 +55,8 @@ contract AirdropDemo {
         bytes32[] calldata _proof
     ) external {
         // Check if airdrop still active and address hasn't already claimed tokens
-        require(!hasClaimed[_to], "AirdropClaim: Already claimed");
+        require(!hasClaimed[_creator][_to], "AirdropDemo: Already claimed.");
+        require(_amount <= limit, "AirdropDemo: Claim amount greater than limit.");
 
         // Verify merkle proof, or revert if not in tree
         bytes32 leaf = keccak256(abi.encodePacked(_to, _amount));
@@ -62,11 +65,11 @@ contract AirdropDemo {
             merkleRoot[_creator],
             leaf
         );
-        if (!isValidLeaf) revert("AirdropClaim: Invalid Address");
+        if (!isValidLeaf) revert("AirdropDemo: Invalid data.");
 
         // Send tokens to claimee
-        hasClaimed[_to] = true;
-        demoToken.safeTransfer(_to, _amount);
+        hasClaimed[_creator][_to] = true;
+        demoToken.mintTo(_to, _amount);
         emit Claimed(_to, _amount);
     }
 

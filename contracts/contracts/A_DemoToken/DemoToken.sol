@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 contract DemoToken is ERC20 {
     address public owner;
     mapping(address => bool) public whitelist;
+    uint256 public mintLimit;
 
     //--------------------  CONSTRUCTOR ----------------------------------------
 
@@ -17,10 +18,11 @@ contract DemoToken is ERC20 {
     constructor(
         string memory _name,
         string memory _symbol,
-        address[] memory _whitelist
+        address[] memory _whitelist,
+        uint256 _limit
     ) ERC20(_name, _symbol) {
         owner = msg.sender;
-
+        mintLimit = _limit;
         for (uint256 index = 0; index < _whitelist.length; index++) {
             whitelist[_whitelist[index]] = true;
         }
@@ -37,13 +39,14 @@ contract DemoToken is ERC20 {
     }
 
     function mintTo(address _recipient, uint256 _amount) external {
-        require(isMinter(msg.sender), "Error: Unauthorized Mint.");
+        require(isMinter(msg.sender), "DemoToken: Unauthorized Mint.");
+        require(_amount <= mintLimit, "DemoToken: Mint amount over per-mint limit.");
 
         _mint(_recipient, _amount);
     }
 
     function burnFrom(address _recipient, uint256 _amount) external {
-        require(isMinter(msg.sender), "Error: Unauthorized Burn.");
+        require(isMinter(msg.sender), "DemoToken: Unauthorized Burn.");
 
         _burn(_recipient, _amount);
     }

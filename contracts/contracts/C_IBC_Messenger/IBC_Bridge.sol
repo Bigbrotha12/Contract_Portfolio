@@ -22,7 +22,7 @@ contract IBC_Bridge is EIP712X {
     address public immutable MINTER;
     mapping(address => mapping(uint256 => mapping(uint256 => uint256)))
         public nonce;
-    DemoToken public Demo;
+    DemoToken public demoToken;
     string public name;
     string public version;
 
@@ -47,18 +47,21 @@ contract IBC_Bridge is EIP712X {
     /// @notice Initializes bridge endpoint contract with given name and version.
     /// @param _name           of current contract
     /// @param _version        of contract being deployed.
-    /// @param _minter         approved Oracle relayer address
+    /// @param _minter         approved Oracle relayer address.
+    /// @param _token          demo token for bridging.
     constructor(
         string memory _name,
         string memory _version,
-        address _minter
+        address _minter,
+        DemoToken _token
     ) EIP712(_name, _version) {
         MESSAGE_TYPE_HASH = keccak256(
-            "Transaction(address receiver,uint256 receivingChainId,uint256 tokenId, uint256 nonce)"
+            "Transaction(address receiver,uint256 receivingChainId,uint256 amount, uint256 nonce)"
         );
         MINTER = _minter;
         name = _name;
         version = _version;
+        demoToken = _token;
     }
 
     //-------------------- VIEW FUNCTIONS ----------------------------------
@@ -83,7 +86,7 @@ contract IBC_Bridge is EIP712X {
 
     function setToken(DemoToken _token) external {
         require(msg.sender == owner(), "IBC_Bridge: Unauthorized.");
-        Demo = _token;
+        demoToken = _token;
     }
 
     /// @notice Initiates data bridge to another chain.
@@ -101,13 +104,13 @@ contract IBC_Bridge is EIP712X {
         bytes32 destinationDomain = getDomainHash(_receivingChainId);
         require(destinationDomain != 0, "IBC_Bridge: Unregistered Domain");
         require(
-            Demo.balanceOf(msg.sender) >= _amount,
+            demoToken.balanceOf(msg.sender) >= _amount,
             "IBC_Bridge: Insufficient funds"
         );
 
         uint256 nonce_ = nonce[msg.sender][block.chainid][_receivingChainId]++;
 
-        Demo.burnFrom(msg.sender, _amount);
+        demoToken.burnFrom(msg.sender, _amount);
         emit DataSent(
             _receiver,
             _amount,
@@ -144,7 +147,7 @@ contract IBC_Bridge is EIP712X {
         address signer = digest.recover(_signature);
         require(signer == MINTER, "ECDSA: Signature Verification Failed");
 
-        Demo.mintTo(_receiver, _amount);
+        demoToken.mintTo(_receiver, _amount);
         emit DataReceived(_receiver, _amount, _sendingChainId, nonce_);
         return true;
     }

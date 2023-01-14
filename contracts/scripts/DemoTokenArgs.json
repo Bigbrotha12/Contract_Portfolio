@@ -2,6 +2,7 @@
     "args": [
         "DemoToken",
         "DEMO",
-        []
+        [],
+        1000
     ]
 }

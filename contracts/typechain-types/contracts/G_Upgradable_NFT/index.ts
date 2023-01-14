@@ -7,6 +7,8 @@ import type * as erc721 from "./ERC721";
 export type { erc721 };
 import type * as imxBridge from "./IMXBridge";
 export type { imxBridge };
+import type * as nftDemoSol from "./NFTDemo.sol";
+export type { nftDemoSol };
 export type { FamiliarAdmin } from "./FamiliarAdmin";
 export type { FamiliarIMX } from "./FamiliarIMX";
 export type { FamiliarLogic } from "./FamiliarLogic";

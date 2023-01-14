@@ -180,6 +180,10 @@ declare module "hardhat/types/runtime" {
       name: "Mintable",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Mintable__factory>;
+    getContractFactory(
+      name: "FamiliarProxy",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.FamiliarProxy__factory>;
 
     getContractAt(
       name: "VRFCoordinatorV2Interface",
@@ -391,6 +395,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.Mintable>;
+    getContractAt(
+      name: "FamiliarProxy",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.FamiliarProxy>;
 
     // default types
     getContractFactory(

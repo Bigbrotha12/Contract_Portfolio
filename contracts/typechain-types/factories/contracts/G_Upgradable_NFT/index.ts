@@ -4,6 +4,7 @@
 export * as erc2981 from "./ERC2981";
 export * as erc721 from "./ERC721";
 export * as imxBridge from "./IMXBridge";
+export * as nftDemoSol from "./NFTDemo.sol";
 export { FamiliarAdmin__factory } from "./FamiliarAdmin__factory";
 export { FamiliarIMX__factory } from "./FamiliarIMX__factory";
 export { FamiliarLogic__factory } from "./FamiliarLogic__factory";

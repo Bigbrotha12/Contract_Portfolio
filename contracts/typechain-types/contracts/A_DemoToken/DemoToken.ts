@@ -38,6 +38,7 @@ export interface DemoTokenInterface extends utils.Interface {
     "decreaseAllowance(address,uint256)": FunctionFragment;
     "increaseAllowance(address,uint256)": FunctionFragment;
     "isMinter(address)": FunctionFragment;
+    "mintLimit()": FunctionFragment;
     "mintTo(address,uint256)": FunctionFragment;
     "name()": FunctionFragment;
     "owner()": FunctionFragment;
@@ -59,6 +60,7 @@ export interface DemoTokenInterface extends utils.Interface {
       | "decreaseAllowance"
       | "increaseAllowance"
       | "isMinter"
+      | "mintLimit"
       | "mintTo"
       | "name"
       | "owner"
@@ -102,6 +104,7 @@ export interface DemoTokenInterface extends utils.Interface {
     functionFragment: "isMinter",
     values: [PromiseOrValue<string>]
   ): string;
+  encodeFunctionData(functionFragment: "mintLimit", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "mintTo",
     values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
@@ -148,6 +151,7 @@ export interface DemoTokenInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "isMinter", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "mintLimit", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "mintTo", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
@@ -271,6 +275,8 @@ export interface DemoToken extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[boolean]>;
 
+    mintLimit(overrides?: CallOverrides): Promise<[BigNumber]>;
+
     mintTo(
       _recipient: PromiseOrValue<string>,
       _amount: PromiseOrValue<BigNumberish>,
@@ -352,6 +358,8 @@ export interface DemoToken extends BaseContract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
+  mintLimit(overrides?: CallOverrides): Promise<BigNumber>;
+
   mintTo(
     _recipient: PromiseOrValue<string>,
     _amount: PromiseOrValue<BigNumberish>,
@@ -432,6 +440,8 @@ export interface DemoToken extends BaseContract {
       _requester: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<boolean>;
+
+    mintLimit(overrides?: CallOverrides): Promise<BigNumber>;
 
     mintTo(
       _recipient: PromiseOrValue<string>,
@@ -539,6 +549,8 @@ export interface DemoToken extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    mintLimit(overrides?: CallOverrides): Promise<BigNumber>;
+
     mintTo(
       _recipient: PromiseOrValue<string>,
       _amount: PromiseOrValue<BigNumberish>,
@@ -620,6 +632,8 @@ export interface DemoToken extends BaseContract {
       _requester: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
+
+    mintLimit(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     mintTo(
       _recipient: PromiseOrValue<string>,

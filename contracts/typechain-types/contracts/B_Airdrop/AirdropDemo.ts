@@ -32,7 +32,8 @@ export interface AirdropDemoInterface extends utils.Interface {
     "claim(address,address,uint256,bytes32[])": FunctionFragment;
     "createAirdrop(bytes32)": FunctionFragment;
     "demoToken()": FunctionFragment;
-    "hasClaimed(address)": FunctionFragment;
+    "hasClaimed(address,address)": FunctionFragment;
+    "limit()": FunctionFragment;
     "merkleRoot(address)": FunctionFragment;
     "owner()": FunctionFragment;
     "setToken(address)": FunctionFragment;
@@ -44,6 +45,7 @@ export interface AirdropDemoInterface extends utils.Interface {
       | "createAirdrop"
       | "demoToken"
       | "hasClaimed"
+      | "limit"
       | "merkleRoot"
       | "owner"
       | "setToken"
@@ -65,8 +67,9 @@ export interface AirdropDemoInterface extends utils.Interface {
   encodeFunctionData(functionFragment: "demoToken", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "hasClaimed",
-    values: [PromiseOrValue<string>]
+    values: [PromiseOrValue<string>, PromiseOrValue<string>]
   ): string;
+  encodeFunctionData(functionFragment: "limit", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "merkleRoot",
     values: [PromiseOrValue<string>]
@@ -84,6 +87,7 @@ export interface AirdropDemoInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "demoToken", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "hasClaimed", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "limit", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "merkleRoot", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "setToken", data: BytesLike): Result;
@@ -147,8 +151,11 @@ export interface AirdropDemo extends BaseContract {
 
     hasClaimed(
       arg0: PromiseOrValue<string>,
+      arg1: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<[boolean]>;
+
+    limit(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     merkleRoot(
       arg0: PromiseOrValue<string>,
@@ -180,8 +187,11 @@ export interface AirdropDemo extends BaseContract {
 
   hasClaimed(
     arg0: PromiseOrValue<string>,
+    arg1: PromiseOrValue<string>,
     overrides?: CallOverrides
   ): Promise<boolean>;
+
+  limit(overrides?: CallOverrides): Promise<BigNumber>;
 
   merkleRoot(
     arg0: PromiseOrValue<string>,
@@ -213,8 +223,11 @@ export interface AirdropDemo extends BaseContract {
 
     hasClaimed(
       arg0: PromiseOrValue<string>,
+      arg1: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<boolean>;
+
+    limit(overrides?: CallOverrides): Promise<BigNumber>;
 
     merkleRoot(
       arg0: PromiseOrValue<string>,
@@ -258,8 +271,11 @@ export interface AirdropDemo extends BaseContract {
 
     hasClaimed(
       arg0: PromiseOrValue<string>,
+      arg1: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    limit(overrides?: CallOverrides): Promise<BigNumber>;
 
     merkleRoot(
       arg0: PromiseOrValue<string>,
@@ -292,8 +308,11 @@ export interface AirdropDemo extends BaseContract {
 
     hasClaimed(
       arg0: PromiseOrValue<string>,
+      arg1: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
+
+    limit(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     merkleRoot(
       arg0: PromiseOrValue<string>,

@@ -1,11 +1,11 @@
 import { ethers } from "ethers";
 
-function createLeaves(airdrop: RecipientList): string[] { 
+function createLeaves(airdrop: RecipientList): Array<string> { 
     var leaves: Array<string> = [];
     
     for(let i = 0; i < airdrop.length; i++)
     {
-        let packed = ethers.utils.solidityKeccak256(["string", "uint256"], [airdrop[i]['to'], airdrop[i]['amount']]);
+        let packed: string = ethers.utils.solidityKeccak256(["address", "uint256"], [airdrop[i]['to'], airdrop[i]['amount']]);
         
         leaves.push(packed); 
     }
@@ -15,7 +15,7 @@ function createLeaves(airdrop: RecipientList): string[] {
 
 function getLeafAtIndex(index: number, airdrop: RecipientList): string {
     if (index >= airdrop.length) return ""; // invalid index
-    let packed = ethers.utils.solidityKeccak256(["string", "uint256"], [airdrop[index]['to'], airdrop[index]['amount']]);
+    let packed: string = ethers.utils.solidityKeccak256(["address", "uint256"], [airdrop[index]['to'], airdrop[index]['amount']]);
     return packed; 
 }
 
@@ -24,7 +24,7 @@ function calculateMerkleRoot(_leaves: Array<string>): string {
     
     for(let i = 0; i<=_leaves.length / 2; i+=2)
     {
-        let hash = ethers.utils.solidityKeccak256(["string", "string"], [_leaves[i], _leaves[i+1]]);
+        let hash: string = ethers.utils.solidityKeccak256(["bytes32", "bytes32"], [_leaves[i], _leaves[i+1]]);
         nodes.push(hash); 
     }
 
@@ -51,11 +51,11 @@ function calculateProof(leaf: string, leaves: Array<string>): Array<string> {
         if(sortedIndex % 2 == 0)
         {
             sibling = leaves[sortedIndex+1];
-            hash = ethers.utils.solidityKeccak256(["string", "string"], [leaf, sibling]); 
+            hash = ethers.utils.solidityKeccak256(["bytes32", "bytes32"], [leaf, sibling]); 
         } else 
         {
             sibling = leaves[sortedIndex-1];
-            hash = ethers.utils.solidityKeccak256(["string", "string"], [sibling, leaf]); 
+            hash = ethers.utils.solidityKeccak256(["bytes32", "bytes32"], [sibling, leaf]); 
         }
 
         proof.push(sibling);
@@ -71,7 +71,7 @@ function reduceMerkle(_leaves: Array<string>): Array<string> {
     
     for(let i = 0; i<=_leaves.length / 2; i+=2)
     {
-        let hash = ethers.utils.solidityKeccak256(["string", "string"], [_leaves[i], _leaves[i + 1]]);
+        let hash: string = ethers.utils.solidityKeccak256(["bytes32", "bytes32"], [_leaves[i], _leaves[i + 1]]);
         nodes.push(hash);
     }
     

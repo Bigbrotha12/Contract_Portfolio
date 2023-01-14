@@ -28,7 +28,6 @@ contract ReflectToken is ERC20, Pausable, Ownable {
     uint256 private rTotal;
     uint256 private tFeeTotal;
     uint8 private feeReflectPct;
-    mapping(address => bool) public whitelist;
     uint256 public mintLimit;
 
     //--------------------  CONSTRUCTOR ----------------------------------------
@@ -55,10 +54,6 @@ contract ReflectToken is ERC20, Pausable, Ownable {
     /// @dev Overrides ERC20 totalSupply function.
     function totalSupply() public view override returns (uint256) {
         return tTotal;
-    }
-
-    function isMinter(address _requester) public view returns (bool) {
-        return whitelist[_requester];
     }
 
     /// @notice See {IERC20-balanceOf}.
@@ -260,20 +255,13 @@ contract ReflectToken is ERC20, Pausable, Ownable {
 
     //----------------------------- RESTRICTED FUNCTIONS ---------------------------
 
-    function changeMinter(address _minter, bool _active) external onlyOwner {
-        whitelist[_minter] = _active;
-    }
-
     function mintTo(address _recipient, uint256 _amount) external {
-        require(isMinter(msg.sender), "ReflectToken: Unauthorized Mint.");
         require(_amount <= mintLimit, "ReflectToken: Mint amount over per-mint limit.");
 
         _mint(_recipient, _amount);
     }
 
     function burnFrom(address _recipient, uint256 _amount) external {
-        require(isMinter(msg.sender), "ReflectToken: Unauthorized Burn.");
-
         _burn(_recipient, _amount);
     }
 

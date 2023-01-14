@@ -1,21 +1,37 @@
 import { HardhatUserConfig, task } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
   networks: {
     hardhat: {},
-    mainnet: {},
+    mainnet: {
+      url: ""
+    },
     goerli: {
       url: "",
       accounts: [process.env.DEPLOY_ACCOUNT || ""]
     },
-    binanceMain: {},
-    binanceTest: {},
-    polygonMain: {},
-    polygonTest: {},
-    avalancheCMain: {},
-    avalancheCTest: {}
+    binanceMain: {
+      url: "",
+    },
+    binanceTest: {
+      url: "",
+    },
+    polygonMain: {
+      url: "",
+    },
+    polygonTest: {
+      url: "",
+    },
+    avalancheCMain: {
+      url: "",
+    },
+    avalancheCTest: {
+      url: "",
+    }
   },
   mocha: {
     timeout: 40000

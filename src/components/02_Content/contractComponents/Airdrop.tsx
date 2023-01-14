@@ -64,7 +64,6 @@ export default function Airdrop(props: {recipientCount: number})
                     </div>
                 </form>
                     
-                {/* Airdrop Claim Transact */}
                 <Material.Typography>Claim Airdrop</Material.Typography>
                 <Material.Divider />
                 <form className='pb-[12px]' onSubmit={handleSubmit((data) => console.log(data))}>
