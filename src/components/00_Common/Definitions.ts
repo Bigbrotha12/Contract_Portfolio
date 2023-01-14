@@ -24,7 +24,10 @@ export type AppConnectionData =
 export type Contract = 
 {
         name: string,
-        address: string,
+        instances: Array<{
+                network: string,
+                address: string
+        }>
         abi: Array<ABIItem>
 }
 

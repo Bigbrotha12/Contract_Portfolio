@@ -1,7 +1,7 @@
 import React from 'react';
 import Material from '../../../assets/Material';
 import { useForm } from 'react-hook-form';
-import Merkle from '../../../../contracts/1_Airdrop/scripts/merkleRootCalculator';
+import Merkle from '../../../../contracts/scripts/merkleRootCalculator';
 
 export default function Airdrop(props: {recipientCount: number})
 {
@@ -50,13 +50,12 @@ export default function Airdrop(props: {recipientCount: number})
                 <Material.Button variant='contained' type='submit'>Submit</Material.Button>
                 </form>
                     
-                {/* Airdrop Claim View */}
                 <Material.Typography sx={{paddingTop: '12px'}}>View Claim</Material.Typography>
                 <Material.Divider />
                 <form className='pb-[12px]' onSubmit={handleSubmit((data) => console.log(data))}>
                     <div className='w-full py-[12px]'>
                         <div className='flex justify-between w-full'>
-                                <Material.Typography sx={{width: '40%', marginY: 'auto'}}>Check Claim</Material.Typography>
+                                <Material.Typography sx={{width: '40%', marginY: 'auto', fontWeight: 'bold'}}>Check Claim</Material.Typography>
                                 <Material.TextField inputProps={{ ...register(`addressCheck`) }} fullWidth label='Address' />
                         </div>
                         <div className='py-[12px] w-full'>
@@ -71,7 +70,7 @@ export default function Airdrop(props: {recipientCount: number})
                 <form className='pb-[12px]' onSubmit={handleSubmit((data) => console.log(data))}>
                     <div className='w-full py-[12px]'>
                         <div className='flex justify-between w-full'>
-                                <Material.Typography sx={{ width: '40%', marginY: 'auto' }}>Claim</Material.Typography>
+                                <Material.Typography sx={{ width: '40%', marginY: 'auto', fontWeight: 'bold' }}>Claim</Material.Typography>
                                 <Material.Button sx={{width: '100%'}} variant='contained' onClick={prepareRoot}>Claim</Material.Button>
                         </div>
                         

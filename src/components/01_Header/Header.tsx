@@ -5,7 +5,7 @@ import { Content } from '../00_Common/Definitions';
 export default function Header(props: { items: Array<Content>, id: string})
 {
     return (
-        <div id={props.id} className='bg-[#242424] text-white py-[12px] flex justify-evenly w-full min-h-[48px] sticky top-0 z-10'>
+        <div id={props.id} className='bg-[#242424] text-white py-[12px] flex justify-evenly w-full min-h-[48px] sticky top-0 z-10 shadow-md'>
             
             {
                 props.items.map((headerItem, index) => {

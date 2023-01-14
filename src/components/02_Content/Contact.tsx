@@ -5,16 +5,21 @@ import { width } from '@mui/system';
 
 export default function Contact(props: {id: string})
 {
+    function handleSubmit(data)
+    {
+
+    }
+
     return (
         <div id={props.id} className='pt-[80px] pb-[48px] px-auto'>
-            <div>
+            <div className='mb-[12px]'>
                 <Material.Typography sx={{ fontFamily: 'inherit', textAlign: 'center' }} variant='h3'>
                     Contact Me
                 </Material.Typography>
             </div>
 
             <div className=' bg-[#ffffff] pb-[32px] px-auto'>
-                <Material.Box sx={{ '& .MuiTextField-root': { m: 1 }}} component='form' autoComplete='off'>
+                <Material.Box sx={{ '& .MuiTextField-root': { m: 1 }}} component='form' onSubmit={handleSubmit} autoComplete='off'>
                     <div className='flex justify-center'>
                         <Material.TextField sx={{width: '40%'}} label="First Name" />
                         <Material.TextField sx={{width: '39%'}} label="Last Name" />  

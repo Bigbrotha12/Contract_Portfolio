@@ -14,7 +14,7 @@ export default function Portfolio(props: { title: string, id: string, content: A
             </div>
 
             <div className='py-[32px] px-auto'>
-                <div className='m-auto p-[24px] w-[600px] overflow-y-hidden overflow-x-scroll whitespace-nowrap'>
+                <div className='m-auto p-[24px] w-[80%] overflow-y-hidden overflow-x-scroll whitespace-nowrap'>
                     {
                         props.content.map(content => {
                             return (

@@ -18,22 +18,28 @@ export default function Reflect()
         <Material.Card sx={{margin: "12px"}}>
             <Material.CardHeader title="Reflect Token Contract" />
             <Material.CardContent>
-                <>
-                
-                <Material.Typography sx={{paddingTop: '12px'}}>Reflect Token Offering</Material.Typography>
-                <Material.Divider />
+                <div>
+                    <div className='pb-[12px]'>
+                        <Material.Typography sx={{paddingTop: '12px'}}>Reflect Token Offering</Material.Typography>
+                        <Material.Divider />
+                    </div>
 
-                <Material.Typography sx={{width: '40%', marginY: 'auto'}}>Offering Price: </Material.Typography>
-                <Material.TextField inputProps={{ ...register(`address`) }} fullWidth label='Purchase Amount' />
-                <Material.Button variant='contained' type='submit'>Purchase</Material.Button>
+                <Material.Typography sx={{width: '40%', marginY: '12px'}}>Offering Price: </Material.Typography>
+                <Material.TextField sx={{marginY: '12px'}} inputProps={{ ...register(`address`) }} fullWidth label='Purchase Amount' />
+                <div className='flex justify-center'>
+                    <Material.Button sx={{ marginBottom: '24px' }} variant='contained' type='submit'>Purchase</Material.Button>
+                </div>
                 <Material.Divider />
                 
-                <Material.Typography sx={{ paddingTop: '12px' }}>Current Reflect Token Balance</Material.Typography>
-                <Material.Typography sx={{paddingTop: '12px'}}>Transfer Tokens</Material.Typography>
-                <Material.TextField inputProps={{ ...register(`address`) }} fullWidth label='Address' />
-                <Material.TextField inputProps={{ ...register(`address`) }} fullWidth label='Amount' />
-                <Material.Button variant='contained' type='submit'>Transfer</Material.Button>
-                </>
+                <Material.Typography sx={{ marginY: '12px' }}>Current Reflect Token Balance: </Material.Typography>
+                <Material.Typography sx={{fontWeight: 'bold'}}>Transfer Tokens</Material.Typography>
+                <Material.TextField sx={{ marginTop: '12px'}} inputProps={{ ...register(`address`) }} fullWidth label='Address' />
+                <Material.TextField sx={{ marginTop: '12px' }} inputProps={{ ...register(`address`) }} fullWidth label='Amount' />
+                <div className='flex justify-center'>
+                    <Material.Button sx={{ marginY: '12px'}} variant='contained' type='submit'>Transfer</Material.Button>
+                </div>
+                
+                </div>
                 </Material.CardContent>
         </Material.Card>                
     )

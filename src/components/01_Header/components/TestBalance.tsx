@@ -5,7 +5,7 @@ export default function TestBalance()
 {
     return (
         <div className='my-auto px-[32px]'>
-            <Material.Typography>TestTokens: 50000000</Material.Typography>
+            <Material.Chip label={'TestTokens: 50000000'} variant='outlined'></Material.Chip>
         </div>
     )
 }

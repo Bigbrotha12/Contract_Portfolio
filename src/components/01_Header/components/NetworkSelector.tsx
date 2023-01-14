@@ -16,7 +16,7 @@ export default function Selector(props: {title: string, selected: {name: string}
     }
 
     return (
-        <div className='w-[20%]'>
+        <div>
             <Material.FormControl fullWidth>
                 <Material.InputLabel id={props.title}>{props.title}</Material.InputLabel>
                 <Material.Select

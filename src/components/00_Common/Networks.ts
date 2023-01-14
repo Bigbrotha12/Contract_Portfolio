@@ -1,42 +1,127 @@
 import { Network, Contract } from "./Definitions";
 
-import Airdrop from '../../../contracts/1_Airdrop/build/contracts/AirdropClaim.json';
-import Bridge from '../../../contracts/2_IBC_Messenger/build/contracts/IBC_Bridge.json';
-import Flipper from '../../../contracts/3_Oracle_Contract/build/contracts/CoinFlipper.json';
-import Reflect from '../../../contracts/4_Reflect_Token/build/contracts/ReflectToken.json';
-import Staker from '../../../contracts/5_Staker/build/contracts/Staking.json';
-import NFT from '../../../contracts/6_Upgradable_NFT/build/contracts/FamiliarProxy.json';
+import DemoToken from '../../../contracts/artifacts/contracts/A_DemoToken/DemoToken.sol/DemoToken.json';
+import Airdrop from '../../../contracts/artifacts/contracts/B_Airdrop/AirdropDemo.sol/AirdropDemo.json';
+import Bridge from '../../../contracts/artifacts/contracts/C_IBC_Messenger/IBC_Bridge.sol/IBC_Bridge.json';
+import Flipper from '../../../contracts/artifacts/contracts/D_Oracle_Contract/CoinFlipper.sol/CoinFlipper.json';
+import Reflect from '../../../contracts/artifacts/contracts/E_Reflect_Token/ReflectToken.sol/ReflectToken.json';
+import Staker from '../../../contracts/artifacts/contracts/F_Staker/Staking.sol/Staking.json';
+import NFT from '../../../contracts/artifacts/contracts/G_Upgradable_NFT/FamiliarProxy.sol/FamiliarProxy.json';
 
 export const Contracts: Array<Contract> =
 [
     {
         name: "Airdrop",
-        address: "",
+        instances:
+        [
+            {
+                network: "mainnet",
+                address: ""
+            },
+            {
+                network: "mainnet",
+                address: ""
+            },
+            {
+                network: "mainnet",
+                address: ""
+            }
+        ],
         abi: Airdrop.abi
     },
     {
         name: "Bridge",
-        address: "",
+        instances:
+        [
+            {
+                network: "mainnet",
+                address: ""
+            },
+            {
+                network: "mainnet",
+                address: ""
+            },
+            {
+                network: "mainnet",
+                address: ""
+            }
+        ],
         abi: Bridge.abi
     },
     {
         name: "Flipper",
-        address: "",
+        instances:
+        [
+            {
+                network: "mainnet",
+                address: ""
+            },
+            {
+                network: "mainnet",
+                address: ""
+            },
+            {
+                network: "mainnet",
+                address: ""
+            }
+        ],
         abi: Flipper.abi
     },
     {
         name: "Reflect",
-        address: "",
+        instances:
+        [
+            {
+                network: "mainnet",
+                address: ""
+            },
+            {
+                network: "mainnet",
+                address: ""
+            },
+            {
+                network: "mainnet",
+                address: ""
+            }
+        ],
         abi: Reflect.abi
     },
     {
         name: "Staker",
-        address: "",
+        instances:
+        [
+            {
+                network: "mainnet",
+                address: ""
+            },
+            {
+                network: "mainnet",
+                address: ""
+            },
+            {
+                network: "mainnet",
+                address: ""
+            }
+        ],
         abi: Staker.abi
     },
     {
         name: "NFT",
-        address: "",
+        instances:
+        [
+            {
+                network: "mainnet",
+                address: ""
+            },
+            {
+                network: "mainnet",
+                address: ""
+            },
+            {
+                network: "mainnet",
+                address: ""
+            }
+        ],
         abi: NFT.abi
     }
     ]

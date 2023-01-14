@@ -22,17 +22,26 @@ export default function Bridge()
         <Material.Card sx={{margin: "12px"}}>
             <Material.CardHeader title="Bridge Contract" />
             <Material.CardContent>
-                <>
-                <form className='pb-[12px]' onSubmit={handleSubmit(handleInputSubmit)}>
-                <Material.Typography sx={{paddingTop: '12px'}}>Token Transfer Bridge</Material.Typography>
-                <Material.Divider />
+                
+                <form onSubmit={handleSubmit(handleInputSubmit)}>
+                    <div className='pb-[12px]'>
+                        <Material.Typography sx={{ paddingTop: '12px' }}>Token Transfer Bridge</Material.Typography>
+                        <Material.Divider />
+                    </div>
+                    
+                    <div className='pb-[12px]'>
+                        <Material.TextField inputProps={{ ...register(`address`) }} fullWidth label='Address' />
+                    </div>
+                    <div className='pb-[12px]'>
+                        <Material.TextField inputProps={{ ...register(`amount`) }} fullWidth label='Amount' />
+                    </div>
+                    <div className='pb-[12px]'>
+                        <NetworkSelector title='Network' selected={targetNetwork} options={Networks} callback={NetworkCallback} />
+                    </div>
 
-                <Material.TextField inputProps={{ ...register(`address`) }} fullWidth label='Address' />
-                <Material.TextField inputProps={{ ...register(`amount`) }} fullWidth label='Amount' />
-                <NetworkSelector title='Network' selected={targetNetwork} options={Networks} callback={NetworkCallback} />
-                <Material.Button variant='contained' type='submit'>Transfer</Material.Button>
+                    <Material.Button sx={{width: '100%'}} variant='contained' type='submit'>Transfer</Material.Button>
                 </form>
-                </>
+                
                 </Material.CardContent>
         </Material.Card>                
     )
