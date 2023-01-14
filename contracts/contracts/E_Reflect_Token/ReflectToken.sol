@@ -16,14 +16,6 @@ contract ReflectToken is ERC20, Pausable, Ownable {
         uint256 Amount;
         uint256 TransferAmount;
         uint256 ReflectFee;
-        uint256 MarketingFee;
-        uint256 AcquisitionFee;
-    }
-
-    enum MarketSide {
-        NONE,
-        BUY,
-        SELL
     }
 
     //------------------ STATE VARIABLES ---------------------------------------
@@ -35,71 +27,26 @@ contract ReflectToken is ERC20, Pausable, Ownable {
     uint256 private tTotal;
     uint256 private rTotal;
     uint256 private tFeeTotal;
-
-    address private marketingWallet;
-    address[5] private acquisitionWallets;
-    mapping(address => bool) private isExchange;
-
-    uint8 private buyFeeReflect;
-    uint8 private buyFeeMarketing;
-    uint8 private buyFeeAcquisition;
-    uint8 private sellFeeReflect;
-    uint8 private sellFeeMarketing;
-    uint8 private sellFeeAcquisition;
+    uint8 private feeReflectPct;
+    mapping(address => bool) public whitelist;
+    uint256 public mintLimit;
 
     //--------------------  CONSTRUCTOR ----------------------------------------
 
-    /// @notice Sets the values for name, symbol, totalSupply, marketingWallet,
-    /// @notice and acquisitionWallets. Initial allocation: 95% to Admin account (for
-    /// @notice liquidity), 2% to Marketing wallet, 3% to Acquisition wallets.
+    /// @notice Sets the values for name, symbol, totalSupply.
     /// @param _name               token name.
     /// @param _symbol             token symbol.
     /// @param _supply             total token supply.
-    /// @param _marketing          inital marketing wallet address.
-    /// @param _acquisition        list of initial 5 acquisition wallet addresses.
     constructor(
         string memory _name,
         string memory _symbol,
         uint256 _supply,
-        address _marketing,
-        address[] memory _acquisition
+        uint256 _mintLimit
     ) ERC20(_name, _symbol) {
         tTotal = _supply * 10 ** 4;
         rTotal = (~uint256(0) - (~uint256(0) % tTotal));
-        buyFeeReflect = 1;
-        buyFeeMarketing = 1;
-        buyFeeAcquisition = 7;
-        sellFeeReflect = 5;
-        sellFeeMarketing = 1;
-        sellFeeAcquisition = 3;
-        marketingWallet = _marketing;
-        for (uint i = 0; i < acquisitionWallets.length; i++) {
-            acquisitionWallets[i] = _acquisition[i];
-        }
-
-        tOwned[_msgSender()] += (tTotal * 95) / 100;
-        rOwned[_msgSender()] += (rTotal / 100) * 95;
-        emit Transfer(address(0), _msgSender(), tOwned[_msgSender()]);
-
-        tOwned[marketingWallet] += (tTotal * 2) / 100;
-        rOwned[marketingWallet] += (rTotal / 100) * 2;
-        emit Transfer(address(0), marketingWallet, (tTotal * 2) / 100);
-
-        for (uint i = 0; i < acquisitionWallets.length; i++) {
-            tOwned[acquisitionWallets[i]] +=
-                (tTotal * 3) /
-                100 /
-                acquisitionWallets.length;
-            rOwned[acquisitionWallets[i]] +=
-                ((rTotal / 100) * 3) /
-                acquisitionWallets.length;
-
-            emit Transfer(
-                address(0),
-                acquisitionWallets[i],
-                (tTotal * 3) / 100 / acquisitionWallets.length
-            );
-        }
+        feeReflectPct = 10;
+        mintLimit = _mintLimit;
     }
 
     //------------------------ VIEWS -------------------------------------------
@@ -108,6 +55,10 @@ contract ReflectToken is ERC20, Pausable, Ownable {
     /// @dev Overrides ERC20 totalSupply function.
     function totalSupply() public view override returns (uint256) {
         return tTotal;
+    }
+
+    function isMinter(address _requester) public view returns (bool) {
+        return whitelist[_requester];
     }
 
     /// @notice See {IERC20-balanceOf}.
@@ -150,22 +101,6 @@ contract ReflectToken is ERC20, Pausable, Ownable {
         return isExcluded[_account];
     }
 
-    /// @notice Returns which address is receiving marketing fees
-    /// @notice from 'BUY' / 'SELL' transactions.
-    function getMarketingWallet() public view returns (address) {
-        return marketingWallet;
-    }
-
-    /// @notice Returns which address is receiving acquisition fees
-    /// @notice from 'BUY' / 'SELL' transactions at a given index.
-    /// @param _index                number between 0 - 4 representing wallets 1 through 5.
-    function getAcquisitionWallet(
-        uint256 _index
-    ) public view returns (address) {
-        require(_index < acquisitionWallets.length, "Invalid index");
-        return acquisitionWallets[_index];
-    }
-
     /// @notice Allows to view total amount of reflection fees collected since
     /// @notice contract creation.
     function totalFees() public view returns (uint256) {
@@ -175,44 +110,28 @@ contract ReflectToken is ERC20, Pausable, Ownable {
     /// @dev Calculates the required fees to be deducted for given transaction
     /// @dev amount and transaction type.
     /// @param _tAmount              amount being transferred by user.
-    /// @param _side                 transaction type: {BUY}, {SELL}, {NONE}.
     function _getValues(
-        uint256 _tAmount,
-        MarketSide _side
+        uint256 _tAmount
     ) private view returns (FeeValues memory, FeeValues memory) {
         uint256 currentRate = _getRate();
-        FeeValues memory tValues = _getTValues(_tAmount, _side);
+        FeeValues memory tValues = _getTValues(_tAmount);
         FeeValues memory rValues = _getRValues(tValues, currentRate);
 
         return (tValues, rValues);
     }
 
-    /// @dev Function call {_getFeeValues} to obtain the relevant fee
-    /// @dev percentage for the {_side} transaction type. Calculates the actual
-    /// @dev marketing, acquistion, and reflection fees to be deducted from the
+    /// @dev Calculates the actual
+    /// @dev reflection fees to be deducted from the
     /// @dev transfer amount.
     /// @param _tAmount            amount being transferred by user.
-    /// @param _side               transaction type: 'BUY', 'SELL', 'NONE'.
     function _getTValues(
-        uint256 _tAmount,
-        MarketSide _side
+        uint256 _tAmount
     ) private view returns (FeeValues memory) {
-        (
-            uint8 feeReflect,
-            uint8 feeMarketing,
-            uint8 feeAcquisition
-        ) = _getFeeValues(_side);
 
         FeeValues memory tValues;
         tValues.Amount = _tAmount;
-        tValues.ReflectFee = (_tAmount * feeReflect) / 100;
-        tValues.MarketingFee = (_tAmount * feeMarketing) / 100;
-        tValues.AcquisitionFee = (_tAmount * feeAcquisition) / 100;
-        tValues.TransferAmount =
-            tValues.Amount -
-            tValues.ReflectFee -
-            tValues.MarketingFee -
-            tValues.AcquisitionFee;
+        tValues.ReflectFee = (_tAmount * feeReflectPct) / 100;
+        tValues.TransferAmount = tValues.Amount - tValues.ReflectFee;
 
         return (tValues);
     }
@@ -228,13 +147,7 @@ contract ReflectToken is ERC20, Pausable, Ownable {
         FeeValues memory rValues;
         rValues.Amount = _tValues.Amount * _currentRate;
         rValues.ReflectFee = _tValues.ReflectFee * _currentRate;
-        rValues.MarketingFee = _tValues.MarketingFee * _currentRate;
-        rValues.AcquisitionFee = _tValues.AcquisitionFee * _currentRate;
-        rValues.TransferAmount =
-            rValues.Amount -
-            rValues.ReflectFee -
-            rValues.MarketingFee -
-            rValues.AcquisitionFee;
+        rValues.TransferAmount = rValues.Amount - rValues.ReflectFee;
 
         return (rValues);
     }
@@ -246,21 +159,6 @@ contract ReflectToken is ERC20, Pausable, Ownable {
     function _getRate() private view returns (uint256) {
         (uint256 rSupply, uint256 tSupply) = _getCurrentSupply();
         return rSupply / tSupply;
-    }
-
-    /// @dev Calculates the transaction fee percentages depending on whether
-    /// @dev user is buying, selling, or transferring the token.
-    /// @param _side               transaction type: 'BUY', 'SELL', 'NONE'.
-    function _getFeeValues(
-        MarketSide _side
-    ) private view returns (uint8, uint8, uint8) {
-        if (_side == MarketSide.BUY) {
-            return (buyFeeReflect, buyFeeMarketing, buyFeeAcquisition);
-        } else if (_side == MarketSide.SELL) {
-            return (sellFeeReflect, sellFeeMarketing, sellFeeAcquisition);
-        } else {
-            return (0, 0, 0);
-        }
     }
 
     /// @dev Calculates the scaled up and actual token supply exclusive of
@@ -313,16 +211,7 @@ contract ReflectToken is ERC20, Pausable, Ownable {
             "ERC20: transfer amount exceeds balance"
         );
 
-        MarketSide side;
-        if (isExchange[_sender]) {
-            side = MarketSide.BUY;
-        } else if (isExchange[_recipient]) {
-            side = MarketSide.SELL;
-        } else {
-            side = MarketSide.NONE;
-        }
-
-        _transferStandard(_sender, _recipient, _amount, side);
+        _transferStandard(_sender, _recipient, _amount);
     }
 
     /// @dev Updates rOwned and tOwned balances after deducting applicable
@@ -332,16 +221,13 @@ contract ReflectToken is ERC20, Pausable, Ownable {
     /// @param _sender is address sending token.
     /// @param _recipient is address receiving token.
     /// @param _tAmount is number of tokens being transferred.
-    /// @param _side is transaction type: 'BUY', 'SELL', 'NONE'.
     function _transferStandard(
         address _sender,
         address _recipient,
-        uint256 _tAmount,
-        MarketSide _side
+        uint256 _tAmount
     ) private {
         (FeeValues memory tValues, FeeValues memory rValues) = _getValues(
-            _tAmount,
-            _side
+            _tAmount
         );
 
         if (isExcluded[_sender]) {
@@ -358,52 +244,8 @@ contract ReflectToken is ERC20, Pausable, Ownable {
             rOwned[_recipient] += rValues.TransferAmount;
         }
 
+        reflectFee(rValues.ReflectFee, tValues.ReflectFee);
         emit Transfer(_sender, _recipient, tValues.TransferAmount);
-
-        if (_side != MarketSide.NONE) {
-            reflectFee(rValues.ReflectFee, tValues.ReflectFee);
-            if (tValues.MarketingFee > 0) {
-                if (isExcluded[marketingWallet]) {
-                    tOwned[marketingWallet] += tValues.MarketingFee;
-                    rOwned[marketingWallet] += rValues.MarketingFee;
-                } else {
-                    rOwned[marketingWallet] += rValues.MarketingFee;
-                }
-                emit Transfer(_sender, marketingWallet, tValues.MarketingFee);
-            }
-
-            if (tValues.AcquisitionFee > 0) {
-                _acquisitionWalletAlloc(
-                    _sender,
-                    tValues.AcquisitionFee,
-                    rValues.AcquisitionFee
-                );
-            }
-        }
-    }
-
-    /// @dev Allocates the acquisition wallet fees to each of the five
-    /// @dev acquisition addresses in equal proportion.
-    /// @param _sender              address sending token.
-    /// @param _tAmount             amount of tokens to be allocated.
-    /// @param _rAmount             scaled up amount to be allocated.
-    function _acquisitionWalletAlloc(
-        address _sender,
-        uint256 _tAmount,
-        uint256 _rAmount
-    ) private {
-        uint256 _tAllocation = _tAmount / acquisitionWallets.length;
-        uint256 _rAllocation = _rAmount / acquisitionWallets.length;
-
-        for (uint i = 0; i < acquisitionWallets.length; i++) {
-            if (isExcluded[acquisitionWallets[i]]) {
-                tOwned[acquisitionWallets[i]] += _tAllocation;
-                rOwned[acquisitionWallets[i]] += _rAllocation;
-            } else {
-                rOwned[acquisitionWallets[i]] += _rAllocation;
-            }
-            emit Transfer(_sender, acquisitionWallets[i], _tAllocation);
-        }
     }
 
     /// @dev Updates {rTotal} supply by subtracting reflection fees. Updates
@@ -418,96 +260,33 @@ contract ReflectToken is ERC20, Pausable, Ownable {
 
     //----------------------------- RESTRICTED FUNCTIONS ---------------------------
 
-    /// @notice Sets the exchange pair address for the token to detect 'BUY',
-    /// @notice 'SELL', or 'NONE' transactions for fee collection.
-    /// @dev Only transactions to, and from this address will trigger fee collection.
-    /// @param _exchangePair         DEX liquidity pool
-    function setExchange(address _exchangePair) external onlyOwner {
-        require(
-            !isExchange[_exchangePair],
-            "FeeOnTransfer: Address already Exchange"
-        );
-        isExchange[_exchangePair] = true;
+    function changeMinter(address _minter, bool _active) external onlyOwner {
+        whitelist[_minter] = _active;
     }
 
-    /// @notice Removes an exchange pair address from fee collection.
-    /// @param _exchangePair         DEX liquidity pool
-    function removeExchange(address _exchangePair) external onlyOwner {
-        require(
-            isExchange[_exchangePair],
-            "FeeOnTransfer: Address not Exchange"
-        );
-        isExchange[_exchangePair] = false;
+    function mintTo(address _recipient, uint256 _amount) external {
+        require(isMinter(msg.sender), "ReflectToken: Unauthorized Mint.");
+        require(_amount <= mintLimit, "ReflectToken: Mint amount over per-mint limit.");
+
+        _mint(_recipient, _amount);
     }
 
-    /// @notice Changes marketing wallet address to receive marketing fee going
-    /// @notice forward.
-    /// @param _newAddress          new address marketing addresses.
-    function changeMarketing(address _newAddress) external onlyOwner {
-        require(
-            _newAddress != address(0),
-            "FeeOnTransfer: Address cannot be zero address"
-        );
-        marketingWallet = _newAddress;
+    function burnFrom(address _recipient, uint256 _amount) external {
+        require(isMinter(msg.sender), "ReflectToken: Unauthorized Burn.");
+
+        _burn(_recipient, _amount);
     }
 
-    /// @notice Changes acquisition wallets address to receive acquisition fee
-    /// @notice going forward.
-    /// @param _index                wallet index to be replaced, from 0 to 4.
-    /// @param _newAddress           new acquisition wallet address.
-    function changeAcquisition(
-        uint256 _index,
-        address _newAddress
-    ) external onlyOwner {
-        require(
-            _index < acquisitionWallets.length,
-            "FeeOnTransfer: Invalid index value"
-        );
-        require(
-            _newAddress != address(0),
-            "FeeOnTransfer: Address cannot be zero address"
-        );
-        acquisitionWallets[_index] = _newAddress;
-    }
-
-    /// @notice Changes the reflection, marketing, and acquisition fee
-    /// @notice percentages to be deducted from 'BUY' transaction type.
-    /// @param _reflectFee           new reflection fee percent.
-    /// @param _marketingFee         new marketing fee percent.
-    /// @param _acquisitionFee       new acquisition fee percent.
-    function setBuyFees(
-        uint8 _reflectFee,
-        uint8 _marketingFee,
-        uint8 _acquisitionFee
-    ) external onlyOwner {
-        require(
-            _reflectFee + _marketingFee + _acquisitionFee < 100,
-            "FeeOnTransfer: Total fee percentage must be less than 100%"
-        );
-
-        buyFeeReflect = _reflectFee;
-        buyFeeMarketing = _marketingFee;
-        buyFeeAcquisition = _acquisitionFee;
-    }
-
-    /// @notice Changes the reflection, marketing, and acquisition fee
+    /// @notice Changes the reflection fee
     /// @notice percentages to be deducted from {SELL} transaction type.
     /// @param _reflectFees is the new reflection fee percentage.
-    /// @param _marketingFees is the new marketing fee percentage.
-    /// @param _acquisitionFees is the new acquisition fee percentage.
-    function setSellFees(
-        uint8 _reflectFees,
-        uint8 _marketingFees,
-        uint8 _acquisitionFees
-    ) external onlyOwner {
+    function setReflectFees(uint8 _reflectFees) external onlyOwner {
         require(
-            _reflectFees + _marketingFees + _acquisitionFees < 100,
+            _reflectFees < 100,
             "FeeOnTransfer: Total fee percentage must be less than 100%"
         );
 
-        sellFeeReflect = _reflectFees;
-        sellFeeMarketing = _marketingFees;
-        sellFeeAcquisition = _acquisitionFees;
+        feeReflectPct = _reflectFees;
     }
 
     /// @notice Removes address from receiving future reflection distributions.
