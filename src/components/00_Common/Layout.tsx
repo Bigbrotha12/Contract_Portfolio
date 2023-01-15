@@ -50,7 +50,7 @@ export default function Layout()
     ]
     const portfolioContent: Array<Content> = [
         { title: 'DApp Demo', icon: DAppImage, content: '/portfolio#top'},
-        { title: 'Code Repositories', icon: CodeImage, content: 'https://github.com/Bigbrotha12?tab=repositories' },
+        { title: 'Code Repositories', icon: CodeImage, content: 'https://github.com/Bigbrotha12' },
         { title: 'NFT', icon: null, content: '' }
     ]
     const skillContent: Array<Content> = [
