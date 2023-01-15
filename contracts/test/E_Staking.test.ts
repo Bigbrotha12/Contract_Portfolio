@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import hre from 'hardhat';
 import { DemoToken } from '../typechain-types/contracts/A_DemoToken';
-import { Staking } from '../typechain-types/contracts/F_Staker';
+import { Staking } from '../typechain-types/contracts/E_Staker';
 
 describe('Staker', function () {
   async function DeployFixture() {

@@ -8,9 +8,8 @@ describe("DemoToken", function () {
         const [admin, whitelistUser, user] = await hre.ethers.getSigners();
         const name: string = "DemoToken";
         const symbol: string = "DEMO";
-        const limit: number = 1000;
         const whitelist: Array<string> = [admin.address, whitelistUser.address];
-        const token = await (await hre.ethers.getContractFactory("DemoToken")).deploy(name, symbol, whitelist, limit);
+        const token = await (await hre.ethers.getContractFactory("DemoToken")).deploy(name, symbol, whitelist);
         
         const IToken = token as DemoToken;
         return { IToken, admin, whitelistUser, user };
@@ -73,13 +72,6 @@ describe("DemoToken", function () {
 
             await expect(IToken.connect(user).mintTo(whitelistUser.address, MINT_AMOUNT)).to.be.revertedWith("DemoToken: Unauthorized Mint.");
             await expect(IToken.connect(user).burnFrom(whitelistUser.address, MINT_AMOUNT)).to.be.revertedWith("DemoToken: Unauthorized Burn.")
-        });
-
-        it("Should not allow mints greater than the per-mint limit.", async () => {
-            const { IToken, admin, whitelistUser, user } = await loadFixture(TokenDeployFixture);
-            const MINT_LIMIT = 1000;
-
-            await expect(IToken.mintTo(user.address, MINT_LIMIT + 1)).to.be.revertedWith("DemoToken: Mint amount over per-mint limit.");
         });
     });
 });

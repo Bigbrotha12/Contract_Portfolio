@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import hre from 'hardhat';
-import { ReflectToken } from '../typechain-types/contracts/E_Reflect_Token';
+import { ReflectToken } from '../typechain-types/contracts/D_Reflect_Token';
 
 describe('Reflect', function () {
   async function DeployFixture() {

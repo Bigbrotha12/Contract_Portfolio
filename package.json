@@ -24,12 +24,11 @@
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
     "@mui/material": "^5.11.3",
-    "ethers": "^5.7.2",
+    "ethers": "5.7.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.41.5",
-    "react-router-dom": "^6.6.1",
-    "web3": "^1.8.1"
+    "react-router-dom": "^6.6.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.12",
@@ -46,7 +45,7 @@
     "babel-plugin-lodash": "^3.3.4",
     "css-loader": "^6.7.3",
     "dotenv": "^16.0.3",
-    "hardhat": "^2.12.6",
+    "hardhat": "2.12.6",
     "html-webpack-plugin": "^5.5.0",
     "lodash-webpack-plugin": "^0.11.6",
     "postcss-loader": "^7.0.2",

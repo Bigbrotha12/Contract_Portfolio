@@ -23,7 +23,9 @@ contract AirdropDemo {
 
     //--------------------  CONSTRUCTOR ----------------------------------------
 
-    /// @notice Creates a new AirdropDemo contract
+    /// @notice Creates a new AirdropDemo contract.
+    /// @param _limit the maximum amount of token to airdrop per-transaction.
+    /// @param _token of the DemoToken contract to be used for minting. 
     constructor(uint256 _limit, DemoToken _token) {
         limit = _limit;
         demoToken = _token;
@@ -33,6 +35,7 @@ contract AirdropDemo {
     //-------------------- MUTATIVE FUNCTIONS ----------------------------------
 
     /// @notice Creates a new Airdrop merkle root. Security checks are disabled for Demo.
+    /// @param _root Merkle root of airdrop data.
     function createAirdrop(bytes32 _root) external {
         merkleRoot[msg.sender] = _root;
     }

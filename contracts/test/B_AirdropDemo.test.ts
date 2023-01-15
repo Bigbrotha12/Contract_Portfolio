@@ -1,20 +1,22 @@
 import { expect } from 'chai';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import hre, { ethers } from 'hardhat';
+import "@nomiclabs/hardhat-ethers";
+import "@nomicfoundation/hardhat-chai-matchers";
+import { ethers } from 'hardhat';
 import Merkle from './../scripts/merkleRootCalculator';
 import { DemoToken } from './../typechain-types/contracts/A_DemoToken/index';
 import { AirdropDemo } from './../typechain-types/contracts/B_Airdrop/index';
 
 describe("AirdropDemo", function () {
   async function DeployFixture() {
-    const [admin, user1, user2, user3] = await hre.ethers.getSigners();
+    const [admin, user1, user2, user3] = await ethers.getSigners();
     const name: string = "DemoToken";
     const symbol: string = "DEMO";
     const limit: number = 1000;
     const whitelist: Array<string> = [admin.address, user1.address];
 
-    const token = await (await hre.ethers.getContractFactory("DemoToken")).deploy(name, symbol, whitelist, limit);
-    const airdrop = await (await hre.ethers.getContractFactory("AirdropDemo")).deploy(limit, token.address);
+    const token = await (await ethers.getContractFactory("DemoToken")).deploy(name, symbol, whitelist);
+    const airdrop = await (await ethers.getContractFactory("AirdropDemo")).deploy(limit, token.address);
     await token.changeMinter(airdrop.address, true);
 
     const IToken = token as DemoToken;
@@ -86,7 +88,7 @@ describe("AirdropDemo", function () {
       // Calculate proof for user 3
       const leaf2 = Merkle.getLeafAtIndex(2, sample1);
       const leaves2 = Merkle.createLeaves(sample1);
-      const proof2 = Merkle.calculateProof(leaf, leaves);
+      const proof2 = Merkle.calculateProof(leaf2, leaves2);
 
       // Attempts to claim tokens over the limit should fail
       await expect(IAirdrop.connect(user3).claim(user3.address, user3.address, 1300, proof2))

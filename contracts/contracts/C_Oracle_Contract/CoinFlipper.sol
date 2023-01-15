@@ -18,7 +18,7 @@ contract CoinFlipper is Ownable, VRFConsumerBaseV2 {
     //------------------ STATE VARIABLES ---------------------------------------
 
     VRFCoordinatorV2Interface COORDINATOR; // Chainlink coordinator interface
-    uint64 subscriptionId; // Chainlink account
+    uint64 public subscriptionId; // Chainlink account
     uint256 public reservedBalance; // Contract balance reserved for players
     mapping(uint256 => address) public playerQuery; // Oracle query for each player
     mapping(address => Player) public players; // Players data
@@ -38,12 +38,15 @@ contract CoinFlipper is Ownable, VRFConsumerBaseV2 {
     /// @notice deployment.
     /// @param _subscriptionId      Chainlink subscription
     /// @param _vrfCoordinator      Address of Chainlink oracle coordinator
+    /// @param _token               Token for demonstration purposes
     constructor(
         uint64 _subscriptionId,
-        address _vrfCoordinator
+        address _vrfCoordinator,
+        DemoToken _token
     ) VRFConsumerBaseV2(_vrfCoordinator) {
         COORDINATOR = VRFCoordinatorV2Interface(_vrfCoordinator);
         subscriptionId = _subscriptionId;
+        token = _token;
     }
 
     //------------------------ VIEWS -------------------------------------------
@@ -72,7 +75,7 @@ contract CoinFlipper is Ownable, VRFConsumerBaseV2 {
     /// @notice Allow player to place a bet of atleast 0.1 ETH.
     /// @dev Player cannot change bet while waiting for oracle response.
     /// @dev Balance to be added to be determined by transaction value.
-    function placeBet(uint256 _amount) external payable {
+    function placeBet(uint256 _amount) external {
         require(_amount >= 1, "CoinFlipper: Minimum bet is 1 DEMO");
         require(
             token.balanceOf(msg.sender) >= _amount,
