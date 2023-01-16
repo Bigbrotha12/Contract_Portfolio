@@ -4,7 +4,6 @@ pragma solidity >=0.8.0 <0.9.0;
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "./EIP712X.sol";
 import "./../A_DemoToken/DemoToken.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /// @title IBC_Bridge
 /// @notice Implementing EIP712 and on-chain signature verification to
@@ -25,6 +24,7 @@ contract IBC_Bridge is EIP712X {
     DemoToken public demoToken;
     string public name;
     string public version;
+    uint256 public limit;
 
     //----------------------- EVENTS -------------------------------------------
 
@@ -53,6 +53,7 @@ contract IBC_Bridge is EIP712X {
         string memory _name,
         string memory _version,
         address _minter,
+        uint256 _limit,
         DemoToken _token
     ) EIP712(_name, _version) {
         MESSAGE_TYPE_HASH = keccak256(
@@ -62,6 +63,7 @@ contract IBC_Bridge is EIP712X {
         name = _name;
         version = _version;
         demoToken = _token;
+        limit = _limit;
     }
 
     //-------------------- VIEW FUNCTIONS ----------------------------------
@@ -102,10 +104,10 @@ contract IBC_Bridge is EIP712X {
         uint256 _receivingChainId
     ) external returns (bool) {
         bytes32 destinationDomain = getDomainHash(_receivingChainId);
-        require(destinationDomain != 0, "IBC_Bridge: Unregistered Domain");
+        require(destinationDomain != 0, "IBC_Bridge: Unregistered Domain.");
         require(
             demoToken.balanceOf(msg.sender) >= _amount,
-            "IBC_Bridge: Insufficient funds"
+            "IBC_Bridge: Insufficient funds."
         );
 
         uint256 nonce_ = nonce[msg.sender][block.chainid][_receivingChainId]++;
@@ -122,11 +124,11 @@ contract IBC_Bridge is EIP712X {
     }
 
     /// @notice Validates the transaction data and verifies signature before
-    /// @notice executing NFT minting.
+    /// @notice executing minting.
     /// @dev The message hash must be computed on-chain based on parameter
     /// @dev input to verify that provided parameters have not been tampered and
     /// @dev signature has not been reused.
-    /// @param _receiver          Address of NFT receiving account.
+    /// @param _receiver          Address of receiving account.
     /// @param _sendingChainId    ID of the origin chain.
     /// @param _amount            Amount of tokens transferred.
     /// @param _signature         Signature for verification.
@@ -143,9 +145,10 @@ contract IBC_Bridge is EIP712X {
             _amount,
             nonce_
         );
+
         bytes32 digest = getPrefixedDataHash(structHash);
-        address signer = digest.recover(_signature);
-        require(signer == MINTER, "ECDSA: Signature Verification Failed");
+        address signer = digest.toEthSignedMessageHash().recover(_signature);
+        require(signer == MINTER, "ECDSA: Signature Verification Failed.");
 
         demoToken.mintTo(_receiver, _amount);
         emit DataReceived(_receiver, _amount, _sendingChainId, nonce_);

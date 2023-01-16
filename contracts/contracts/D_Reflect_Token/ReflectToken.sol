@@ -27,8 +27,14 @@ contract ReflectToken is ERC20, Pausable, Ownable {
     uint256 private tTotal;
     uint256 private rTotal;
     uint256 private tFeeTotal;
-    uint8 private feeReflectPct;
+    uint8 public feeReflectPct;
     uint256 public mintLimit;
+
+    //----------------------- EVENTS ---------------------------------------
+
+    event FeeChanged(uint256 oldFee, uint256 newFee);
+    event AccountExcluded(address indexed account);
+    event AccountIncluded(address indexed account);
 
     //--------------------  CONSTRUCTOR ----------------------------------------
 
@@ -40,12 +46,15 @@ contract ReflectToken is ERC20, Pausable, Ownable {
         string memory _name,
         string memory _symbol,
         uint256 _supply,
-        uint256 _mintLimit
+        uint256 _mintLimit,
+        uint8 _feeReflect
     ) ERC20(_name, _symbol) {
-        tTotal = _supply * 10 ** 4;
+        tTotal = _supply;
         rTotal = (~uint256(0) - (~uint256(0) % tTotal));
-        feeReflectPct = 10;
+        feeReflectPct = _feeReflect;
         mintLimit = _mintLimit;
+        tOwned[msg.sender] = tTotal;
+        rOwned[msg.sender] = rTotal;
     }
 
     //------------------------ VIEWS -------------------------------------------
@@ -74,7 +83,7 @@ contract ReflectToken is ERC20, Pausable, Ownable {
     /// @dev to maintain precision of arithmetic operations for reflection fee
     /// @dev distributions, given a large token supply.
     function decimals() public pure override returns (uint8) {
-        return 4;
+        return 18;
     }
 
     /// @notice Provides scaled down amount based on current reflection rate.
@@ -255,16 +264,6 @@ contract ReflectToken is ERC20, Pausable, Ownable {
 
     //----------------------------- RESTRICTED FUNCTIONS ---------------------------
 
-    function mintTo(address _recipient, uint256 _amount) external {
-        require(_amount <= mintLimit, "ReflectToken: Mint amount over per-mint limit.");
-
-        _mint(_recipient, _amount);
-    }
-
-    function burnFrom(address _recipient, uint256 _amount) external {
-        _burn(_recipient, _amount);
-    }
-
     /// @notice Changes the reflection fee
     /// @notice percentages to be deducted from {SELL} transaction type.
     /// @param _reflectFees is the new reflection fee percentage.
@@ -273,7 +272,7 @@ contract ReflectToken is ERC20, Pausable, Ownable {
             _reflectFees < 100,
             "FeeOnTransfer: Total fee percentage must be less than 100%"
         );
-
+        emit FeeChanged(feeReflectPct, _reflectFees);
         feeReflectPct = _reflectFees;
     }
 
@@ -292,6 +291,7 @@ contract ReflectToken is ERC20, Pausable, Ownable {
         tOwned[_account] = balanceOf(_account);
         excluded.push(_account);
         isExcluded[_account] = true;
+        emit AccountExcluded(_account);
     }
 
     /// @notice Includes previously excluded address to receive reflection
@@ -313,6 +313,8 @@ contract ReflectToken is ERC20, Pausable, Ownable {
                 break;
             }
         }
+
+        emit AccountIncluded(_account);
     }
 
     /// @notice Pauses token transfer functionality in case of emergency.

@@ -1,7 +1,7 @@
-import { expect } from 'chai';
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import "@nomiclabs/hardhat-ethers";
 import "@nomicfoundation/hardhat-chai-matchers";
+import { expect } from 'chai';
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { ethers } from 'hardhat';
 import Merkle from './../scripts/merkleRootCalculator';
 import { DemoToken } from './../typechain-types/contracts/A_DemoToken/index';

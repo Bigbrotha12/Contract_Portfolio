@@ -1,8 +1,10 @@
+import "@nomiclabs/hardhat-ethers";
+import "@nomicfoundation/hardhat-chai-matchers";
 import { expect } from 'chai';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import hre from 'hardhat';
 import { FamiliarProxy } from '../typechain-types/contracts/F_Upgradable_NFT/NFTDemo.sol';
-import { FamiliarLogic } from '../typechain-types/contracts/F_Upgradable_NFT/FamiliarLogic';
+import { FamiliarLogic } from '../typechain-types/contracts/F_Upgradable_NFT';
 
 describe("Upgradable NFT", function () {
   async function DeployFixture() {

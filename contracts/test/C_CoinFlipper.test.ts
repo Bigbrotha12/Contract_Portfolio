@@ -1,3 +1,5 @@
+import "@nomiclabs/hardhat-ethers";
+import "@nomicfoundation/hardhat-chai-matchers";
 import { expect } from 'chai';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import hre, { ethers } from 'hardhat';
@@ -118,7 +120,4 @@ describe("CoinFlipper", function () {
       expect(await ICoinFlip.getPlayerBalance(user1.address)).to.be.equal(betAmount * 0);
     });
   });
-  
-
-  
 });

@@ -1,8 +1,9 @@
 import { expect } from 'chai';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import hre, { ethers } from 'hardhat';
+import { TypedDataDomain, TypedDataField } from 'ethers';
 import { DemoToken } from './../typechain-types/contracts/A_DemoToken/index';
-import { IBC_Bridge } from './../typechain-types/contracts/C_IBC_Messenger/index';
+import { IBC_Bridge } from './../typechain-types/contracts/C_IBC_Messenger/IBC_Bridge';
 
 describe("IBC_Bridge", function () {
   async function DeployFixture() {
@@ -16,8 +17,8 @@ describe("IBC_Bridge", function () {
     const bridgeVersion: string = "0.0.1";
     const minter: string = admin.address;
 
-    const token = await (await hre.ethers.getContractFactory("DemoToken")).deploy(name, symbol, whitelist, limit);
-    const bridge = await (await hre.ethers.getContractFactory("IBC_Bridge")).deploy(bridgeName, bridgeVersion, minter, token.address);
+    const token = await (await hre.ethers.getContractFactory("DemoToken")).deploy(name, symbol, whitelist);
+    const bridge = await (await hre.ethers.getContractFactory("IBC_Bridge")).deploy(bridgeName, bridgeVersion, minter, limit, token.address);
     await token.changeMinter(bridge.address, true);
 
     const IBridge = bridge as IBC_Bridge;
@@ -35,7 +36,7 @@ describe("IBC_Bridge", function () {
       expect(await IBridge.MINTER()).to.be.equal(admin.address);
     });
 
-    it("should initialize to correct domain hash", async () => {
+    it("Should initialize to correct domain hash", async () => {
       const { IToken, IBridge, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
       
       let domainTypeHash = ethers.utils.solidityKeccak256(["string"],["EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"]);
@@ -47,7 +48,7 @@ describe("IBC_Bridge", function () {
       let encodedDomain = ethers.utils.AbiCoder.prototype.encode(
         ['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],
         [domainTypeHash, domainNameHash, domainVersionHash, domainChainId, domainAddress]);
-      let domainHash = ethers.utils.solidityKeccak256(["bytes32"], [encodedDomain]);
+      let domainHash = ethers.utils.solidityKeccak256(["bytes"], [encodedDomain]);
       let currentDomain = await IBridge.getCurrentDomainHash();
       
       expect(domainHash).to.be.equal(currentDomain);
@@ -55,7 +56,7 @@ describe("IBC_Bridge", function () {
   });
 
   describe("Struct Construction", function () {
-    it("should build valid domain hashes", async () => {
+    it("Should build valid domain hashes", async () => {
       const { IToken, IBridge, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
   
       let domainTypeHash = ethers.utils.solidityKeccak256(["string"], ["EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"]);
@@ -64,16 +65,16 @@ describe("IBC_Bridge", function () {
       let domainChainId = 3;
       let domainAddress = user1.address;     
       // abi.encode
-      let encodedDomain = ethers.utils.AbiCoder.prototype.encode(
+      let encodedDomain = ethers.utils.defaultAbiCoder.encode(
         ['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],
         [domainTypeHash, domainNameHash, domainVersionHash, domainChainId, domainAddress]);
-      let domainHash = ethers.utils.solidityKeccak256(["bytes32"], [encodedDomain]);
+      let domainHash = ethers.utils.solidityKeccak256(["bytes"], [encodedDomain]);
       let currentDomain = await IBridge.buildDomainHash(domainNameHash, domainVersionHash, domainChainId, domainAddress);
    
       expect(domainHash).to.be.equal(currentDomain);
     });
   
-    it("should build valid struct hashes", async () => {
+    it("Should build valid struct hashes", async () => {
       const { IToken, IBridge, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
   
       let structTypeHash = ethers.utils.solidityKeccak256(["string"], ["Transaction(address receiver,uint256 receivingChainId,uint256 amount, uint256 nonce)"]);
@@ -85,129 +86,180 @@ describe("IBC_Bridge", function () {
       let encodedStruct = ethers.utils.AbiCoder.prototype.encode(
         ['bytes32', 'address', 'uint256', 'uint256', 'uint256'],
         [structTypeHash, structReceiver, structChainId, structAmount, structNonce]);
-      let structHash = ethers.utils.solidityKeccak256(["bytes32"], [encodedStruct]);
+      let structHash = ethers.utils.solidityKeccak256(["bytes"], [encodedStruct]);
       let builtStruct = await IBridge.buildStructHash(structReceiver, structChainId, structAmount, structNonce);
    
       expect(structHash).to.be.equal(builtStruct);
     });
   
-    it("should conform to TypedDataV4 message signing", async () => {
+    it("Should conform to TypedDataV4 message signing", async () => {
       const { IToken, IBridge, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
   
       let domainChainId = await IBridge.getChainId();
-      let domainAddress = await IBridge.getAddress(); 
-      let structReceiver = admin.address;
-      let structChainId = 1337;
-      let structAmount = 100;
-      let structNonce = 1;
-      let builtStruct = await IBridge.buildStructHash(structReceiver, structChainId, structAmount, structNonce);
-      //let msg = await bridgeInst.getTypedDataHash(builtStruct);
-      let msg = prepareMsgHash(structReceiver, structChainId, structAmount, structNonce, domainAddress, domainChainId);
-      let prefixMsg = await IBridge.getPrefixedDataHash(builtStruct);
-      let signedMsg = await admin.signMessage(msg);
-  
-      //Check that contract struct hashing and prefixing works correctly
-      let recoveredPKey = ethers.utils.verifyMessage(prefixMsg, signedMsg);
+      let domainAddress = await IBridge.getAddress();     
+
+      let domainCalc = domainHash("IBC_DEMO", "0.0.1", domainChainId.toNumber(), domainAddress);
+      let structCalc = structHash(user1.address, domainChainId.toNumber(), 100, 0);
+      
+      let digest = prepareMsgHash(user1.address, domainChainId.toNumber(), 100, 0, "IBC_DEMO", "0.0.1", domainAddress);
+      let solDigest = await IBridge.getPrefixedDataHash(structCalc);
+      
+      let signature = await admin.signMessage(digest);
+      let recoveredPKey = ethers.utils.verifyMessage(solDigest, signature);
   
       expect(recoveredPKey).to.be.equal(admin.address);
     });
   });
 
   describe("Validation", function () {
-    it("should execute valid mint requests", async () => {
+    it("Should execute valid mint requests", async () => {
       const { IToken, IBridge, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
-      
-  
-      // Prepare 2 message hash for signing
-      let domainChainId = await IBridge.getChainId();
-      let domainAddress = await IBridge.getAddress(); 
-      let msg = prepareMsgHash(user1.address, domainChainId, 10, 0, domainAddress, domainChainId);
-      let signedMsg = admin.signMessage(msg);  // Returns signed message object
-     
-      // Relay mint request to bridge
-      expect(await IToken.balanceOf(user1.address)).to.be.equal(0);
-      let mintTx = await IBridge.dataReceive(user1.address, hre.network.config.chainId || 1, 10, signedMsg);
-      await expect(IBridge.dataReceive(user1.address, hre.network.config.chainId || 1, 10, signedMsg)).to.emit(IBridge, "DataReceived");
-      expect(await IToken.balanceOf(user1.address)).to.be.equal(10);
+      const mintAmount = 100;
+      const domainName: string = await IBridge.getName();
+      const domainVersion: string = await IBridge.getVersion();
+      const domainChainId: number = (await IBridge.getChainId()).toNumber();
+      const domainAddress: string = await IBridge.getAddress();
+      const currentNonce: number = (await IBridge.nonce(user1.address, domainChainId, domainChainId)).toNumber();
+    
+      let msgHash = prepareMsgHash(user1.address, domainChainId, mintAmount, currentNonce, domainName, domainVersion, domainAddress);
+      let signature = await admin.signMessage(ethers.utils.arrayify(msgHash));
+
+      await expect(IBridge.dataReceive(user1.address, domainChainId, mintAmount, signature)).to.changeTokenBalance(
+        IToken,
+        user1.address,
+        mintAmount
+      );
     });
   
     it("should execute valid burn requests", async () => {
       const { IToken, IBridge, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
-  
-      await IToken.mintTo(user1.address, 100);
-  
-      // Register Chain ID "1" as receiving domain 
-      await IBridge.registerDomain("Foreign_Bridge", "1.0.0", 1, user1.address);
-  
+      const transferAmount = 100;
+      const newDomainName: string = "Foreign_Bridge";
+      const newDomainVersion: string = "1.0.0";
+      const newDomainId: number = 1;
+      const newDomainAddress: string = user3.address;
+
+      // register new destination domain
+      await IBridge.registerDomain(newDomainName, newDomainVersion, newDomainId, newDomainAddress);
+
+      await IToken.mintTo(user1.address, transferAmount);
+      await expect(IBridge.connect(user1).dataSend(user1.address, transferAmount, newDomainId)).to.emit(IBridge, "DataSent");
     });
   });
 
   describe("Domain Registration", function () {
     it("Should reject requests to unregistered domains.", async () => {
       const { IToken, IBridge, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
-
+      const transferAmount = 100;
+      const newDomainId = 777;
       // Attempt send transaction to unregistered domain
-      await expect(await IBridge.dataSend(user1.address, 10, 777)).to.be.revertedWith("IBC_Bridge: Unregistered Domain");
+      await expect(IBridge.dataSend(user1.address, transferAmount, newDomainId)).to.be.revertedWith("IBC_Bridge: Unregistered Domain.");
     });
 
     it("Should reject registration requests for existing domains.", async () => {
       const { IToken, IBridge, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
+      const newDomainName: string = "Foreign_Bridge";
+      const newDomainVersion: string = "1.0.0";
+      const newDomainId: number = 1;
+      const newDomainAddress: string = user3.address;
 
+      await IBridge.registerDomain(newDomainName, newDomainVersion, newDomainId, newDomainAddress);
       // Registration request for existing domains should be rejected
-      await expect(IBridge.registerDomain("Foreign_Bridge", "1.0.0", 1, user1.address)).to.be.revertedWith("EIP712X: Domain already exist");
+      await expect(IBridge.registerDomain(newDomainName, newDomainVersion, newDomainId, newDomainAddress)).to.be.revertedWith("EIP712X: Domain already exist");
     });
 
     it("Should register new valid receiving domains if admin", async () => {
       const { IToken, IBridge, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
-  
+      const newDomainName: string = "Foreign_Bridge";
+      const newDomainVersion: string = "1.0.0";
+      const newDomainId: number = 1;
+      const newDomainAddress: string = user3.address;
+
       // Registration request from non-admin accounts should be rejected
-      await expect(IBridge.registerDomain("Foreign_Bridge", "1.0.0", 777, user1.address)).to.be.revertedWith("Ownable: caller is not the owner");
-      // Register new domain name: "Foreign_Bridge", version: 1.0.0, chain: 777, address: accounts[5]
-      await IBridge.registerDomain("Foreign_Bridge", "1.0.0", 777, user1.address);
+      await expect(IBridge.connect(user1).registerDomain(newDomainName, newDomainVersion, newDomainId, newDomainAddress)).to.be.revertedWith("Ownable: caller is not the owner");
+      // Register new domain name
+      await expect(IBridge.registerDomain(newDomainName, newDomainVersion, newDomainId, newDomainAddress)).to.emit(IBridge, "DomainRegistered");
     });
   
     it("Should allow updates to existing receiver domains", async () => {
       const { IToken, IBridge, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
-  
+      const newDomainName: string = "Foreign_Bridge";
+      const newDomainVersion: string = "1.0.0";
+      const newDomainId: number = 1;
+      const newDomainAddress: string = user3.address;
+
       // Change request from non-admin accounts should be rejected
-      await expect(IBridge.changeDomain("Foreign_Bridge", "1.0.0", 777, user1.address)).to.be.revertedWith("Ownable: caller is not the owner");
+      await expect(IBridge.connect(user1).changeDomain(newDomainAddress, newDomainVersion, newDomainId, newDomainAddress)).to.be.revertedWith("Ownable: caller is not the owner");
       // Change request to unregistered domains should be rejected
-      await expect(IBridge.changeDomain("Foreign_Bridge", "1.0.0", 999, user1.address)).to.be.revertedWith("EIP712X: Domain does not exist");
-      // Change request domain name: "Foreign_Bridge", version: 1.4.0, chain: 777, address: accounts[7]
-      await expect(IBridge.changeDomain("Foreign_Bridge", "1.4.0", 777, user1.address)).to.emit(IBridge, "Domain changed");
+      await expect(IBridge.changeDomain(newDomainAddress, newDomainVersion, newDomainId, newDomainAddress)).to.be.revertedWith("EIP712X: Domain does not exist");
+      
+      await IBridge.registerDomain(newDomainName, newDomainVersion, newDomainId, newDomainAddress);
+      // Change request domain
+      await expect(IBridge.changeDomain(newDomainName, newDomainVersion, newDomainId, newDomainAddress)).to.emit(IBridge, "DomainChanged");
+    });
+
+    it("Should not allow registration or updates to contract's own domain", async () => {
+      const { IToken, IBridge, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
+      const newDomainName: string = "Foreign_Bridge";
+      const newDomainVersion: string = "1.0.0";
+      const currentChain: number = (await IBridge.getChainId()).toNumber();;
+      const newDomainAddress: string = user3.address;
+
+      await expect(IBridge.registerDomain(newDomainName, newDomainVersion, currentChain, newDomainAddress)).to.be.revertedWith("EIP712X: Cannot change this domain.");
+      await expect(IBridge.changeDomain(newDomainAddress, newDomainVersion, currentChain, newDomainAddress)).to.be.revertedWith("EIP712X: Cannot change this domain.");
     });
   });
 });
 
-function prepareMsgHash(_recipient, _chainId, _amount, _nonce, _domainAddress, _domainChain) {
+function prepareMsgHash(
+  _recipient: string,
+  _chainId: number,
+  _amount: number,
+  _nonce: number,
+  _domainName: string,
+  _domainVer: string,
+  _domainAddress: string
+) {
 
   // Reference encoding layout
   //    domainSeparator: keccak256(abi.encode(typeHash,name,version,chainId,receivingContract)
-  //    buildStructHash: keccak256(abi.encode(typeHash,receiver,receivingChainId,tokenId,nonce))
+  //    buildStructHash: keccak256(abi.encode(typeHash,receiver,receivingChainId,amount,nonce))
   //    TypedMsg: keccak256(abi.encodePacked("\x19\x01", domainSeparator, buildStructHash))
 
   // domainSeparator
-  let domainTypeHash = ethers.utils.solidityKeccak256(["string"], ["EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"]);
-  let domainNameHash = ethers.utils.solidityKeccak256(["string"], ["Test"]);
-  let domainVersionHash = ethers.utils.solidityKeccak256(["string"], ["1.0.0"]); 
-  let domainChainId = _domainChain;
-  let domainAddress = _domainAddress;     
-  let encodedDomain = ethers.utils.AbiCoder.prototype.encode(
+  let domainSeparator = domainHash(_domainName, _domainVer, _chainId, _domainAddress);
+  // structSeparator
+  let structSeparator = structHash(_recipient, _chainId, _amount, _nonce);
+
+  let msg = ethers.utils.solidityKeccak256(["string", "bytes32", "bytes32"], ["\x19\x01", domainSeparator, structSeparator]);
+  //let msg = ethers.utils.solidityKeccak256(["bytes32", "bytes32"], [domainSeparator, structSeparator]);
+  
+  return msg;
+}
+
+function domainHash(name: string, version: string, chainId: number, address: string): string {
+  // domainSeparator
+  let domainTypeHash = ethers.utils.solidityKeccak256(["string"],["EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"]);
+  let domainNameHash = ethers.utils.solidityKeccak256(["string"], [name]);
+  let domainVersionHash = ethers.utils.solidityKeccak256(["string"], [version]); 
+  let domainChainId = chainId;
+  let domainAddress = address;     
+  // abi.encode
+  let encodedDomain = ethers.utils.defaultAbiCoder.encode(
     ['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],
     [domainTypeHash, domainNameHash, domainVersionHash, domainChainId, domainAddress]);
-  let domainHash = ethers.utils.solidityKeccak256(["bytes32"], [encodedDomain]);
+  return ethers.utils.solidityKeccak256(["bytes"], [encodedDomain]);
+}
 
-  // buildStructHash
-  let structTypeHash = ethers.utils.solidityKeccak256(["string"], ["Transaction(address receiver,uint256 receivingChainId,uint256 tokenId, uint256 nonce)"]);
+function structHash(_recipient: string, _chainId: number, _amount: number, _nonce: number): string {
+  // domainSeparator
+  let structTypeHash = ethers.utils.solidityKeccak256(["string"], ["Transaction(address receiver,uint256 receivingChainId,uint256 amount, uint256 nonce)"]);
   let structReceiver = _recipient;
   let structChainId = _chainId; 
   let structAmount = _amount;
   let structNonce = _nonce;     
-  let encodedStruct = ethers.utils.AbiCoder.prototype.encode(
+  let encodedStruct = ethers.utils.defaultAbiCoder.encode(
     ['bytes32', 'address', 'uint256', 'uint256', 'uint256'],
     [structTypeHash, structReceiver, structChainId, structAmount, structNonce]);
-  let structHash = ethers.utils.solidityKeccak256(["bytes32"], [encodedStruct]);
-
-  let msg = ethers.utils.solidityKeccak256(["string", "bytes32", "bytes32"], ["\x19\x01", domainHash, structHash]);
-  return msg;
+  return ethers.utils.solidityKeccak256(["bytes"], [encodedStruct]);
 }

@@ -96,22 +96,21 @@ abstract contract EIP712X is EIP712, Ownable {
     /// @notice Calculates typed structured message hash.
     /// @param _receiver          Address of the receiving account on the destination blockchain.
     /// @param _receivingChainId  ID of the destination blockchain.
-    /// @param _tokenId           ID number of the NFT collection to be minted on destination blockchain.
+    /// @param _amount            amount of tokens to be minted on destination blockchain.
     /// @param _nonce             Transaction number.
     function buildStructHash(
       address _receiver, 
       uint256 _receivingChainId,
-      uint256 _tokenId,
+      uint256 _amount,
       uint256 _nonce
     ) public view returns (bytes32) {
-      return _buildStructHash(MESSAGE_TYPE_HASH, _receiver, _receivingChainId, _tokenId, _nonce);
+      return _buildStructHash(MESSAGE_TYPE_HASH, _receiver, _receivingChainId, _amount, _nonce);
     }
 
     function _prefixedHashTypedDataV4( 
         bytes32 structHash
     ) internal view virtual returns (bytes32) {
-        bytes32 msgHash = _hashTypedDataV4(structHash);
-        return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", msgHash));
+        return _hashTypedDataV4(structHash);
     }
 
     function _buildDomainSeparator(
@@ -135,19 +134,19 @@ abstract contract EIP712X is EIP712, Ownable {
     }
 
     function _buildStructHash(
-        bytes32 typeHash, 
-        address receiver, 
-        uint256 receivingChainId, 
-        uint256 tokenId, 
-        uint256 nonce
+        bytes32 _typeHash, 
+        address _receiver, 
+        uint256 _receivingChainId, 
+        uint256 _amount, 
+        uint256 _nonce
     ) internal pure returns (bytes32) {
         return keccak256(
             abi.encode(
-                typeHash,
-                receiver,
-                receivingChainId,
-                tokenId,
-                nonce
+                _typeHash,
+                _receiver,
+                _receivingChainId,
+                _amount,
+                _nonce
             )
         );
     }
@@ -167,6 +166,7 @@ abstract contract EIP712X is EIP712, Ownable {
       uint256 _chainId, 
       address _verifier
     ) external onlyOwner returns (bool) {
+      require(_chainId != block.chainid, "EIP712X: Cannot change this domain.");
       require(getDomainHash(_chainId) == 0, "EIP712X: Domain already exist");
       
       bytes32 nameHash = keccak256(bytes(_name));
@@ -191,6 +191,7 @@ abstract contract EIP712X is EIP712, Ownable {
       uint256 _chainId, 
       address _verifier
     ) external onlyOwner returns (bool) {
+      require(_chainId != block.chainid, "EIP712X: Cannot change this domain.");
       require(getDomainHash(_chainId) != 0, "EIP712X: Domain does not exist");
 
       bytes32 nameHash = keccak256(bytes(_name));
