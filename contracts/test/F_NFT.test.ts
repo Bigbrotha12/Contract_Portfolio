@@ -3,7 +3,7 @@ import "@nomicfoundation/hardhat-chai-matchers";
 import { expect } from 'chai';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import hre, { ethers } from 'hardhat';
-import { NFTDemo } from '../typechain-types/contracts/F_Upgradable_NFT/NFTDemo.sol';
+import { NFTDemo } from '../typechain-types/contracts/F_Upgradable_NFT';
 import { FamiliarLogic } from '../typechain-types/contracts/F_Upgradable_NFT';
 
 describe("Upgradable NFT", function () {

@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import hre, { ethers } from 'hardhat';
 import { DemoToken } from '../typechain-types/contracts/A_DemoToken';
-import { CoinFlipper, testCoordinatorSol } from '../typechain-types/contracts/C_Oracle_Contract';
+import { CoinFlipper, testCoordinatorSol } from '../typechain-types/contracts/G_Oracle_Contract';
 
 describe("CoinFlipper", function () {
   async function DeployFixture() {
