@@ -54,7 +54,8 @@ export default function PortfolioBoard(props: {connection: AppConnectionData, se
     }
     
     return (
-        <div className='w-full min-h-screen bg-[#c5c5c5]'>
+        <div className='w-full min-h-screen bg-gradientBg bg-cover'>
+            
             <Header id='top' items={headerItem} />
             <W3Header connection={props.connection} setConnection={props.setConnection} />
             <InfoBanner />
