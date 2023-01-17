@@ -2,7 +2,7 @@ import React from 'react';
 import Material from '../../../assets/Material';
 import { useForm } from 'react-hook-form';
 import NetworkSelector from '../../01_Header/components/NetworkSelector';
-import { Networks } from '../../00_Common/Networks';
+import { Networks } from '../../../app/Networks';
 import { AppConnectionData, Network } from '../../00_Common/Definitions';
 
 export default function Bridge()

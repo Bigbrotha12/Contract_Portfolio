@@ -1,6 +1,6 @@
 import IController from "./IController";
 import { Network, Contract } from "../components/00_Common/Definitions";
-import { Networks, Contracts } from "../components/00_Common/Networks";
+import { Networks, Contracts } from "./Networks";
 import { ethers } from 'ethers';
 
 export default class AppController implements IController

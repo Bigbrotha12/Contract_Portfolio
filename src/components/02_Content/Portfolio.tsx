@@ -18,7 +18,7 @@ export default function Portfolio(props: { title: string, id: string, content: A
                     {
                         props.content.map(content => {
                             return (
-                                <Link key={content.title} to={content.content}>
+                                <Link key={content.title} to={content.content} onClick={() => window.location.replace(content.content)}>
                                     <Material.Card key={content.title} sx={{ display: 'inline-block', width: '320px', height: '320px', margin: '12px' }}>
                                         <Material.CardHeader title={content.title} titleTypographyProps={{textAlign: 'center', fontFamily: 'inherit'}} />
                                         <Material.CardMedia component='img' image={content.icon || '' } alt='image' />

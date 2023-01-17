@@ -6,6 +6,9 @@ module.exports = {
   './dist/*.js'],
   theme: {
     extend: {
+      backgroundImage: {
+        gradientBg: "url('/src/assets/images/18_grain_texture_1080x1080.jpeg')"
+      },
       colors: {
         light: {
           primary: "#4484CE",

@@ -9,6 +9,8 @@ node_modules
 
 #constants
 Constants
+src/assets/images
+src/assets/icons
 
 #config
 truffle-config.js

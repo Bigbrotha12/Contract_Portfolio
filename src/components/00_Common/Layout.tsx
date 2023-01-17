@@ -14,6 +14,7 @@ import Footer from '../03_Footer/Footer';
 // Images
 import AboutImage from '../../assets/images/Andorra.png';
 import DAppImage from '../../assets/images/dapp0.jpeg';
+import GameImage from '../../assets/images/VideoGame.jpeg';
 import CodeImage from '../../assets/images/Solidity.jpeg';
 
 export default function Layout()
@@ -49,9 +50,9 @@ export default function Layout()
         },
     ]
     const portfolioContent: Array<Content> = [
-        { title: 'DApp Demo', icon: DAppImage, content: '/portfolio#top'},
+        { title: 'DApp Demo', icon: DAppImage, content: '/portfolio#top' },
+        { title: 'NFT Game', icon: GameImage, content: 'https://arcane-familiars.netlify.app/' },
         { title: 'Code Repositories', icon: CodeImage, content: 'https://github.com/Bigbrotha12' },
-        { title: 'NFT', icon: null, content: '' }
     ]
     const skillContent: Array<Content> = [
         { title: 'Typescript', icon: null, content: '' },

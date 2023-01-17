@@ -7,7 +7,7 @@ import { ControllerContext } from './state/AppContext';
 import Layout from './components/00_Common/Layout';
 import PortfolioBoard from './components/00_Common/PortfolioBoard';
 import { AppConnectionData } from './components/00_Common/Definitions';
-import { Contracts, Networks } from './components/00_Common/Networks';
+import { Contracts, Networks } from './app/Networks';
 
 export default function App()
 {

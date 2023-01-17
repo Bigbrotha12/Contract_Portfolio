@@ -6,7 +6,7 @@ import TestBalance from './components/TestBalance';
 import Account from './components/Account';
 import ContractSelector from './components/ContractSelector';
 import NetworkSelector from './components/NetworkSelector';
-import { Networks, Contracts } from "../00_Common/Networks";
+import { Networks, Contracts } from "../../app/Networks";
 
 import { ControllerContext } from '../../state/AppContext';
 import IController from '../../app/IController';
