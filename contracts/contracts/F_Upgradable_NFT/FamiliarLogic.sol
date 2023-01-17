@@ -27,6 +27,10 @@ contract FamiliarLogic is CommonStorage, ERC165, ERC721, ERC2981, IInitializable
             super.supportsInterface(interfaceId);
     }
 
+    function totalSupply() public view returns (uint256) {
+        return supply;
+    }
+
     /// @notice Returns the NFT data associated with given token ID
     /// @param _tokenId     of token data being queried.
     function getTokenBlueprint(uint256 _tokenId) external view returns (string memory) {
@@ -40,10 +44,10 @@ contract FamiliarLogic is CommonStorage, ERC165, ERC721, ERC2981, IInitializable
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         require(_exists(_tokenId), "ERC721Metadata: URI query for nonexistent token");
 
-        string memory familiarId = blueprints[_tokenId].substring(0,4);
+        string memory size = blueprints[_tokenId].substring(0,3);
         string memory baseURI = _baseURI();
 
-        return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, "/Images/", familiarId, ".png")) : "";
+        return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, size)) : "";
     }
 
     function _baseURI() internal view override returns (string memory) {
@@ -60,5 +64,11 @@ contract FamiliarLogic is CommonStorage, ERC165, ERC721, ERC2981, IInitializable
         names = string(_data[1]);
         symbols = string(_data[2]);
         rootURI = string(_data[3]);
+    }
+
+    function mint(address _to, bytes memory _blueprint) external {
+        uint256 tokenId = supply++;
+        blueprints[tokenId] = _blueprint;
+        _safeMint(_to, tokenId);
     }
 }

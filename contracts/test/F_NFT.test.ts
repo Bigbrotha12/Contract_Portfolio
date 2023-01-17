@@ -2,160 +2,167 @@ import "@nomiclabs/hardhat-ethers";
 import "@nomicfoundation/hardhat-chai-matchers";
 import { expect } from 'chai';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import hre from 'hardhat';
-import { FamiliarProxy } from '../typechain-types/contracts/F_Upgradable_NFT/NFTDemo.sol';
+import hre, { ethers } from 'hardhat';
+import { NFTDemo } from '../typechain-types/contracts/F_Upgradable_NFT/NFTDemo.sol';
 import { FamiliarLogic } from '../typechain-types/contracts/F_Upgradable_NFT';
 
 describe("Upgradable NFT", function () {
   async function DeployFixture() {
-    const [admin, user1, user2, user3] = await hre.ethers.getSigners();
-
-    const proxy = await (await hre.ethers.getContractFactory("NFTDemo")).deploy();
-    const logic = await (await hre.ethers.getContractFactory("FamiliarLogic")).deploy();
-
-    const IProxy = proxy as FamiliarProxy;
-    const ILogic = logic as FamiliarLogic;
+    const [admin, user1, user2, user3] = await ethers.getSigners();
+    const routingData = [admin.address];
+    const proxy = await (await ethers.getContractFactory("NFTDemo")).deploy(routingData);
+    const logic = await (await ethers.getContractFactory("FamiliarLogic")).deploy();
+    await proxy.deployed();
+    await logic.deployed();
+    const IProxy = proxy as NFTDemo;
+    
+    // Initialization
+    // [0]: Version | [1]: Name | [2]: Symbol | [3]: RootURI
+    const version: string = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("1.0.0"));
+    const name: string = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("NFT Demo"));
+    const symbol: string = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("NFTD"));
+    const rootURI: string = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("https://picsum.photos/"));
+    const initData: Array<string> = [version, name, symbol, rootURI];
+    await IProxy.upgradeInit(logic.address, initData);
+    const ILogic = logic.attach(proxy.address) as FamiliarLogic;
+    
     return { IProxy, ILogic, admin, user1, user2, user3 };
   };
 
   describe("Deployment and Initialization", function () {
-    it("initializes to correct routing configuration", async () => {
+    it("Should initialize to correct data and routing configuration", async () => {
       const { IProxy, ILogic, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
 
-      // Admin = accounts[0], IMX = accounts[1]
-      // Storage Layout:
-      // 0: IMX Address       || 1: blueprint || 2: names           || 3: symbols           || 4: rootURI
-      // 5: owners            || 6: balances  || 7: tokenApprovals  || 8: operatorApprovals || 9: defaultRoyaltyInfo
-      // 10: tokenRoyaltyInfo || 11: admin    || 12: initializing   || 13: initialized      || 14: callRouting
-      // 15: version
-      // let admin = web3.utils.toChecksumAddress(await web3.eth.getStorageAt(famProxy.address, 11));
-      // let IMX = web3.utils.toChecksumAddress(await web3.eth.getStorageAt(famProxy.address, 0));
-      // let adminRoute = await famProxy.getRouting(admin);
-      // let IMXRoute = await famProxy.getRouting(IMX);
-  
-      // // Admin and IMX accounts initialization
-      // assert.equal(admin, accounts[0], "Admin account not initialized correctly");
-      // assert.equal(IMX, accounts[1], "IMX account not initialized correctly");
-  
-      // // Routing initialization
-      // expectEvent(adminRoute, "currentRouting", { role: admin, target: famAdmin.address });
-      // expectEvent(IMXRoute, "currentRouting", { role: IMX, target: famIMX.address });
-    });
-
-    it("checks for valid upgrade target and initializes", async () => {
-      const { IProxy, ILogic, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
-
-      // State variables to check:
-      // version[famLogic.address]; names; symbols; rootURI;
-      // Expected values:
-      // version  = "1.0.0"
-      // names    = "Arcane Familiars"
-      // symbols  = "ARC"
-      // rootURI  = "IPFS/sampleCID"
-      // let initData = [
-      //   web3.utils.utf8ToHex("1.0.0"),
-      //   web3.utils.utf8ToHex("Arcane Familiars"),
-      //   web3.utils.utf8ToHex("ARC"),
-      //   web3.utils.utf8ToHex("IPFS/sampleCID"),
-      // ]
-  
-      // let tx1 = await famProxy.upgradeInit(famLogic.address, initData, { from: accounts[0] });
-      // expectEvent(tx1, "contractUpgraded", { version: _sha3("1.0.0"), target: famLogic.address });
+      expect(await IProxy.callStatic.getRouting(user1.address)).to.be.equal(ethers.constants.AddressZero);
+      expect(await IProxy.callStatic.getVersion()).to.be.equal("1.0.0");
+      expect(await ILogic.connect(user1).name()).to.be.equal("NFT Demo");
+      expect(await ILogic.connect(user1).symbol()).to.be.equal("NFTD");
     });
   
-    it("initializes upgraded contract correctly", async () => {
+    it("Should be a transparent proxy", async () => {
       const { IProxy, ILogic, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
 
-      // State variables to check:
-      // version[famLogic.address]; names; symbols; rootURI;
-      // Expected values:
-      // version  = "1.0.0"
-      // names    = "Arcane Familiars"
-      // symbols  = "ARC"
-      // rootURI  = "IPFS/sampleCID"
-      // let tx1 = await famProxy.getVersion({ from: accounts[0] });
-      // expectEvent(tx1, "currentVersion", { version: _sha3("1.0.0"), target: famLogic.address });
-  
-      // let names = await proxyLogic.name({ from: accounts[2] });
-      // let symbols = await proxyLogic.symbol({ from: accounts[2] });
-      // let rootURI = web3.utils.hexToUtf8(await web3.eth.getStorageAt(famProxy.address, 4));
-  
-      // assert.equal("Arcane Familiars", names, "Names not initialized correctly");
-      // assert.equal("ARC", symbols, "Symbols not initialized correctly");
-      // assert.equal("IPFS/sampleCID", rootURI.substring(0, 14), "RootURI not initialized correctly");
-    });
-  
-    it("is a transparent proxy", async () => {
-      const { IProxy, ILogic, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
+      expect(IProxy.address).to.be.equal(ILogic.address);
+      // Users may not call proxy contract functions
+      await expect(IProxy.connect(user1).getVersion()).to.be.reverted;
+      // Users may call logic functions
+      await expect(ILogic.connect(user1).mint(user1.address, ethers.utils.hexlify(ethers.utils.toUtf8Bytes("TEST")))).not.to.be.reverted;
 
-      // // Admin (accounts[0]) can call admin and proxy contract functions
-      // let tx1 = await famProxy.getVersion({ from: accounts[0] });
-      // truffleAssert.eventEmitted(tx1, "currentVersion");
-      // let tx2 = await proxyAdmin.deleteDefaultRoyalty({ from: accounts[0] });
-      // truffleAssert.eventEmitted(tx2, "royaltyUpdated");
-  
-      // // Admin cannot call logic or IMX contract
-      // truffleAssert.fails(proxyLogic.name({ from: accounts[0] }));
-      // truffleAssert.fails(proxyIMX.name({ from: accounts[0] }));
-  
-      // // Users (accounts[2]) and IMX (accounts[1]) cannot call Admin or proxy functions
-      // truffleAssert.fails(famProxy.getVersion({ from: accounts[1] }));
-      // truffleAssert.fails(famProxy.getVersion({ from: accounts[2] }));
-      // truffleAssert.fails(proxyAdmin.deleteDefaultRoyalty({ from: accounts[1] }));
-      // truffleAssert.fails(proxyAdmin.deleteDefaultRoyalty({ from: accounts[2] }));
-  
-      // // Users and IMX can call their respective contracts
-      // let tx3 = await proxyIMX.name({ from: accounts[1] });
-      // let tx4 = await proxyLogic.name({ from: accounts[2] });
-      // assert.equal("Arcane Familiars", tx3, "IMX routing error");
-      // assert.equal("Arcane Familiars", tx4, "Users routing error");
+      // Admin may not call logic contract functions
+      await expect(ILogic.mint(user1.address, ethers.utils.hexlify(ethers.utils.toUtf8Bytes("TEST")))).to.be.reverted;
+      // Admin may call proxy functions
+      await expect(IProxy.getVersion()).not.to.be.reverted;
     });
   });
 
   describe("Admin Management", function () {
-    it("changes admin successfully", async () => {
-    const { IProxy, ILogic, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
+    it("Should change admin successfully", async () => {
+      const { IProxy, ILogic, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
       
-    // // Admin calls to changeAdmin(address _newAdmin) should succeed except when
-    // // new admin address is address(0).
-    // let tx1 = await famProxy.changeAdmin(accounts[5], { from: accounts[0] });
-    // expectEvent(tx1, "adminChanged", { prevAdmin: accounts[0], newAdmin: accounts[5] });
-    //   truffleAssert.fails(famProxy.changeAdmin(accounts[5], { from: accounts[0] }));
-      
-    // let tx2 = await famProxy.changeAdmin(accounts[0], { from: accounts[5] });
-    // expectEvent(tx2, "adminChanged", { prevAdmin: accounts[5], newAdmin: accounts[0] });
-    //   truffleAssert.fails(famProxy.changeAdmin(ZERO_ADDRESS, { from: accounts[0] }), "Proxy: Invalid admin address");
+      // Address zero is not allowed target
+      await expect(IProxy.changeAdmin(ethers.constants.AddressZero)).to.be.revertedWith("Proxy: Invalid admin address");
+      // User 1 to be new admin
+      await expect(IProxy.changeAdmin(user1.address)).to.emit(IProxy, "adminChanged").withArgs(
+        admin.address,
+        user1.address
+      );
+      await expect(IProxy.connect(user1).getVersion()).not.to.be.reverted;
     });
   
-    it("changes routing successfully", async () => {
+    it("Should change routing successfully", async () => {
       const { IProxy, ILogic, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
 
-      // // Admin calls to changeRouting(address _role, address _target) should succeed except when
-      // // new _role address is address(0) since this is default route which is maintained via upgradeInit.
-      // let tx1 = await famProxy.changeRouting(accounts[1], famLogic.address, { from: accounts[0] });
-      // expectEvent(tx1, "routingUpdated", { role: accounts[1], target: famLogic.address });
-      // let tx2 = await famProxy.getRouting(accounts[1], { from: accounts[0] });
-      // expectEvent(tx2, "currentRouting", { role: accounts[1], target: famLogic.address });
-    
-      // await famProxy.changeRouting(accounts[1], famIMX.address, { from: accounts[0] });
-      // truffleAssert.fails(famProxy.changeRouting(ZERO_ADDRESS, famAdmin.address, { from: accounts[0] }), "Proxy: Improper route change");
+      // User 2 address as 'target' for user 1
+      await expect(IProxy.changeRouting(user1.address, user2.address)).to.emit(IProxy, "routingUpdated").withArgs(
+        user1.address,
+        user2.address
+      );
+
+      // Check routing has indeed changed
+      expect(await IProxy.callStatic.getRouting(user1.address)).to.be.equal(user2.address);
     });  
+  });
+
+  describe("Minting", function () {
+    it("Should mint new tokens.", async () => {
+      const { IProxy, ILogic, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
+
+      let pictureSize = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("200"));
+      await expect(ILogic.connect(user1).mint(user1.address, pictureSize)).to.emit(ILogic, "Transfer").withArgs(
+        ethers.constants.AddressZero,
+        user1.address,
+        0
+      );
+    });
+
+    it("Should mint tokens uniquely and sequentially.", async () => {
+      const { IProxy, ILogic, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
+
+      let pictureSize = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("200"));
+      await expect(ILogic.connect(user1).mint(user1.address, pictureSize)).to.emit(ILogic, "Transfer").withArgs(
+        ethers.constants.AddressZero,
+        user1.address,
+        0
+      );
+      await expect(ILogic.connect(user2).mint(user1.address, pictureSize)).to.emit(ILogic, "Transfer").withArgs(
+        ethers.constants.AddressZero,
+        user1.address,
+        1
+      );
+      await expect(ILogic.connect(user2).mint(user2.address, pictureSize)).to.emit(ILogic, "Transfer").withArgs(
+        ethers.constants.AddressZero,
+        user2.address,
+        2
+      );
+      expect(await ILogic.connect(user1).totalSupply()).to.be.equal(3);
+    });
+
+    it("Should track token ownership and balances.", async () => {
+      const { IProxy, ILogic, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
+
+      let pictureSize = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("200"));
+      await ILogic.connect(user1).mint(user1.address, pictureSize);
+      await ILogic.connect(user2).mint(user1.address, pictureSize);
+      await ILogic.connect(user2).mint(user2.address, pictureSize);
+
+      expect(await ILogic.connect(user1).ownerOf(0)).to.be.equal(user1.address);
+      expect(await ILogic.connect(user1).ownerOf(1)).to.be.equal(user1.address);
+      expect(await ILogic.connect(user1).ownerOf(2)).to.be.equal(user2.address);
+
+      expect(await ILogic.connect(user1).balanceOf(user1.address)).to.be.equal(2);
+      expect(await ILogic.connect(user1).balanceOf(user2.address)).to.be.equal(1);
+    });
   });
   
   describe("Metadata Correctness", function () {
-    it("provides correct URL for NFT image", async () => {
+    it("Should provide correct URL for NFT image", async () => {
       const { IProxy, ILogic, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
 
-      // // NFT Minting
-      // let blob = web3.utils.toHex("{0005}:{03350555}");
-      // await proxyIMX.mintFor(accounts[0], 1, blob, {from: accounts[1]});
+      // URL points to Lorem Picsum site for random images.
+      // Blueprint will determine picture size.
+      let pictureSize1 = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("200"));
+      let pictureSize2 = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("400"))
+      await ILogic.connect(user1).mint(user1.address, pictureSize1);
+      await ILogic.connect(user1).mint(user1.address, pictureSize2);
   
-      // // URL must be "IPFS/sampleCID/Images/{blueprint.substring(0,4)}.png
-      // // For blueprint 03350555, expected value is "IPFS/sampleCID/Images/0335.png"
-      // let tx1 = await proxyLogic.tokenURI(5, {from: accounts[2]});
-      // assert.equal(tx1, "IPFS/sampleCID/Images/0335.png", "Incorrect URL received");
+      expect(await ILogic.connect(user1).tokenURI(0)).to.be.equal("https://picsum.photos/200"); 
+      expect(await ILogic.connect(user1).tokenURI(1)).to.be.equal("https://picsum.photos/400"); 
+    });
+
+    it("Should provide correct blueprint for NFT", async () => {
+      const { IProxy, ILogic, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
+
+      let pictureSize1 = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("200"));
+      let pictureSize2 = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("400"))
+      await ILogic.connect(user1).mint(user1.address, pictureSize1);
+      await ILogic.connect(user1).mint(user1.address, pictureSize2);
+  
+      expect(await ILogic.connect(user1).getTokenBlueprint(0)).to.be.equal("200"); 
+      expect(await ILogic.connect(user1).getTokenBlueprint(1)).to.be.equal("400"); 
     });
   });
+
+  
 
 });
 

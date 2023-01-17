@@ -16,6 +16,7 @@ abstract contract CommonStorage {
     string internal names;
     string internal symbols;
     string internal rootURI;
+    uint256 internal supply;
     mapping(uint256 => address) internal owners;
     mapping(address => uint256) internal balances;
     mapping(uint256 => address) internal tokenApprovals;

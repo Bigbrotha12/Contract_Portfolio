@@ -5,20 +5,20 @@ import "@openzeppelin/contracts/proxy/Proxy.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "./CommonStorage.sol";
 
+import "hardhat/console.sol";
+
 /// @title FamiliarProxy
 /// @notice Proxy implementation handling contract call forwarding,
 /// @notice access controls, and upgradability logic for Familiar dApp.
 /// @dev Logic implementation or base contracts other 
 /// @dev than CommonStorage must not declare any state variables
-contract FamiliarProxy is Proxy, CommonStorage {
+contract NFTDemo is Proxy, CommonStorage {
 
     //----------------------- EVENTS -------------------------------------------
 
     event contractUpgraded(string indexed version, address target);
     event adminChanged(address indexed prevAdmin, address newAdmin);
     event routingUpdated(address indexed role, address target);
-    event currentVersion(string indexed version, address target);
-    event currentRouting(address role, address target);
 
     //--------------------  CONSTRUCTOR ----------------------------------------
 
@@ -26,8 +26,7 @@ contract FamiliarProxy is Proxy, CommonStorage {
     /// @dev Maintains routes for special roles Admin and IMX.
     /// @param _routingConfig   is address of special roles and target implementations 
     constructor(address[] memory _routingConfig) {
-        admin = _routingConfig[0]; callRouting[_routingConfig[0]] = _routingConfig[1];
-        imx = _routingConfig[2]; callRouting[_routingConfig[2]] = _routingConfig[3];
+        admin = _routingConfig[0]; 
     }
 
     /// Access control for proxy functions in line with transparent proxy pattern
@@ -42,20 +41,21 @@ contract FamiliarProxy is Proxy, CommonStorage {
     //------------------- VIEW FUNCTIONS ----------------------------------------
 
     /// @notice Returns version of current NFT implementation via event
-    function getVersion() external ifAdmin {
-        address impl = callRouting[address(0)];
-        emit currentVersion(version[impl], impl);
-    }
-
-    function _implementation() internal view override returns (address) {
-        address route = callRouting[msg.sender];
-        if(route == address(0)) return callRouting[address(0)];
-        return route;
+    function getVersion() external ifAdmin returns (string memory version_) {
+        address target_ = callRouting[address(0)];
+        version_ = version[target_];
     }
 
     /// @notice Returns route for given role via event
-    function getRouting(address _role) external ifAdmin {
-        emit currentRouting(_role, callRouting[_role]);
+    function getRouting(address _role) external ifAdmin returns(address route_) {
+        route_ = callRouting[_role];
+    }
+
+    function _implementation() internal view override returns (address) {
+        require(msg.sender != admin, "NFTDemo: Admin may not call implementation.");
+        address route = callRouting[msg.sender];
+        if(route == address(0)) return callRouting[address(0)];
+        return route;
     }
 
     //-------------------- MUTATIVE FUNCTIONS ----------------------------------
@@ -114,4 +114,6 @@ contract FamiliarProxy is Proxy, CommonStorage {
         callRouting[_role] = _target;
         emit routingUpdated(_role, _target);
     }  
+
+    
 }
