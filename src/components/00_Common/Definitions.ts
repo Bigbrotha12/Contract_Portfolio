@@ -38,6 +38,7 @@ export type Network =
         hexID: string,
         explorer: string,
         availableContracts: Array<Contract> | null,
-        rpcUrl: string
+        rpcUrl: string,
+        faucet: string | null
 }
        

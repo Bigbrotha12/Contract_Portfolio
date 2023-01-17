@@ -6,35 +6,49 @@ dotenv.config();
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
   networks: {
-    hardhat: {},
+    hardhat: {
+      forking: {
+        url: process.env.MAINNET_RPC || ""
+      }
+    },
     mainnet: {
-      url: ""
+      url: process.env.MAINNET_RPC,
+      accounts: [process.env.DEPLOY_PRIV || ""]
     },
     goerli: {
-      url: "",
-      accounts: [process.env.DEPLOY_ACCOUNT || ""]
+      url: process.env.GOERLI_RPC,
+      accounts: [process.env.DEPLOY_PRIV || ""]
     },
     binanceMain: {
-      url: "",
+      url: process.env.BINANCE_RPC,
+      accounts: [process.env.DEPLOY_PRIV || ""]
     },
     binanceTest: {
-      url: "",
+      url: process.env.BINANCE_TEST_RPC,
+      accounts: [process.env.DEPLOY_PRIV || ""]
     },
     polygonMain: {
-      url: "",
+      url: process.env.POLYGON_RPC,
+      accounts: [process.env.DEPLOY_PRIV || ""]
     },
     polygonTest: {
-      url: "",
+      url: process.env.POLYGON_TEST_RPC,
+      accounts: [process.env.DEPLOY_PRIV || ""]
     },
     avalancheCMain: {
-      url: "",
+      url: process.env.AVAC_RPC,
+      accounts: [process.env.DEPLOY_PRIV || ""]
     },
     avalancheCTest: {
-      url: "",
+      url: process.env.AVAC_TEST_RPC,
+      accounts: [process.env.DEPLOY_PRIV || ""]
     }
   },
   mocha: {
     timeout: 40000
+  },
+  etherscan: {
+    apiKey: "S9TIR39DG6AG13P77G3EJ4JJWN44W4Q4J4"
   },
   solidity: {
     version: "0.8.17",
@@ -70,7 +84,7 @@ task("deploy", "Deploys contract to network").addPositionalParam("contract", "Co
       });
     }
     
-    const contract = await (await hre.ethers.getContractFactory(taskArgs.contract)).deploy(...constructorArgs[Object.keys(constructorArgs)[0]] || null);
+    const contract = await (await hre.ethers.getContractFactory(taskArgs.contract)).deploy(...constructorArgs[taskArgs.contract] || null);
     console.log(`Contract ${taskArgs.contract} deployed at ${contract.address}`);
   }
   catch (error)
