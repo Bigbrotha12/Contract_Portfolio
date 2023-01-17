@@ -30,7 +30,7 @@ contract ReflectToken is ERC20, Pausable, Ownable {
     uint8 public feeReflectPct;
     uint256 public mintLimit;
 
-    //----------------------- EVENTS ---------------------------------------
+    //----------------------- EVENTS -------------------------------------------
 
     event FeeChanged(uint256 oldFee, uint256 newFee);
     event AccountExcluded(address indexed account);
