@@ -1,31 +1,24 @@
 import React from 'react';
 import Material from '../../../assets/Material';
-import { useForm } from 'react-hook-form';
-import { Networks } from '../../../app/Networks';
-import { AppConnectionData, Network } from '../../00_Common/Definitions';
+import IController from '../../../app/IController';
+import { ControllerContext } from '../../../state/AppContext';
 
 export default function Flipper()
 {
-    const { register, handleSubmit } = useForm();
     const [bet, setBet] = React.useState<number>(0);
-    const [targetNetwork, setTargetNetwork] = React.useState<Network>(Networks[0]);
-    function handleInputSubmit(data)
-    {
-        console.log(data);
-    }
-    function triggerCoinFlip()
-    {
+    const controller: IController = React.useContext(ControllerContext);
 
+    function triggerCoinFlip() {
+        controller.FlipperFlipCoin();
     }
-    function placeBet()
-    {
-
+    function placeBet() {
+        if (bet) {
+            controller.FlipperAddFunds(bet);
+        }
     }
-    function withdrawFunds()
-    {
-
+    function withdrawFunds() {
+        controller.FlipperWithdrawFunds();
     }
-    
     
     return (
         <Material.Card sx={{margin: "12px"}}>
@@ -36,9 +29,13 @@ export default function Flipper()
                         <Material.Typography sx={{paddingTop: '12px'}}>Coin Betting Game</Material.Typography>
                         <Material.Divider />
                     </div>
-                    <Material.Typography sx={{marginY: '12px'}}>Current Funds: ${bet}</Material.Typography>
+                    <Material.Typography sx={{marginY: '12px'}}>Current Funds: </Material.Typography>
                     <Material.Typography sx={{width: '40%', marginY: '12px', fontWeight: 'bold'}}>Enter Betting Amount</Material.Typography>
-                    <Material.TextField sx={{marginY: '12px'}} inputProps={{ ...register(`amount`) }} value={bet} type='number' onChange={handleInputSubmit} fullWidth label='Bet' />    
+                    <Material.TextField sx={{ marginY: '12px' }} value={bet} type='number' onChange={(e) => {
+                        if (e.target.value && validateAmount(e.target.value)) {
+                            setBet(parseInt(e.target.value));
+                        }
+                    }} fullWidth label='Bet' />    
                     <div className='flex justify-center'>
                         <Material.Button sx={{marginX: '12px'}} variant='contained' onClick={placeBet}>Place Bet</Material.Button>
                         <Material.Button sx={{ marginX: '12px' }} variant='contained' onClick={triggerCoinFlip}>Flip Coin</Material.Button>
@@ -48,5 +45,11 @@ export default function Flipper()
             </Material.CardContent>
         </Material.Card>                
     )
-    
+}
+
+function validateAmount(test: string): boolean {
+    if (test === undefined || test === "") return true;
+    let num = parseInt(test);
+    if (num !== num) return false;
+    return /[0-9]*/.test(test) && num> 0;
 }

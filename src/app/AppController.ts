@@ -2,9 +2,12 @@ import IController from "./IController";
 import { Network, Contract } from "../components/00_Common/Definitions";
 import { Networks, Contracts } from "./Networks";
 import { ethers } from 'ethers';
+import Merkle from "../../contracts/scripts/merkleRootCalculator";
 
 export default class AppController implements IController
 {
+    signer: ethers.Signer;
+
     ConnectionStatus(): boolean {
         return (window as any).ethereum?.isConnected() ? true : false;
     }
@@ -17,7 +20,6 @@ export default class AppController implements IController
             try
             {
                 let userAccount = await provider.request({ method: 'eth_requestAccounts' });
-                
                 return userAccount[0];
             } catch (error)
             {
@@ -85,18 +87,27 @@ export default class AppController implements IController
         return false;  
     }
 
-    #InstantiateContracts(contract: Contract, network: Network)
+    #InstantiateContracts(contract: Contract, network: Network): ethers.Contract | null
     {
-        
+        let contractInstance = contract.instances.find(instance => network.name === instance.network);
+        if (contractInstance && this.signer)
+        {
+            return new ethers.Contract(contractInstance.address, contract.abi, this.signer);
+        }
+        return null;
     }
 
     GetTestTokens(amount: number): void {
         throw new Error("Method not implemented.");
     }
-    AirdropNewRecipients(recipients: { address: string; amount: number; }[]): boolean {
-        throw new Error("Method not implemented.");
+
+    AirdropNewRecipients(recipients: { to: string; amount: string; }[]): boolean {
+        let leaves = Merkle.createLeaves(recipients);
+        let root = Merkle.calculateMerkleRoot(leaves);
+        console.log(recipients);
+        return true;
     }
-    AirdropClaim(address: string): boolean {
+    AirdropClaim(address: string, amount: string): boolean {
         throw new Error("Method not implemented.");
     }
     AirdropCheckClaim(address: string): number {

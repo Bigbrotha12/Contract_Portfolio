@@ -1,33 +1,40 @@
 import React from 'react';
 import Material from '../../../assets/Material';
 import { useForm } from 'react-hook-form';
-import Merkle from '../../../../contracts/scripts/merkleRootCalculator';
+import IController from '../../../app/IController';
+import { ConnectionContext, ControllerContext } from '../../../state/AppContext';
+import { AppConnectionData } from '../../00_Common/Definitions';
 
 type AirdropData = Array<{to: string, amount: string}>;
 const tokenLimit = 1_000;
 export default function Airdrop(props: {recipientCount: number})
 {
+    const [airdropList, setAirdropList] = React.useState<AirdropData>();
+    const [checkAddress, setCheckAddress] = React.useState<string>("");
     const { register, handleSubmit, setError, formState: { errors } } = useForm();
-    function handleInputSubmit(data) {
+    const controller: IController = React.useContext(ControllerContext);
+    const connection: AppConnectionData = React.useContext(ConnectionContext);
+
+    function handleAirdropData(data) {
         let airdrop = parseAirdropData(data);
-        console.log(airdrop);
-        let root = prepareRoot(airdrop);
-        console.log(root);
+        setAirdropList(airdrop);
+        controller.AirdropNewRecipients(airdrop)
     }
-    
-    
-    function prepareRoot(data: AirdropData) {
-        let sample: AirdropData = [
-            { to: "0x5B38Da6a701c568545dCfcB03FcB875f56beddC4", amount: "500" },
-            { to: "0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2", amount: "200" },
-            { to: "0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db", amount: "300" },
-            { to: "0x0000000000000000000000000000000000000000", amount: "0" }
-        ];
-        let leaves = Merkle.createLeaves(sample);
-        let root = Merkle.calculateMerkleRoot(leaves);
-        console.log(leaves);
-        console.log(root);
-        return root;
+    function handleAirdropCheck() {
+        if (!/^0x[a-fA-F0-9]{40}$/.test(checkAddress)) {
+            console.error("Invalid address.");
+            return;
+        }
+        controller.AirdropCheckClaim(checkAddress);
+    }
+    function handleAirdropClaim() {
+        if (!airdropList) {
+            console.error("Airdrop list must be defined.");
+            return;
+        }
+        let address: string = connection.account;
+        let amount: string = airdropList.find((entry) => { return entry.to === address })?.amount || "0";
+        controller.AirdropClaim(address, amount);
     }
 
     return (
@@ -36,7 +43,7 @@ export default function Airdrop(props: {recipientCount: number})
             <Material.CardContent>
                 <>
                 {/* Airdrop Recipients Input + Deployment */}
-                <form className='pb-[12px]' onSubmit={handleSubmit(handleInputSubmit)}>
+                <form className='pb-[12px]' onSubmit={handleSubmit(handleAirdropData)}>
                 <Material.Typography sx={{paddingTop: '12px'}}>Recipients</Material.Typography>
                 <Material.Divider />
                 {
@@ -56,7 +63,7 @@ export default function Airdrop(props: {recipientCount: number})
                                 <div className='w-[48%]'>
                                     <Material.TextField
                                         error={!validateAmount((errors[`amount${i}`] as any)?.ref?.value)}
-                                        inputProps={{ ...register(`amount${i}`), inputMode: 'numeric', pattern: '[0-9]*', max: {tokenLimit} }}
+                                        inputProps={{ ...register(`amount${i}`), inputMode: 'numeric', pattern: '[0-9]*' }}
                                         fullWidth
                                         onChange={() => setError(`amount${i}`, { type: 'pattern' })}
                                         label={!validateAmount((errors[`amount${i}`] as any)?.ref?.value) ? 'invalid amount' : 'amount'}
@@ -75,24 +82,28 @@ export default function Airdrop(props: {recipientCount: number})
                 
                     <div className='w-full py-[12px]'>
                         <div className='flex justify-between w-full'>
-                                <Material.Typography sx={{width: '40%', marginY: 'auto', fontWeight: 'bold'}}>Check Claim</Material.Typography>
-                                <Material.TextField fullWidth label='Address' required inputProps={{pattern: '^0x[a-fA-F0-9]{40}$' }} />
+                                {/* <Material.Typography sx={{width: '40%', marginY: 'auto', fontWeight: 'bold'}}>Check Claim</Material.Typography> */}
+                            <Material.TextField
+                                fullWidth
+                                label='address'
+                                required
+                                inputProps={{ pattern: '^0x[a-fA-F0-9]{40}$', id: 'checkAddress' }}
+                                onChange={(event) => setCheckAddress(event.target.value)}
+                            />
                         </div>
                         <div className='py-[12px] w-full'>
-                                <Material.Button fullWidth variant='contained' type='submit'>Check Address</Material.Button>
+                            <Material.Button fullWidth variant='contained' type='button' onClick={handleAirdropCheck}>Check Address</Material.Button>
                         </div>
                     </div>
-                
-                    
+
                 <Material.Typography>Claim Airdrop</Material.Typography>
                 <Material.Divider />
             
                     <div className='w-full py-[12px]'>
                         <div className='flex justify-between w-full'>
-                                <Material.Typography sx={{ width: '40%', marginY: 'auto', fontWeight: 'bold' }}>Claim</Material.Typography>
-                                <Material.Button fullWidth variant='contained'>Claim</Material.Button>
+                                {/* <Material.Typography sx={{ width: '40%', marginY: 'auto', fontWeight: 'bold' }}>Claim</Material.Typography> */}
+                            <Material.Button fullWidth variant='contained' onClick={handleAirdropClaim}>Claim</Material.Button>
                         </div>
-                        
                     </div>
               
                 </>
@@ -108,8 +119,8 @@ function parseAirdropData(data: Object): AirdropData {
     let result: AirdropData = [];
     for (let i = 0; i < keys.length; i += 2)
     {
-        let address: string = data[keys[i]];
-        let amount: string = data[keys[i+1]];
+        let address: string = validateAddress(data[keys[i]]) ? data[keys[i]] : addressZero;
+        let amount: string = validateAmount(data[keys[i+1]]) ? data[keys[i+1]] : "0";
         if (!address) { address = addressZero; }
         if (!parseInt(amount)) { amount = "0"; }
         result.push({ to: address, amount: amount });
@@ -126,5 +137,5 @@ function validateAmount(test: string): boolean {
     if (test === undefined || test === "") return true;
     let num = parseInt(test);
     if (num !== num) return false;
-    return /[0-9]*/.test(test) && num <= tokenLimit;
+    return /[0-9]*/.test(test) && num> 0 && num <= tokenLimit;
 }

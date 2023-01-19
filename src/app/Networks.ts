@@ -1,4 +1,4 @@
-import { Network, Contract } from "../components/00_Common/Definitions";
+import { Network, Contract, AppConnectionData } from "../components/00_Common/Definitions";
 
 import DemoToken from '../../contracts/artifacts/contracts/A_DemoToken/DemoToken.sol/DemoToken.json';
 import Airdrop from '../../contracts/artifacts/contracts/B_Airdrop/AirdropDemo.sol/AirdropDemo.json';
@@ -202,3 +202,9 @@ export const Networks: Array<Network> =
         faucet: "https://faucet.polygon.technology/"
     }
 ]
+
+export const defaultConnection: AppConnectionData = {
+    account: '',
+    contract: Contracts[0],
+    network: Networks[0]
+}

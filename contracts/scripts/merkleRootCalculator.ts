@@ -1,15 +1,15 @@
 import { ethers } from "ethers";
 
+const emptyLeaf = { to: ethers.constants.AddressZero, amount: "0" };
 function createLeaves(airdrop: RecipientList): Array<string> { 
-    var leaves: Array<string> = [];
+    if (airdrop.length % 2 === 1) { airdrop.push(emptyLeaf); }
+    let leaves: Array<string> = [];
     
     for(let i = 0; i < airdrop.length; i++)
     {
         let packed: string = ethers.utils.solidityKeccak256(["address", "uint256"], [airdrop[i]['to'], airdrop[i]['amount']]);
-        
         leaves.push(packed); 
     }
-
     return leaves.sort(); 
 }
 

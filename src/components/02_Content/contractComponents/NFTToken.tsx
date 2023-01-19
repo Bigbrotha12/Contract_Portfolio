@@ -1,16 +1,27 @@
 import React from 'react';
 import Material from '../../../assets/Material';
-import { useForm } from 'react-hook-form';
-import { Networks } from '../../../app/Networks';
-import { AppConnectionData, Network } from '../../00_Common/Definitions';
+import { AppConnectionData } from '../../00_Common/Definitions';
+import { ConnectionContext, ControllerContext } from '../../../state/AppContext';
+import IController from '../../../app/IController';
 
 export default function NFTToken()
 {
-    const { register, handleSubmit } = useForm();
+    const [recipient, setRecipient] = React.useState<string>("");
+    const [tokenId, setTokenId] = React.useState<string>("");
+    const controller = React.useContext<IController>(ControllerContext);
+    const connection: AppConnectionData = React.useContext(ConnectionContext);
 
-    function MintToken()
+    function mintToken()
     {
-
+        if (connection.account) {
+            controller.NFTMint(connection.account);
+        }
+    }
+    function transfer()
+    {
+        if (recipient && tokenId) {
+            controller.NFTTransfer(recipient, parseInt(tokenId));
+        }
     }
     
     return (
@@ -23,18 +34,47 @@ export default function NFTToken()
                         <Material.Divider />
                     </div>
                     <div className='flex justify-center'>
-                        <Material.Button variant='contained' type='submit'>Mint Token</Material.Button>
+                        <Material.Button variant='contained' fullWidth type='button' onClick={mintToken}>Mint Token</Material.Button>
                     </div>
                     <Material.Typography sx={{ marginY: '12px' }}>Current NFT Token Balance</Material.Typography>
                     <Material.Typography sx={{ marginY: '12px'}}>Transfer NFT</Material.Typography>
-                    <Material.TextField sx={{ marginY: '12px' }} inputProps={{ ...register(`address`) }} fullWidth label='Address' />
-                    <Material.TextField sx={{ marginY: '12px' }} inputProps={{ ...register(`address`) }} fullWidth label='Token ID' />
+                    <Material.TextField
+                        sx={{ marginY: '12px' }}
+                        onChange={(e) => {
+                            if (validateAddress(e.target.value)) {
+                                setRecipient(e.target.value)
+                            }
+                        }}
+                        fullWidth
+                        label='recipient address'
+                    />
+                    <Material.TextField
+                        sx={{ marginY: '12px' }}
+                        onChange={(e) => {
+                            if (validateNumber(e.target.value)) {
+                                setTokenId(e.target.value)
+                            }
+                        }}
+                        fullWidth
+                        label='token ID'
+                    />
                     <div className='flex justify-center'>
-                        <Material.Button variant='contained' type='submit'>Transfer</Material.Button>
+                        <Material.Button variant='contained' type='button' onClick={transfer}>Transfer</Material.Button>
                     </div> 
                 </div>
                 </Material.CardContent>
         </Material.Card>                
     )
-    
+}
+
+function validateAddress(test: string): boolean {
+    if (test === undefined) return true;
+    return /^$|^0x[a-fA-F0-9]{40}$/.test(test);
+}
+
+function validateNumber(test: string): boolean {
+    if (test === undefined || test === "") return true;
+    let num = parseInt(test);
+    if (num !== num) return false;
+    return /[0-9]*/.test(test) && num > 0;
 }

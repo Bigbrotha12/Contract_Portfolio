@@ -2,7 +2,7 @@ import React from 'react';
 import Material from '../../../assets/Material';
 import { Network } from '../../00_Common/Definitions';
 
-export default function Selector(props: {title: string, selected: {name: string}, options: Array<Network>, callback: (network: Network) => void})
+export default function Selector(props: {title: string, selected: {name: string}, options: Array<Network>, callback?: (network: Network) => void})
 { 
     const [selection, setSelection] = React.useState<number>(0);
     const handleSelection = (event) =>
@@ -11,7 +11,7 @@ export default function Selector(props: {title: string, selected: {name: string}
         if (index < props.options.length)
         {
             setSelection(index);
-            props.callback(props.options[index]);
+            props.callback && props.callback(props.options[index]);
         }
     }
 

@@ -8,8 +8,8 @@ export default interface IController
     ChangeNetwork(network: Network): Promise<boolean>;
     GetTestTokens(amount: number): void;    // Request test ERC20 tokens from contract.
     
-    AirdropNewRecipients(recipients: Array<{ address: string, amount: number }>): boolean;  // Generates new root and saves to browser.
-    AirdropClaim(address: string): boolean;     // Generates proof and sends claim transaction.
+    AirdropNewRecipients(recipients: Array<{ to: string, amount: string }>): boolean;  // Generates new root and saves to browser.
+    AirdropClaim(address: string, amount: string): boolean;     // Generates proof and sends claim transaction.
     AirdropCheckClaim(address: string): number; // Returns amount claimable by address.
 
     BridgeTransferTo(destination: Network, amount: number): void;
@@ -30,7 +30,7 @@ export default interface IController
     StakeCheckReward(address: string): number;
     StakeClaimReward(): void;
 
-    NFTMint(): void;
+    NFTMint(address: string): void;
     NFTBalance(address: string): number;
     NFTGetOwner(tokenId: number): string;
     NFTTransfer(recipient: string, tokenId: number): void;

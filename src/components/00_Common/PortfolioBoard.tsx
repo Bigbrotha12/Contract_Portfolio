@@ -12,16 +12,18 @@ import Flipper from '../02_Content/contractComponents/Flipper';
 import NFTToken from '../02_Content/contractComponents/NFTToken';
 import Reflect from '../02_Content/contractComponents/Reflect';
 import Staker from '../02_Content/contractComponents/Staker';
+import { ConnectionContext } from '../../state/AppContext';
 
 // ABI
 //import Airdrop from '../../../contracts/1_Airdrop/build/contracts/AirdropClaim.json';
 
-export default function PortfolioBoard(props: {connection: AppConnectionData, setConnection})
+export default function PortfolioBoard(props: {setConnection: React.Dispatch<React.SetStateAction<AppConnectionData>>})
 {
     React.useEffect(() => {
         window.scrollTo(0, 0)
     }, []);
-    
+
+    const connection: AppConnectionData = React.useContext(ConnectionContext); 
     const headerItem: Array<Content> = [
         { title: 'Home', icon: null, content: "/" },
         { title: 'Services', icon: null, content: "/#services" },
@@ -34,7 +36,7 @@ export default function PortfolioBoard(props: {connection: AppConnectionData, se
 
     const displayContract = () =>
     {
-        switch (props.connection.contract?.name)
+        switch (connection.contract?.name)
         {
             case "Airdrop":
                 return <Airdrop recipientCount={4} />
@@ -57,7 +59,7 @@ export default function PortfolioBoard(props: {connection: AppConnectionData, se
         <div className='w-full min-h-screen bg-gradientBg bg-cover'>
             
             <Header id='top' items={headerItem} />
-            <W3Header connection={props.connection} setConnection={props.setConnection} />
+            <W3Header setConnection={props.setConnection} />
             <InfoBanner />
             <div className='flex justify-center w-[80%] mx-auto'>
                 <ContractInterface>{displayContract()}</ContractInterface>
