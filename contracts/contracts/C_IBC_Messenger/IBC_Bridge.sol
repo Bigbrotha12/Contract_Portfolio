@@ -24,7 +24,6 @@ contract IBC_Bridge is EIP712X {
     DemoToken public demoToken;
     string public name;
     string public version;
-    uint256 public limit;
 
     //----------------------- EVENTS -------------------------------------------
 
@@ -53,7 +52,6 @@ contract IBC_Bridge is EIP712X {
         string memory _name,
         string memory _version,
         address _minter,
-        uint256 _limit,
         DemoToken _token
     ) EIP712(_name, _version) {
         MESSAGE_TYPE_HASH = keccak256(
@@ -63,7 +61,6 @@ contract IBC_Bridge is EIP712X {
         name = _name;
         version = _version;
         demoToken = _token;
-        limit = _limit;
     }
 
     //-------------------- VIEW FUNCTIONS ----------------------------------

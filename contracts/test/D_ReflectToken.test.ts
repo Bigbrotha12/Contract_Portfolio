@@ -5,6 +5,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import hre from 'hardhat';
 import { BigNumber, Signer } from "ethers";
 import { ReflectToken } from '../typechain-types/contracts/D_Reflect_Token';
+import { DemoToken } from "../typechain-types/contracts/A_DemoToken";
 
 interface SignerWithAddress extends Signer {
   address: string
@@ -13,16 +14,29 @@ interface SignerWithAddress extends Signer {
 describe('Reflect', function () {
   async function DeployFixture() {
     const [admin, user1, user2, user3] = await hre.ethers.getSigners();
+    const demoName: string = "DemoToken";
+    const demoSymbol: string = "DEMO";
+    const whitelist: Array<string> = [admin.address, user1.address];
+
     const decimal: number = 18;
     const name: string = "Reflect";
     const symbol: string = "RFT";
     const supply: BigNumber = hre.ethers.utils.parseUnits("1000000", decimal);
     const limit: BigNumber = hre.ethers.utils.parseUnits("1000", decimal);
+    const price: BigNumber = hre.ethers.utils.parseUnits("10", decimal);
     const fee: number = 0;
-    const reflectToken = await (await hre.ethers.getContractFactory("ReflectToken")).deploy(name, symbol, supply, limit, fee);
-    
+
+    const token = await (await hre.ethers.getContractFactory("DemoToken")).deploy(demoName, demoSymbol, whitelist);
+    const reflectToken = await (await hre.ethers.getContractFactory("ReflectToken")).deploy(name, symbol, supply, limit, fee, price, token.address);
+
+    const IToken = token as DemoToken;
     const IReflect = reflectToken as ReflectToken;
-    return { IReflect, admin, user1, user2, user3 };
+    await IToken.changeMinter(IReflect.address, true);
+    await IToken.mintTo(admin.address, limit.mul(BigNumber.from(10000000)));
+    console.log("Minted: " + await IToken.balanceOf(admin.address));
+    await IReflect.purchaseTokens(limit);
+    
+    return { IToken, IReflect, admin, user1, user2, user3 };
   };
 
   describe("Deployment", function () {
@@ -35,7 +49,6 @@ describe('Reflect', function () {
       const limit: BigNumber = hre.ethers.utils.parseUnits("1000", decimal);
       const fee: number = 0;
       
-
       expect(await IReflect.name()).to.be.equal(name);
       expect(await IReflect.symbol()).to.be.equal(symbol);
       expect(await IReflect.totalSupply()).to.be.equal(supply);

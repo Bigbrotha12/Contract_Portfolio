@@ -1,3 +1,4 @@
+import "@nomiclabs/hardhat-ethers";
 import { ethers } from 'hardhat';
 import deployArgs from './deploymentArgs.json';
 import { DemoToken } from '../typechain-types/contracts/A_DemoToken';
@@ -16,21 +17,21 @@ async function main() {
     const NFTLogic = await ethers.getContractFactory("FamiliarLogic");
     const NFTProxy = await ethers.getContractFactory("NFTDemo");
 
-    const demoToken = await DemoToken.deploy([...deployArgs["DemoToken"], [admin.address]] || null);
+    const demoToken = await DemoToken.deploy(...deployArgs["DemoToken"], [admin.address]);
     await demoToken.deployed();
-    const airdrop = await Airdrop.deploy([...deployArgs["AirdropDemo"], demoToken.address] || null);
+    const airdrop = await Airdrop.deploy(...deployArgs["AirdropDemo"], demoToken.address);
     await airdrop.deployed();
-    const bridge = await Bridge.deploy([...deployArgs["IBC_Bridge"], demoToken.address] || null);
+    const bridge = await Bridge.deploy(...deployArgs["IBC_Bridge"], demoToken.address);
     await bridge.deployed();
-    const flipper = await Flipper.deploy([...deployArgs["CoinFlipper"], demoToken.address] || null);
+    const flipper = await Flipper.deploy(...deployArgs["CoinFlipper"], demoToken.address);
     await flipper.deployed();
-    const reflect = await Reflect.deploy(deployArgs["ReflectToken"] || null);
+    const reflect = await Reflect.deploy(...deployArgs["ReflectToken"], demoToken.address);
     await reflect.deployed();
-    const staker = await Staker.deploy([...deployArgs["Staker"], demoToken.address, demoToken.address] || null);
+    const staker = await Staker.deploy(...deployArgs["Staker"], demoToken.address, demoToken.address);
     await staker.deployed();
-    const nftLogic = await NFTLogic.deploy(deployArgs["FamiliarLogic"] || null);
+    const nftLogic = await NFTLogic.deploy(deployArgs["FamiliarLogic"]);
     await nftLogic.deployed();
-    const nftProxy = await NFTProxy.deploy([...deployArgs["NFTDemo"], admin.address] || null);
+    const nftProxy = await NFTProxy.deploy(...deployArgs["NFTDemo"], [admin.address]);
     await nftProxy.deployed();
 
     let token = demoToken as DemoToken;

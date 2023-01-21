@@ -5,8 +5,6 @@ import "@openzeppelin/contracts/proxy/Proxy.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "./CommonStorage.sol";
 
-import "hardhat/console.sol";
-
 /// @title FamiliarProxy
 /// @notice Proxy implementation handling contract call forwarding,
 /// @notice access controls, and upgradability logic for Familiar dApp.

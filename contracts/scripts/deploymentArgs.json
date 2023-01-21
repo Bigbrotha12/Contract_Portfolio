@@ -1,10 +1,10 @@
 {
     "DemoToken": ["Demo Token", "DEMO"],
     "AirdropDemo": ["1000000000000000000000"],
-    "IBC_Bridge": ["Demo Bridge", "1.0.0", "0xe48dC812F1cEe846A4E3d804A8bf7DC4ddF3255f", "1000000000000000000000"],
-    "ReflectToken": ["Reflect Demo", "RFLT", "10000000000000000000000000", "1000000000000000000000", 10],
+    "IBC_Bridge": ["Demo Bridge", "1.0.0", "0xe48dC812F1cEe846A4E3d804A8bf7DC4ddF3255f"],
+    "ReflectToken": ["Reflect Demo", "RFLT", "10000000000000000000000000", "1000000000000000000000", 10, "10000000000000000000"],
     "Staker": [],
     "NFTDemo": [],
     "FamiliarLogic": [],
-    "CoinFlipper": ["_subscriptionId", "_vrfCoordinator"]
+    "CoinFlipper": ["1", "0xe48dC812F1cEe846A4E3d804A8bf7DC4ddF3255f"]
 }

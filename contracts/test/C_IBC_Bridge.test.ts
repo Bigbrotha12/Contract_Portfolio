@@ -1,7 +1,8 @@
+import "@nomiclabs/hardhat-ethers";
+import "@nomicfoundation/hardhat-chai-matchers";
 import { expect } from 'chai';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import hre, { ethers } from 'hardhat';
-import { TypedDataDomain, TypedDataField } from 'ethers';
 import { DemoToken } from './../typechain-types/contracts/A_DemoToken/index';
 import { IBC_Bridge } from './../typechain-types/contracts/C_IBC_Messenger/IBC_Bridge';
 
@@ -18,7 +19,7 @@ describe("IBC_Bridge", function () {
     const minter: string = admin.address;
 
     const token = await (await hre.ethers.getContractFactory("DemoToken")).deploy(name, symbol, whitelist);
-    const bridge = await (await hre.ethers.getContractFactory("IBC_Bridge")).deploy(bridgeName, bridgeVersion, minter, limit, token.address);
+    const bridge = await (await hre.ethers.getContractFactory("IBC_Bridge")).deploy(bridgeName, bridgeVersion, minter, token.address);
     await token.changeMinter(bridge.address, true);
 
     const IBridge = bridge as IBC_Bridge;

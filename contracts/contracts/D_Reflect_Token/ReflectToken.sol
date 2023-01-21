@@ -4,6 +4,9 @@ pragma solidity >=0.8.0 <0.9.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
+import "../A_DemoToken/DemoToken.sol";
+
+import "hardhat/console.sol";
 
 /// @title A Fee on Transfer token with automatic reflections to holders.
 /// @notice Token contract inheriting ERC20 standard with basic access
@@ -29,6 +32,8 @@ contract ReflectToken is ERC20, Pausable, Ownable {
     uint256 private tFeeTotal;
     uint8 public feeReflectPct;
     uint256 public mintLimit;
+    DemoToken public purchaseToken;
+    uint256 public price;
 
     //----------------------- EVENTS -------------------------------------------
 
@@ -47,17 +52,29 @@ contract ReflectToken is ERC20, Pausable, Ownable {
         string memory _symbol,
         uint256 _supply,
         uint256 _mintLimit,
-        uint8 _feeReflect
+        uint8 _feeReflect,
+        uint256 _price,
+        DemoToken _token
     ) ERC20(_name, _symbol) {
         tTotal = _supply;
         rTotal = (~uint256(0) - (~uint256(0) % tTotal));
         feeReflectPct = _feeReflect;
         mintLimit = _mintLimit;
-        tOwned[msg.sender] = tTotal;
-        rOwned[msg.sender] = rTotal;
+        tOwned[address(this)] = tTotal;
+        rOwned[address(this)] = rTotal;
+        purchaseToken = _token;
+        price = _price;
     }
 
     //------------------------ VIEWS -------------------------------------------
+
+    function purchasePrice() public view returns (uint256) {
+        return price;
+    }
+
+    function remainingBalance() public view returns (uint256) {
+        return balanceOf(address(this));
+    }
 
     /// @notice See {IERC20-totalSupply}.
     /// @dev Overrides ERC20 totalSupply function.
@@ -184,6 +201,17 @@ contract ReflectToken is ERC20, Pausable, Ownable {
     }
 
     //-------------------- MUTATIVE FUNCTIONS ----------------------------------
+
+    function purchaseTokens(uint256 amount) external {
+        require(amount <= mintLimit, "Reflect: Amount exceeds mint limit.");
+        require(amount <= balanceOf(address(this)), "Reflect: Insufficient balance for sale.");
+
+        uint256 requiredTokens = (amount / 1e18) * price;
+        console.log("Burning: ");
+        console.log(requiredTokens);
+        purchaseToken.burnFrom(msg.sender, requiredTokens);
+        _transfer(address(this), msg.sender, amount);
+    }
 
     /// @notice See {IERC20-transfer}.
     /// @dev Overrides ERC20 _transfer function. Requires 'sender' and
