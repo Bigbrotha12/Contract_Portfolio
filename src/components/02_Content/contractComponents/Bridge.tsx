@@ -7,20 +7,19 @@ import IController from '../../../app/IController';
 import { ControllerContext } from '../../../state/AppContext';
 
 type BridgeTx = {
-    recipient: string,
     amount: number,
     network: Network
 }
 export default function Bridge()
 {
-    const [transferTx, setTransferTx] = React.useState<BridgeTx>({recipient: "", amount: 0, network: Networks[0]});
+    const [transferTx, setTransferTx] = React.useState<BridgeTx>({amount: 0, network: Networks[0]});
     const controller: IController = React.useContext(ControllerContext);
 
     function networkSelection(data: Network) {
         setTransferTx(state => { return { ...state, network: data } });
     }
     function bridgeTransfer() {
-        if (transferTx.recipient && transferTx.amount) {
+        if (transferTx.network && transferTx.amount) {
             controller.BridgeTransferTo(transferTx.network, transferTx.amount);
         }
     }
@@ -35,11 +34,11 @@ export default function Bridge()
                     </div>
                     
                     <div className='pb-[12px]'>
-                    <Material.TextField fullWidth onChange={(e) => {
+                    {/* <Material.TextField fullWidth onChange={(e) => {
                         if (e.target.value && validateAddress(e.target.value)) {
                             setTransferTx(state => { return { ...state, recipient: e.target.value } });
                         }
-                    }} label='address' />
+                    }} label='address' /> */}
                     </div>
                     <div className='pb-[12px]'>
                         <Material.TextField fullWidth onChange={(e) => {

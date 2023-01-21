@@ -1,18 +1,31 @@
 import React from 'react';
 import Material from '../../../assets/Material';
-import { AppConnectionData, Network } from '../../00_Common/Definitions';
-import { ConnectionContext, ControllerContext } from '../../../state/AppContext';
+import { ControllerContext } from '../../../state/AppContext';
 import IController from '../../../app/IController';
+import { Contracts } from '../../../app/Networks';
 
 export default function Staker()
 {
-    const [stakeAmount, setStakeAmount] = React.useState<number>(0);
+    const [newStake, setNewStake] = React.useState<number>(0);
     const controller = React.useContext<IController>(ControllerContext);
-    const connection = React.useContext<AppConnectionData>(ConnectionContext);
+    const useStaker = (): [number, number] => {
+        const [stakedAmount, setStakedAmount] = React.useState<number>(0);
+        const [reward, setReward] = React.useState<number>(0);
+
+        React.useEffect(() => {
+            if (controller.ConnectionStatus()) {
+                setStakedAmount(controller.StakeCheckStake());
+                setReward(controller.StakeCheckReward());
+            }
+            controller.Subscribe(Contracts.get("Staker")!, "Staked", updateStakerBalance);
+            return(() => controller.Unsubscribe(Contracts.get("Staker")!, "Staked", updateStakerBalance))
+        });
+        return [stakedAmount, reward];
+    }
 
     function stakeTokens() {
-        if (stakeAmount) {
-            controller.StakeAddFunds(stakeAmount);
+        if (newStake) {
+            controller.StakeAddFunds(newStake);
         }
     }
     function claimReward() {
@@ -21,6 +34,10 @@ export default function Staker()
     function withdrawStake() {
         controller.StakeWithdrawFunds();
     }
+    function updateStakerBalance(e) {
+        console.log(e);
+    }
+    const [stakedAmount, reward] = useStaker();
     
     return (
         <Material.Card sx={{margin: "12px"}}>
@@ -31,15 +48,15 @@ export default function Staker()
                         <Material.Typography sx={{paddingTop: '12px'}}>Staking Contract</Material.Typography>
                         <Material.Divider />
                     </div>
-                    <Material.Typography sx={{ marginY: '12px' }}>Current Stake: 10 DEMO</Material.Typography>
-                    <Material.Typography sx={{ marginY: '12px'}}>Current Reward: 5 DEMO</Material.Typography>
+                    <Material.Typography sx={{ marginY: '12px' }}>Current Stake: {stakedAmount} DEMO</Material.Typography>
+                    <Material.Typography sx={{ marginY: '12px'}}>Current Reward: {reward} DEMO</Material.Typography>
                     <Material.TextField
                         sx={{ marginY: '12px' }}
                         fullWidth
                         onChange={(e) => {
                             if (validateNumber(e.target.value))
                             {
-                                setStakeAmount(parseInt(e.target.value));
+                                setNewStake(parseInt(e.target.value));
                             }
                         }}
                         label='Stake Amount'

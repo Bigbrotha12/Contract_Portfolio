@@ -21,13 +21,15 @@ export type AppConnectionData =
         contract: Contract
 }
 
+export type ContractName = "Airdrop" | "NFT" | "Staker" | "Reflect" | "Flipper" | "Bridge" | "Token"
+
 export type Contract = 
 {
-        name: string,
+        name: ContractName,
         instances: Array<{
                 network: string,
                 address: string
-        }>
+        }>,
         abi: Array<ABIItem>
 }
 
@@ -37,7 +39,6 @@ export type Network =
         id: number,
         hexID: string,
         explorer: string,
-        availableContracts: Array<Contract> | null,
         rpcUrl: string,
         faucet: string | null
 }

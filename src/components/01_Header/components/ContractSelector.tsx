@@ -1,39 +1,51 @@
 import React from 'react';
 import Material from '../../../assets/Material';
-import { Contract } from '../../00_Common/Definitions';
+import { Contract, ContractName } from '../../00_Common/Definitions';
 
-export default function ContractSelector(props: {title: string, selected: Contract, options: Array<Contract>, callback: (contract: Contract) => void})
+export default function ContractSelector(props: {title: string, selected: Contract, options: Map<string, Contract>, callback: (contract: ContractName) => void})
 { 
-    const [selection, setSelection] = React.useState<number>(0);
-    const handleSelection = (event) =>
-    {
-        let index = event.target.value;
-        if (index < props.options.length)
-        {
-            setSelection(index);
-            props.callback(props.options[index])
-        }
-    }
-
     return (
         <div className='w-[20%]'>
             <Material.FormControl fullWidth>
                 <Material.InputLabel id={props.title}>{props.title}</Material.InputLabel>
                 <Material.Select
                     labelId={props.title}
-                    value={selection}
+                    value={props.selected.name}
                     label={props.title}
-                    onChange={handleSelection}
+                    onChange={(e) => {
+                        if (validateName(e.target.value)) {
+                            props.callback(e.target.value)
+                        }
+                    }}
                 >
-                    {
-                        props.options.map((option, index) => {
-                            return (
-                                <Material.MenuItem key={option.name} value={index}>{option.name}</Material.MenuItem>
-                            )
-                        })
-                    }
+                {
+                    Array.from(props.options.keys()).map((name) => {
+                        return (<Material.MenuItem key={name} value={name}>{name}</Material.MenuItem>)
+                    })
+                }
                 </Material.Select>
             </Material.FormControl>
         </div>
     )
+}
+
+function validateName(test: string): test is ContractName {
+    switch (test) {
+        case "Airdrop":
+            return true;
+        case "NFT":
+            return true;
+        case "Bridge":
+            return true;
+        case "Flipper":
+            return true;
+        case "Reflect":
+            return true;
+        case "Staker":
+            return true;
+        case "Token":
+            return true;
+        default:
+            return false;
+    }
 }

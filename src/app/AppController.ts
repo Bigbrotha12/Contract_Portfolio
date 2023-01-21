@@ -6,6 +6,21 @@ import Merkle from "../../contracts/scripts/merkleRootCalculator";
 
 export default class AppController implements IController
 {
+    ReflectGetPrice(): number {
+        throw new Error("Method not implemented.");
+    }
+ 
+    Subscribe(contract: Contract, event: string, callback: (event: any) => void) {
+        console.log("Subscribing to: ", event);
+        console.log(contract);
+        callback("sub done");
+    }
+    Unsubscribe(contract: Contract, event: string, callback: (event: any) => void) {
+        console.log("Unsubscribing from: ", event);
+        console.log(contract);
+        callback("unsub done");
+    }
+   
     signer: ethers.Signer;
 
     ConnectionStatus(): boolean {
@@ -110,8 +125,13 @@ export default class AppController implements IController
     AirdropClaim(address: string, amount: string): boolean {
         throw new Error("Method not implemented.");
     }
+
+    AirdropHasClaimed(address: string): boolean {
+        return false;
+    }
+
     AirdropCheckClaim(address: string): number {
-        throw new Error("Method not implemented.");
+        return 15;
     }
     BridgeTransferTo(destination: Network, amount: number): void {
         throw new Error("Method not implemented.");
@@ -119,7 +139,7 @@ export default class AppController implements IController
     FlipperAddFunds(amount: number): void {
         throw new Error("Method not implemented.");
     }
-    FlipperCheckFunds(address: string): number {
+    FlipperCheckFunds(): number {
         throw new Error("Method not implemented.");
     }
     FlipperFlipCoin(): void {
@@ -146,10 +166,10 @@ export default class AppController implements IController
     StakeWithdrawFunds(): void {
         throw new Error("Method not implemented.");
     }
-    StakeCheckStake(address: string): number {
+    StakeCheckStake(): number {
         throw new Error("Method not implemented.");
     }
-    StakeCheckReward(address: string): number {
+    StakeCheckReward(): number {
         throw new Error("Method not implemented.");
     }
     StakeClaimReward(): void {

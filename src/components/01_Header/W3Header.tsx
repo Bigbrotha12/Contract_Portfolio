@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppConnectionData, Network, Contract } from '../00_Common/Definitions';
+import { AppConnectionData, Network, Contract, ContractName } from '../00_Common/Definitions';
 import APIStatus from './components/APIStatus';
 import Connector from './components/Connector';
 import TestBalance from './components/TestBalance';
@@ -14,21 +14,18 @@ import IController from '../../app/IController';
 export default function W3Header(props: {setConnection: React.Dispatch<React.SetStateAction<AppConnectionData>>})
 {
     const controller = React.useContext<IController>(ControllerContext); 
-    const connection: AppConnectionData = React.useContext(ConnectionContext);
+    const connection = React.useContext<AppConnectionData>(ConnectionContext);
 
-    const ContractCallback = (contract: Contract) => {
-        console.log('Selected: ' + contract.name);
-        props.setConnection({...connection, contract: contract});
+    const ContractCallback = (contract: ContractName) => {
+        props.setConnection({...connection, contract: Contracts.get(contract)!});
     }
 
     const NetworkCallback = (network: Network) => {
-        console.log('Selected: ' + network.name);
         props.setConnection({ ...connection, network: network });
     }
 
     async function WalletConnect()
     {
-        
         let address = await controller.RequestConnection();
         let network = await controller.GetNetwork();
        

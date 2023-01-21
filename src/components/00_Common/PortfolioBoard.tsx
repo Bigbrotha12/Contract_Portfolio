@@ -14,9 +14,6 @@ import Reflect from '../02_Content/contractComponents/Reflect';
 import Staker from '../02_Content/contractComponents/Staker';
 import { ConnectionContext } from '../../state/AppContext';
 
-// ABI
-//import Airdrop from '../../../contracts/1_Airdrop/build/contracts/AirdropClaim.json';
-
 export default function PortfolioBoard(props: {setConnection: React.Dispatch<React.SetStateAction<AppConnectionData>>})
 {
     React.useEffect(() => {
@@ -36,7 +33,7 @@ export default function PortfolioBoard(props: {setConnection: React.Dispatch<Rea
 
     const displayContract = () =>
     {
-        switch (connection.contract?.name)
+        switch (connection.contract.name)
         {
             case "Airdrop":
                 return <Airdrop recipientCount={4} />
@@ -61,7 +58,7 @@ export default function PortfolioBoard(props: {setConnection: React.Dispatch<Rea
             <Header id='top' items={headerItem} />
             <W3Header setConnection={props.setConnection} />
             <InfoBanner />
-            <div className='flex justify-center w-[80%] mx-auto'>
+            <div className='flex px-[10%] mx-auto'>
                 <ContractInterface>{displayContract()}</ContractInterface>
                 <EventTracker />
             </div>

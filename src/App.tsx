@@ -18,7 +18,7 @@ export default function App()
 {
     const controller: IController = new AppController();
     const [connection, setConnection] = React.useState<AppConnectionData>(defaultConnection);
-    
+    console.log(defaultConnection);
     return (
         <div className='flex'>
             <React.StrictMode>

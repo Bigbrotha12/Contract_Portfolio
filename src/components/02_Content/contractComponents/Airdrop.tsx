@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import IController from '../../../app/IController';
 import { ConnectionContext, ControllerContext } from '../../../state/AppContext';
 import { AppConnectionData } from '../../00_Common/Definitions';
+import { Contracts } from '../../../app/Networks';
 
 type AirdropData = Array<{to: string, amount: string}>;
 const tokenLimit = 1_000;
@@ -11,6 +12,7 @@ export default function Airdrop(props: {recipientCount: number})
 {
     const [airdropList, setAirdropList] = React.useState<AirdropData>();
     const [checkAddress, setCheckAddress] = React.useState<string>("");
+    const [airdrop, setAirdrop] = React.useState<boolean>(false);
     const { register, handleSubmit, setError, formState: { errors } } = useForm();
     const controller: IController = React.useContext(ControllerContext);
     const connection: AppConnectionData = React.useContext(ConnectionContext);
@@ -37,6 +39,27 @@ export default function Airdrop(props: {recipientCount: number})
         controller.AirdropClaim(address, amount);
     }
 
+    const useAirdrop = (account) => {
+        const [claimed, setClaimed] = React.useState<boolean>(false);
+        const [amount, setAmount] = React.useState<number>(0);
+        function handleClaim(event) {
+            console.log(event);
+        }
+
+        React.useEffect(() => {
+            if (account) {
+                setAmount(controller.AirdropCheckClaim(account));
+                setClaimed(controller.AirdropHasClaimed(account));
+            }
+            controller.Subscribe(Contracts.get("Airdrop")!, "Claimed", handleClaim);
+            return (() => 
+                controller.Unsubscribe(Contracts.get("Airdrop")!, "Claimed", handleClaim)
+            )
+        }, [account]);
+        return [amount, claimed];
+    }
+    const [amount, claimStatus] = useAirdrop(connection.account);
+
     return (
         <Material.Card sx={{margin: "12px"}}>
             <Material.CardHeader title="Airdrop Contract" />
@@ -55,7 +78,7 @@ export default function Airdrop(props: {recipientCount: number})
                                         error={!validateAddress((errors[`address${i}`] as any)?.ref?.value)}
                                         inputProps={{ ...register(`address${i}`), pattern: '^0x[a-fA-F0-9]{40}$' }}
                                         fullWidth
-                                        onChange={() => setError(`address${i}`, { type: 'pattern' })}
+                                        onChange={() => setError(`address${i}`, { type: 'pattern', message: "Please enter a valid blockchain address." })}
                                         label={!validateAddress((errors[`address${i}`] as any)?.ref?.value) ? 'invalid address' : 'address'}
                                         placeholder="Enter a valid address"
                                     />
@@ -65,7 +88,7 @@ export default function Airdrop(props: {recipientCount: number})
                                         error={!validateAmount((errors[`amount${i}`] as any)?.ref?.value)}
                                         inputProps={{ ...register(`amount${i}`), inputMode: 'numeric', pattern: '[0-9]*' }}
                                         fullWidth
-                                        onChange={() => setError(`amount${i}`, { type: 'pattern' })}
+                                        onChange={() => setError(`amount${i}`, { type: 'pattern', message: "Please enter a number within the range." })}
                                         label={!validateAmount((errors[`amount${i}`] as any)?.ref?.value) ? 'invalid amount' : 'amount'}
                                         placeholder="Enter value [0 - 1,000]"
                                     />
@@ -82,7 +105,7 @@ export default function Airdrop(props: {recipientCount: number})
                 
                     <div className='w-full py-[12px]'>
                         <div className='flex justify-between w-full'>
-                                {/* <Material.Typography sx={{width: '40%', marginY: 'auto', fontWeight: 'bold'}}>Check Claim</Material.Typography> */}
+                            <Material.Typography sx={{ width: '40%', marginY: 'auto', fontWeight: 'bold' }}>Your address is entitled to: {amount} and has {claimStatus ? 'already claimed': 'not yet claimed.'}</Material.Typography>
                             <Material.TextField
                                 fullWidth
                                 label='address'
