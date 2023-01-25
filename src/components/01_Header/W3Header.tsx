@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppConnectionData, Network, Contract, ContractName } from '../00_Common/Definitions';
+import { AppConnectionData, Network, Contract, ContractName } from '../../app/Definitions';
 import APIStatus from './components/APIStatus';
 import Connector from './components/Connector';
 import TestBalance from './components/TestBalance';

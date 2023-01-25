@@ -34,7 +34,7 @@ export default function Staker()
     function withdrawStake() {
         controller.StakeWithdrawFunds();
     }
-    function updateStakerBalance(e) {
+    async function updateStakerBalance(e) {
         console.log(e);
     }
     const [stakedAmount, reward] = useStaker();

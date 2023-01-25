@@ -1,6 +1,6 @@
 import React from 'react';
 import Material from '../../assets/Material';
-import { Content } from '../00_Common/Definitions';
+import { Content } from '../../app/Definitions';
 
 export default function Services(props: {title: string, id:string, content: Array<Content>})
 {

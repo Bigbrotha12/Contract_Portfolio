@@ -27,7 +27,7 @@ export default function Reflect()
             controller.ReflectTransfer(transfer.recipient, transfer.amount);
         }
     }
-    function updateUserBalance(e) {
+    async function updateUserBalance(e) {
         console.log(e);
     }
     

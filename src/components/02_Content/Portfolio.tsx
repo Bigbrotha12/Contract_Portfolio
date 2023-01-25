@@ -1,7 +1,7 @@
 import React from 'react';
 import Material from '../../assets/Material';
 import { Link } from 'react-router-dom';
-import { Content } from '../00_Common/Definitions';
+import { Content } from '../../app/Definitions';
 
 export default function Portfolio(props: { title: string, id: string, content: Array<Content> })
 {

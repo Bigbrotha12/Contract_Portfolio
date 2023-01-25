@@ -1,5 +1,5 @@
 import React from 'react';
-import { Content } from '../00_Common/Definitions';
+import { Content } from '../../app/Definitions';
 import Material from '../../assets/Material';
 import { useForm } from 'react-hook-form';
 

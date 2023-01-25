@@ -1,5 +1,5 @@
 import React from 'react';
-import { Content } from './Definitions';
+import { Content } from '../../app/Definitions';
 
 // Components
 import Header from '../01_Header/Header';

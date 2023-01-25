@@ -1,6 +1,6 @@
 import React from 'react';
 import Material from '../../../assets/Material';
-import { Network } from '../../00_Common/Definitions';
+import { Network } from '../../../app/Definitions';
 
 export default function Selector(props: {title: string, selected: {name: string}, options: Array<Network>, callback?: (network: Network) => void})
 { 

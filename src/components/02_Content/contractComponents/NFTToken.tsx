@@ -24,7 +24,7 @@ export default function NFTToken()
             controller.NFTTransfer(transfer.recipient, transfer.tokenId);
         }
     }
-    function updateUserBalance(event) {
+    async function updateUserBalance(event) {
         console.log(event);
     }
 

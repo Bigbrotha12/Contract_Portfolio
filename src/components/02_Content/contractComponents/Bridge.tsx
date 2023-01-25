@@ -2,7 +2,7 @@ import React from 'react';
 import Material from '../../../assets/Material';
 import NetworkSelector from '../../01_Header/components/NetworkSelector';
 import { Networks } from '../../../app/Networks';
-import { AppConnectionData, Network } from '../../00_Common/Definitions';
+import { AppConnectionData, Network } from '../../../app/Definitions';
 import IController from '../../../app/IController';
 import { ControllerContext } from '../../../state/AppContext';
 

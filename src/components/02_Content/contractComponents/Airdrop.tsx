@@ -3,7 +3,7 @@ import Material from '../../../assets/Material';
 import { useForm } from 'react-hook-form';
 import IController from '../../../app/IController';
 import { ConnectionContext, ControllerContext } from '../../../state/AppContext';
-import { AppConnectionData } from '../../00_Common/Definitions';
+import { AppConnectionData } from '../../../app/Definitions';
 import { Contracts } from '../../../app/Networks';
 
 type AirdropData = Array<{to: string, amount: string}>;
@@ -42,7 +42,7 @@ export default function Airdrop(props: {recipientCount: number})
     const useAirdrop = (account) => {
         const [claimed, setClaimed] = React.useState<boolean>(false);
         const [amount, setAmount] = React.useState<number>(0);
-        function handleClaim(event) {
+        async function handleClaim(event) {
             console.log(event);
         }
 

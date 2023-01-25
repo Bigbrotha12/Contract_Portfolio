@@ -4,7 +4,7 @@ import W3Header from '../01_Header/W3Header';
 import InfoBanner from '../02_Content/InfoBanner';
 import ContractInterface from '../02_Content/ContractInterface';
 import EventTracker from '../02_Content/EventTracker';
-import { AppConnectionData, Content } from './Definitions';
+import { AppConnectionData, Content } from '../../app/Definitions';
 
 import Airdrop from '../02_Content/contractComponents/Airdrop';
 import Bridge from '../02_Content/contractComponents/Bridge';
@@ -31,9 +31,23 @@ export default function PortfolioBoard(props: {setConnection: React.Dispatch<Rea
         { title: 'Contact', icon: null, content: "/#contact" }
     ]
 
-    const displayContract = () =>
+    return (
+        <div className='w-full min-h-screen bg-gradientBg bg-cover'>
+            
+            <Header id='top' items={headerItem} />
+            <W3Header setConnection={props.setConnection} />
+            <InfoBanner />
+            <div className='flex px-[10%] mx-auto'>
+                <ContractInterface><DisplayContract contractName={connection.contract.name} /></ContractInterface>
+                <EventTracker />
+            </div>
+        </div>
+    )
+}
+
+function DisplayContract(props: { contractName: string })
     {
-        switch (connection.contract.name)
+        switch (props.contractName)
         {
             case "Airdrop":
                 return <Airdrop recipientCount={4} />
@@ -51,17 +65,3 @@ export default function PortfolioBoard(props: {setConnection: React.Dispatch<Rea
                 return <Airdrop recipientCount={4} />
         }
     }
-    
-    return (
-        <div className='w-full min-h-screen bg-gradientBg bg-cover'>
-            
-            <Header id='top' items={headerItem} />
-            <W3Header setConnection={props.setConnection} />
-            <InfoBanner />
-            <div className='flex px-[10%] mx-auto'>
-                <ContractInterface>{displayContract()}</ContractInterface>
-                <EventTracker />
-            </div>
-        </div>
-    )
-}

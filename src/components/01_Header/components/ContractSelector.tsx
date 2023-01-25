@@ -1,6 +1,6 @@
 import React from 'react';
 import Material from '../../../assets/Material';
-import { Contract, ContractName } from '../../00_Common/Definitions';
+import { Contract, ContractName } from '../../../app/Definitions';
 
 export default function ContractSelector(props: {title: string, selected: Contract, options: Map<string, Contract>, callback: (contract: ContractName) => void})
 { 

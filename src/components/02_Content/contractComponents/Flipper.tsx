@@ -3,7 +3,6 @@ import Material from '../../../assets/Material';
 import IController from '../../../app/IController';
 import { ControllerContext } from '../../../state/AppContext';
 import { Contracts } from '../../../app/Networks';
-import { number } from 'prop-types';
 
 export default function Flipper()
 {
@@ -12,7 +11,7 @@ export default function Flipper()
     const useFlipper = (): [number, string] => {
         const [pot, setPot] = React.useState<number>(0);
         const [winState, setWinState] = React.useState<string>("");
-        function handleFlipperEvent(event) {
+        async function handleFlipperEvent(event) {
             console.log(event);
         }
 
