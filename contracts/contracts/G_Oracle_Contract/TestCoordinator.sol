@@ -21,7 +21,16 @@ contract TestCoordinator {
   }
 
   function requestRandomWords(bytes32 keyHash,uint64 subId,uint16 minimumRequestConfirmations,uint32 callbackGasLimit,uint32 numWords) external pure returns (uint256 requestId) {
+    keyHash; subId; minimumRequestConfirmations; callbackGasLimit; numWords;
     return 500;
+  }
+
+  function createSubscription() external pure returns (uint256) {
+    return 1;
+  }
+
+  function addConsumer(uint64 id, address consumer) external pure {
+    id; consumer;
   }
 
 }

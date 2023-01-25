@@ -4,6 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/LinkTokenInterface.sol";
 import "./../A_DemoToken/DemoToken.sol";
 
 struct Player {
@@ -18,11 +19,15 @@ contract CoinFlipper is Ownable, VRFConsumerBaseV2 {
     //------------------ STATE VARIABLES ---------------------------------------
 
     VRFCoordinatorV2Interface COORDINATOR; // Chainlink coordinator interface
+    LinkTokenInterface LINK;
     uint64 public subscriptionId; // Chainlink account
+    bytes32 public keyHash;
+
     uint256 public reservedBalance; // Contract balance reserved for players
     mapping(uint256 => address) public playerQuery; // Oracle query for each player
     mapping(address => Player) public players; // Players data
     DemoToken public token;
+    
 
     //----------------------- EVENTS -------------------------------------------
 
@@ -35,18 +40,20 @@ contract CoinFlipper is Ownable, VRFConsumerBaseV2 {
     //--------------------  CONSTRUCTOR ----------------------------------------
 
     /// @notice Requires chainlink subscription to be set-up prior to contract
-    /// @notice deployment.
-    /// @param _subscriptionId      Chainlink subscription
+    /// @notice deployment. Contract will auto-subscribe as VRF consumer.
     /// @param _vrfCoordinator      Address of Chainlink oracle coordinator
     /// @param _token               Token for demonstration purposes
     constructor(
-        uint64 _subscriptionId,
         address _vrfCoordinator,
+        bytes32 _keyHash,
+        LinkTokenInterface _linkToken,
         DemoToken _token
     ) VRFConsumerBaseV2(_vrfCoordinator) {
         COORDINATOR = VRFCoordinatorV2Interface(_vrfCoordinator);
-        subscriptionId = _subscriptionId;
+        LINK = _linkToken;
+        keyHash = _keyHash;
         token = _token;
+        subscribe();
     }
 
     //------------------------ VIEWS -------------------------------------------
@@ -70,6 +77,26 @@ contract CoinFlipper is Ownable, VRFConsumerBaseV2 {
 
     function setToken(DemoToken _token) external onlyOwner {
         token = _token;
+    }
+
+    function subscribe() public onlyOwner {
+        subscriptionId = COORDINATOR.createSubscription();
+        COORDINATOR.addConsumer(subscriptionId, address(this));
+    }
+
+    /// Requires Chainlink deposited to contract.
+    function fundOracle(uint256 amount) public onlyOwner { 
+        LINK.transferAndCall(
+            address(COORDINATOR),
+            amount,
+            abi.encode(subscriptionId)
+        );
+    }
+
+    function unsubscribe() public onlyOwner {
+        COORDINATOR.removeConsumer(subscriptionId, address(this));
+        COORDINATOR.cancelSubscription(subscriptionId, msg.sender);
+        subscriptionId = 0;
     }
 
     /// @notice Allow player to place a bet of atleast 0.1 ETH.
@@ -131,7 +158,6 @@ contract CoinFlipper is Ownable, VRFConsumerBaseV2 {
         reservedBalance += bet; //Reserve balance in case player wins.
 
         // Chainlink query parameters
-        bytes32 keyHash = 0x79d3d8832d904592c0bf9818b621522c988bb8b0c05cdc3b15aea1b6e8db0c15; // Chainlink gas lane
         uint16 requestConfirmations = 3; // Delay before oracle executes query.
         uint32 callbackGasLimit = 200000; // Gas needed for oracle callback transaction.
         uint32 numberRequired = 1; // Number of random numbers requested.

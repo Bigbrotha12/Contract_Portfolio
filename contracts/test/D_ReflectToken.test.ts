@@ -33,7 +33,6 @@ describe('Reflect', function () {
     const IReflect = reflectToken as ReflectToken;
     await IToken.changeMinter(IReflect.address, true);
     await IToken.mintTo(admin.address, limit.mul(BigNumber.from(10000000)));
-    console.log("Minted: " + await IToken.balanceOf(admin.address));
     await IReflect.purchaseTokens(limit);
     
     return { IToken, IReflect, admin, user1, user2, user3 };

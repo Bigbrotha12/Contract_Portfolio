@@ -17,7 +17,7 @@ describe("CoinFlipper", function () {
   
     const token = await (await ethers.getContractFactory("DemoToken")).deploy(name, symbol, whitelist);
     const testOracle = await (await ethers.getContractFactory("TestCoordinator")).deploy();
-    const coinFlip = await (await ethers.getContractFactory("CoinFlipper")).deploy(subscriptionId, testOracle.address, token.address);
+    const coinFlip = await (await ethers.getContractFactory("CoinFlipper")).deploy(testOracle.address, token.address, token.address);
     await token.changeMinter(coinFlip.address, true);
 
     const IToken = token as DemoToken;

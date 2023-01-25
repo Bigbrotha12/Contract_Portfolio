@@ -6,7 +6,7 @@ import { ControllerContext } from './state/AppContext';
 import { ConnectionContext } from './state/AppContext';
 import Layout from './components/00_Common/Layout';
 import PortfolioBoard from './components/00_Common/PortfolioBoard';
-import { AppConnectionData } from './components/00_Common/Definitions';
+import { AppConnectionData } from './app/Definitions';
 import { defaultConnection } from './app/Networks';
 import { useTheme, createTheme } from '@mui/material';
 

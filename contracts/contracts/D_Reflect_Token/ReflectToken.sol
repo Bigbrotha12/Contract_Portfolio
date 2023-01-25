@@ -6,8 +6,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "../A_DemoToken/DemoToken.sol";
 
-import "hardhat/console.sol";
-
 /// @title A Fee on Transfer token with automatic reflections to holders.
 /// @notice Token contract inheriting ERC20 standard with basic access
 /// @notice control and emergency pause mechanism. The token contract implements
@@ -207,8 +205,6 @@ contract ReflectToken is ERC20, Pausable, Ownable {
         require(amount <= balanceOf(address(this)), "Reflect: Insufficient balance for sale.");
 
         uint256 requiredTokens = (amount / 1e18) * price;
-        console.log("Burning: ");
-        console.log(requiredTokens);
         purchaseToken.burnFrom(msg.sender, requiredTokens);
         _transfer(address(this), msg.sender, amount);
     }

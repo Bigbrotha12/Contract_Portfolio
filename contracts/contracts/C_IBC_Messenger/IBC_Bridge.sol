@@ -29,14 +29,14 @@ contract IBC_Bridge is EIP712X {
 
     event DataSent(
         address indexed receiver,
-        uint256 tokenId,
+        uint256 amount,
         uint256 receivingChainId,
         uint256 nonce,
         bytes32 domainSeparator
     );
     event DataReceived(
         address indexed receiver,
-        uint256 tokenId,
+        uint256 amount,
         uint256 sendingChainId,
         uint256 nonce
     );

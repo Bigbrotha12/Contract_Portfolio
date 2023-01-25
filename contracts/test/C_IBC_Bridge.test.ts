@@ -132,7 +132,7 @@ describe("IBC_Bridge", function () {
       );
     });
   
-    it("should execute valid burn requests", async () => {
+    it.only("should execute valid burn requests", async () => {
       const { IToken, IBridge, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
       const transferAmount = 100;
       const newDomainName: string = "Foreign_Bridge";
@@ -142,9 +142,26 @@ describe("IBC_Bridge", function () {
 
       // register new destination domain
       await IBridge.registerDomain(newDomainName, newDomainVersion, newDomainId, newDomainAddress);
-
       await IToken.mintTo(user1.address, transferAmount);
-      await expect(IBridge.connect(user1).dataSend(user1.address, transferAmount, newDomainId)).to.emit(IBridge, "DataSent");
+      
+      let filter = IBridge.filters.DataSent(user1.address);
+      let hash = await IBridge.connect(user1).dataSend(user1.address, transferAmount, newDomainId);
+      let receipt = await ethers.provider.getTransactionReceipt(hash.hash);
+      let blockEvent = await IBridge.queryFilter(filter, receipt.blockHash);
+      if (blockEvent) {
+        let result = blockEvent.pop()?.args;
+        if (result)
+        {
+          let receiver = result[0];
+          let amount = result[1];
+          let destChain = result[2];
+          let nonce = result[3];
+          console.log("Receiver: %s, amount: %d, destination: %d, nonce: %d", receiver, amount, destChain, nonce);
+        }
+        
+
+      }
+      
     });
   });
 

@@ -47,4 +47,8 @@ contract DemoToken is ERC20 {
 
         _burn(_recipient, _amount);
     }
+
+    function faucet() external {
+        _mint(msg.sender, 10 ether);
+    }
 }
