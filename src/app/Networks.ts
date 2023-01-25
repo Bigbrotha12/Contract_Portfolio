@@ -1,4 +1,4 @@
-import { Network, Contract, AppConnectionData, ContractName } from "../components/00_Common/Definitions";
+import { Network, Contract, AppConnectionData, ContractName } from "./Definitions";
 
 import DemoToken from '../../contracts/artifacts/contracts/A_DemoToken/DemoToken.sol/DemoToken.json';
 import Airdrop from '../../contracts/artifacts/contracts/B_Airdrop/AirdropDemo.sol/AirdropDemo.json';

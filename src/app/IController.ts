@@ -1,41 +1,44 @@
-import { Network, Contract } from "../components/00_Common/Definitions";
+import { Network, Contract, TransactionStatus } from "./Definitions";
 
 export default interface IController
 {
-    ConnectionStatus(): boolean;                                // Returns whether or not user wallet is unlocked.
+    ConnectionStatus(): boolean;                 // Returns whether or not user wallet is unlocked.
     RequestConnection(): Promise<string | null>; // Request user unlock wallet and creates signer.
-    GetNetwork(): Promise<Network>;
+    GetNetwork(): Promise<Network | null>;
     ChangeNetwork(network: Network): Promise<boolean>;
-    GetTestTokens(amount: number): void;    // Request test ERC20 tokens from contract.
-    Subscribe(contract: Contract, event: string, callback: (event) => void);
-    Unsubscribe(contract: Contract, event: string, callback: (event) => void);
+    GetTestTokens(amount: number): Promise<boolean>;    // Request test ERC20 tokens from contract.
+    AddTransactionListener(callback: (status: TransactionStatus, hash: string) => void): boolean;
+    RemoveTransactionListener(): boolean;
+    Subscribe(contract: Contract, event: string, callback: (event) => Promise<boolean>);
+    Unsubscribe(contract: Contract, event: string, callback: (event) => boolean);
     
-    AirdropNewRecipients(recipients: Array<{ to: string, amount: string }>): boolean;  // Generates new root and saves to browser.
-    AirdropClaim(address: string, amount: string): boolean;     // Generates proof and sends claim transaction.
-    AirdropCheckClaim(address: string): number; // Returns amount claimable by address.
-    AirdropHasClaimed(address: string): boolean 
+    AirdropNewRecipients(recipients: Array<{ to: string, amount: string }>): Promise<boolean>;  // Generates new root and saves to browser.
+    AirdropClaim(address: string, amount: string, data: { to: string; amount: string; }[]): Promise<boolean>;     // Generates proof and sends claim transaction.
+    AirdropCheckClaim(address: string, data: { to: string; amount: string; }[]): number | null; // Returns amount claimable by address.
+    AirdropHasClaimed(address: string): Promise<boolean | null>; 
 
-    BridgeTransferTo(destination: Network, amount: number): void;
+    BridgeSendTx(destination: Network, amount: string): Promise<string | null>;
+    BridgePendingTransaction(sendingChain: Network, receivingChain: Network): Promise<boolean>;
+    BridgeCompleteTransfer(signature: string, sendingChain: string, amount: string): Promise<boolean>;
 
-    FlipperAddFunds(amount: number): void;
-    FlipperCheckFunds(): number;
-    FlipperFlipCoin(): void;
-    FlipperWithdrawFunds(): void;
+    FlipperAddFunds(amount: string): Promise<boolean>;
+    FlipperCheckFunds(): Promise<string | null>;
+    FlipperFlipCoin(): Promise<boolean>;
+    FlipperWithdrawFunds(amount: string): Promise<boolean>;
 
-    ReflectGetToken(amount: number): void;
-    ReflectGetPrice(): number;
-    ReflectApprove(address: string, amount: number): void;
-    ReflectBalance(address?: string): number;
-    ReflectTransfer(recipient: string, amount: number): void;
+    ReflectGetToken(amount: string): Promise<boolean>;
+    ReflectGetPrice(): Promise<string | null>;
+    ReflectBalance(address?: string): Promise<string | null>;
+    ReflectTransfer(recipient: string, amount: string): Promise<boolean>;
 
-    StakeAddFunds(amount: number): void;
-    StakeWithdrawFunds(): void;
-    StakeCheckStake(): number;
-    StakeCheckReward(): number;
-    StakeClaimReward(): void;
+    StakeAddFunds(amount: string): Promise<boolean>;
+    StakeWithdrawFunds(amount: string): Promise<boolean>;
+    StakeCheckStake(): Promise<string | null>;
+    StakeCheckReward(): Promise<string | null>;
+    StakeClaimReward(): Promise<boolean>;
 
-    NFTMint(): void;
-    NFTBalance(address?: string): number;
-    NFTGetOwner(tokenId: number): string;
-    NFTTransfer(recipient: string, tokenId: number): void;
+    NFTMint(message: string): Promise<boolean>;
+    NFTBalance(address?: string): Promise<string | null>;
+    NFTGetOwner(tokenId: string): Promise<string | null>;
+    NFTTransfer(recipient: string, tokenId: string): Promise<boolean>;
 }
