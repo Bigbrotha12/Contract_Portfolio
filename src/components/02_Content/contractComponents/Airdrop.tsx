@@ -4,61 +4,20 @@ import { useForm } from 'react-hook-form';
 import IController from '../../../app/IController';
 import { ConnectionContext, ControllerContext } from '../../../state/AppContext';
 import { AppConnectionData } from '../../../app/Definitions';
-import { Contracts } from '../../../app/Networks';
+import { AirdropData, useAirdrop } from './contractHooks';
 
-type AirdropData = Array<{to: string, amount: string}>;
 const tokenLimit = 1_000;
 export default function Airdrop(props: {recipientCount: number})
 {
-    const [airdropList, setAirdropList] = React.useState<AirdropData>();
-    const [checkAddress, setCheckAddress] = React.useState<string>("");
-    const [airdrop, setAirdrop] = React.useState<boolean>(false);
+    const [checkAddress, setCheckAddress] = React.useState<string>('');
     const { register, handleSubmit, setError, formState: { errors } } = useForm();
     const controller: IController = React.useContext(ControllerContext);
     const connection: AppConnectionData = React.useContext(ConnectionContext);
+    const [amount, claimed, airdrop] = useAirdrop(connection.account, connection.network.name, controller);
 
     function handleAirdropData(data) {
-        let airdrop = parseAirdropData(data);
-        setAirdropList(airdrop);
-        controller.AirdropNewRecipients(airdrop)
+        airdrop.createAirdrop({ network: connection.network.name, data: parseAirdropData(data) });
     }
-    function handleAirdropCheck() {
-        if (!/^0x[a-fA-F0-9]{40}$/.test(checkAddress)) {
-            console.error("Invalid address.");
-            return;
-        }
-        controller.AirdropCheckClaim(checkAddress);
-    }
-    function handleAirdropClaim() {
-        if (!airdropList) {
-            console.error("Airdrop list must be defined.");
-            return;
-        }
-        let address: string = connection.account;
-        let amount: string = airdropList.find((entry) => { return entry.to === address })?.amount || "0";
-        controller.AirdropClaim(address, amount);
-    }
-
-    const useAirdrop = (account) => {
-        const [claimed, setClaimed] = React.useState<boolean>(false);
-        const [amount, setAmount] = React.useState<number>(0);
-        async function handleClaim(event) {
-            console.log(event);
-        }
-
-        React.useEffect(() => {
-            if (account) {
-                setAmount(controller.AirdropCheckClaim(account));
-                setClaimed(controller.AirdropHasClaimed(account));
-            }
-            controller.Subscribe(Contracts.get("Airdrop")!, "Claimed", handleClaim);
-            return (() => 
-                controller.Unsubscribe(Contracts.get("Airdrop")!, "Claimed", handleClaim)
-            )
-        }, [account]);
-        return [amount, claimed];
-    }
-    const [amount, claimStatus] = useAirdrop(connection.account);
 
     return (
         <Material.Card sx={{margin: "12px"}}>
@@ -105,7 +64,7 @@ export default function Airdrop(props: {recipientCount: number})
                 
                     <div className='w-full py-[12px]'>
                         <div className='flex justify-between w-full'>
-                            <Material.Typography sx={{ width: '40%', marginY: 'auto', fontWeight: 'bold' }}>Your address is entitled to: {amount} and has {claimStatus ? 'already claimed': 'not yet claimed.'}</Material.Typography>
+                            
                             <Material.TextField
                                 fullWidth
                                 label='address'
@@ -115,7 +74,9 @@ export default function Airdrop(props: {recipientCount: number})
                             />
                         </div>
                         <div className='py-[12px] w-full'>
-                            <Material.Button fullWidth variant='contained' type='button' onClick={handleAirdropCheck}>Check Address</Material.Button>
+                            <Material.Button fullWidth variant='contained' type='button' onClick={() => {
+                                airdrop.checkClaim(checkAddress)
+                            }}>Check Address</Material.Button>
                         </div>
                     </div>
 
@@ -123,9 +84,15 @@ export default function Airdrop(props: {recipientCount: number})
                 <Material.Divider />
             
                     <div className='w-full py-[12px]'>
-                        <div className='flex justify-between w-full'>
+                        <div className=''>
+                            <Material.Typography sx={{ marginY: '12px', }}>
+                                Your address is entitled to: {amount} and has {claimed ? 'already claimed' : 'not yet claimed.'}
+                            </Material.Typography>
                                 {/* <Material.Typography sx={{ width: '40%', marginY: 'auto', fontWeight: 'bold' }}>Claim</Material.Typography> */}
-                            <Material.Button fullWidth variant='contained' onClick={handleAirdropClaim}>Claim</Material.Button>
+                            <Material.Button fullWidth variant='contained' onClick={() => {
+                                airdrop.claim(connection.account)
+                            }
+                            }>Claim</Material.Button>
                         </div>
                     </div>
               
@@ -136,10 +103,10 @@ export default function Airdrop(props: {recipientCount: number})
     
 }
 
-function parseAirdropData(data: Object): AirdropData {
+function parseAirdropData(data: Object): AirdropData['data'] {
     const addressZero: string = "0x0000000000000000000000000000000000000000";
     let keys: Array<string> = Object.keys(data);
-    let result: AirdropData = [];
+    let result: AirdropData['data'] = [];
     for (let i = 0; i < keys.length; i += 2)
     {
         let address: string = validateAddress(data[keys[i]]) ? data[keys[i]] : addressZero;
