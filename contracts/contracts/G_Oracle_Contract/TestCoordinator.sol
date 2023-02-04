@@ -8,6 +8,7 @@ interface VRFConsumerBase {
 contract TestCoordinator {
 
   uint256[] public result;
+  mapping(uint64 => mapping(address => bool)) isConsumer;
 
   function answerTestQuery(uint256 _queryId, uint256 _desiredResult, address _target) external {
     VRFConsumerBase target = VRFConsumerBase(_target);
@@ -20,7 +21,8 @@ contract TestCoordinator {
     target.rawFulfillRandomWords(_queryId, result);
   }
 
-  function requestRandomWords(bytes32 keyHash,uint64 subId,uint16 minimumRequestConfirmations,uint32 callbackGasLimit,uint32 numWords) external pure returns (uint256 requestId) {
+  function requestRandomWords(bytes32 keyHash,uint64 subId,uint16 minimumRequestConfirmations,uint32 callbackGasLimit,uint32 numWords) external view returns (uint256 requestId) {
+    require(isConsumer[subId][msg.sender], "Error: Not a registered consumer.");
     keyHash; subId; minimumRequestConfirmations; callbackGasLimit; numWords;
     return 500;
   }
@@ -29,8 +31,8 @@ contract TestCoordinator {
     return 1;
   }
 
-  function addConsumer(uint64 id, address consumer) external pure {
-    id; consumer;
+  function addConsumer(uint64 _id, address _consumer) external {
+    isConsumer[_id][_consumer] = true;
   }
 
 }

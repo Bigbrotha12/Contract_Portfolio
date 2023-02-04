@@ -51,7 +51,7 @@ describe('Reflect', function () {
       expect(await IReflect.name()).to.be.equal(name);
       expect(await IReflect.symbol()).to.be.equal(symbol);
       expect(await IReflect.totalSupply()).to.be.equal(supply);
-      expect(await IReflect.mintLimit()).to.be.equal(limit);
+      expect(await IReflect.limit()).to.be.equal(limit);
       expect(await IReflect.feeReflectPct()).to.be.equal(fee);
     });
   });

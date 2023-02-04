@@ -14,35 +14,37 @@ struct Player {
 
 /// @title CoinFlipper
 /// @notice Operates a coin-flipping gambling game using Chainlink
-/// @notice VRF Oracle as source of randomness.
+/// @notice VRF Oracle network as source of randomness.
+/// @dev Contract operates as owner of its own subscription with auto-
+/// @dev subscribe and unsubscribe capabilities.
 contract CoinFlipper is Ownable, VRFConsumerBaseV2 {
     //------------------ STATE VARIABLES ---------------------------------------
 
-    VRFCoordinatorV2Interface COORDINATOR; // Chainlink coordinator interface
-    LinkTokenInterface LINK;
-    uint64 public subscriptionId; // Chainlink account
-    bytes32 public keyHash;
+    VRFCoordinatorV2Interface public COORDINATOR;   // Chainlink coordinator interface
+    LinkTokenInterface public LINK;                 // Chainlink token interface
+    uint64 public subscriptionId;                   // Chainlink account
+    bytes32 public keyHash;                         // Gas lane for fulfilling requests
 
-    uint256 public reservedBalance; // Contract balance reserved for players
+    uint256 public reservedBalance;                 // Contract balance reserved for players
     mapping(uint256 => address) public playerQuery; // Oracle query for each player
-    mapping(address => Player) public players; // Players data
+    mapping(address => Player) public players;      // Players data
     DemoToken public token;
     
 
     //----------------------- EVENTS -------------------------------------------
 
-    event betPlaced(address indexed _from, uint256 _amount); // Emitted after player places bet
-    event betPaidOut(address indexed _to, uint256 _amount); // Emitted after player withdraws balance
-    event logNewQuery(address indexed _player, uint256 _id); // Emitted after each oracle query is sent
-    event randomNumber(uint256 indexed _id, uint256 _result); // Emitted after oracle responds
+    event betPlaced(address indexed _from, uint256 _amount);       // Emitted after player places bet
+    event betPaidOut(address indexed _to, uint256 _amount);        // Emitted after player withdraws balance
+    event logNewQuery(address indexed _player, uint256 _id);       // Emitted after each oracle query is sent
+    event randomNumber(uint256 indexed _id, uint256 _result);      // Emitted after oracle responds
     event fundsReceived(address indexed _sender, uint256 _amount); // Emitted after receiving funding
 
     //--------------------  CONSTRUCTOR ----------------------------------------
 
     /// @notice Requires chainlink subscription to be set-up prior to contract
     /// @notice deployment. Contract will auto-subscribe as VRF consumer.
-    /// @param _vrfCoordinator      Address of Chainlink oracle coordinator
-    /// @param _token               Token for demonstration purposes
+    /// @param _vrfCoordinator Address of Chainlink oracle coordinator
+    /// @param _token Token for demonstration purposes
     constructor(
         address _vrfCoordinator,
         bytes32 _keyHash,
@@ -75,17 +77,25 @@ contract CoinFlipper is Ownable, VRFConsumerBaseV2 {
 
     //-------------------- MUTATIVE FUNCTIONS ----------------------------------
 
+    /// @notice Allows contract owner to change Demo Token to be used for test.abi
+    /// @param _token address of new token conforming to the DemoToken interface.
     function setToken(DemoToken _token) external onlyOwner {
         token = _token;
     }
 
+    /// @notice Create new subscription with oracle coordinator and adds itself as
+    /// @notice consumer.
     function subscribe() public onlyOwner {
         subscriptionId = COORDINATOR.createSubscription();
         COORDINATOR.addConsumer(subscriptionId, address(this));
     }
 
-    /// Requires Chainlink deposited to contract.
-    function fundOracle(uint256 amount) public onlyOwner { 
+    /// @notice Funds the subscription account with LINK tokens.
+    /// @dev Requires Chainlink deposited to contract.
+    function fundOracle() public onlyOwner { 
+        require(subscriptionId != 0, "CoinFlipper: Subscription must be set first.");
+        uint256 amount = LINK.balanceOf(address(this));
+
         LINK.transferAndCall(
             address(COORDINATOR),
             amount,
@@ -93,21 +103,19 @@ contract CoinFlipper is Ownable, VRFConsumerBaseV2 {
         );
     }
 
+    /// @notice Removes contract as oracle consumer and remove subscription
     function unsubscribe() public onlyOwner {
         COORDINATOR.removeConsumer(subscriptionId, address(this));
         COORDINATOR.cancelSubscription(subscriptionId, msg.sender);
         subscriptionId = 0;
     }
 
-    /// @notice Allow player to place a bet of atleast 0.1 ETH.
+    /// @notice Allow player to place a bet of atleast 1 DEMO.
     /// @dev Player cannot change bet while waiting for oracle response.
     /// @dev Balance to be added to be determined by transaction value.
+    /// @param _amount of tokens to be deposited to contract
     function placeBet(uint256 _amount) external {
         require(_amount >= 1, "CoinFlipper: Minimum bet is 1 DEMO");
-        require(
-            token.balanceOf(msg.sender) >= _amount,
-            "CoinFlipper: Insufficient funds"
-        );
         require(
             !players[msg.sender].awaitingQuery,
             "CoinFlipper: Coin flip in progress"

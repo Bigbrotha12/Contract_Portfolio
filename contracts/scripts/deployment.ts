@@ -11,26 +11,40 @@ import { BigNumber } from "ethers";
 async function main() {
 
     const [admin] = await ethers.getSigners();
+    console.log("Initiating deployment procedure on network %s with signer %s", hre.network.name, admin.address);
 
     //------------------------- DEMO Token ---------------------------
+    console.log("Deploying DEMO Token...");
     const DemoToken = await ethers.getContractFactory("DemoToken");
     const demoToken = await DemoToken.deploy(...deployArgs["DemoToken"], [admin.address]);
     await demoToken.deployed();
     let token = demoToken as DemoToken;
+    demoToken.address ?
+        console.log("DEMO Token successfully deployed at %s", demoToken.address) :
+        console.log("DEMO Token failed deployment. Check constructor arguments and ensure you have sufficient ETH for transaction fees.");
 
     //------------------------ Airdrop Demo --------------------------
+    console.log("Deploying Airdrop DEMO...");
     const Airdrop = await ethers.getContractFactory("AirdropDemo");
     const airdrop = await Airdrop.deploy(...deployArgs["AirdropDemo"], demoToken.address);
     await airdrop.deployed();
     await token.changeMinter(airdrop.address, true);
+    airdrop.address ?
+        console.log("Airdrop DEMO successfully deployed at %s", airdrop.address) :
+        console.log("Airdrop DEMO failed deployment. Check constructor arguments and ensure you have sufficient ETH for transaction fees.");
 
     //------------------------ IBC Bridge ----------------------------
+    console.log("Deploying IBC Bridge...");
     const Bridge = await ethers.getContractFactory("IBC_Bridge");
     const bridge = await Bridge.deploy(...deployArgs["IBC_Bridge"], demoToken.address);
     await bridge.deployed();
     await token.changeMinter(bridge.address, true);
+    bridge.address ?
+        console.log("IBC Bridge successfully deployed at %s", bridge.address) :
+        console.log("IBC Bridge failed deployment. Check constructor arguments and ensure you have sufficient ETH for transaction fees.");
     
     //------------------------ Flipper -------------------------------
+    console.log("Deploying Coin Flipper...");
     let { linkToken, coordinator, keyHash } = getChainlinkContract();
     if (linkToken && coordinator && keyHash) {
         const Flipper = await ethers.getContractFactory("CoinFlipper");
@@ -40,31 +54,55 @@ async function main() {
         let linkContract = new ethers.Contract(linkToken, linkAbi, admin);
         let minLink: BigNumber = ethers.utils.parseUnits("10", 18);
         if (await (linkContract as LinkTokenInterface).balanceOf(admin.address) >= minLink) {
-            await (linkContract as LinkTokenInterface).transfer(flipper.address, minLink);
-            await (flipper as CoinFlipper).fundOracle(minLink);
+            let transferTx = await (linkContract as LinkTokenInterface).transfer(flipper.address, minLink);
+            await transferTx.wait();
+            await (flipper as CoinFlipper).fundOracle();
         }
         await token.changeMinter(flipper.address, true);
+        flipper.address ?
+        console.log("Coin Flipper successfully deployed at %s", flipper.address) :
+        console.log("Coin Flipper failed deployment. Check constructor arguments and ensure you have sufficient ETH for transaction fees.");
+    } else {
+        console.log("Coin Flipper deployment failed due to missing oracle parameters. Network: %s", hre.network.name);
     }
 
     //------------------------ Reflect Token --------------------------
+    console.log("Deploying Reflect Token...");
     const Reflect = await ethers.getContractFactory("ReflectToken");
     const reflect = await Reflect.deploy(...deployArgs["ReflectToken"], demoToken.address);
     await reflect.deployed();
     await token.changeMinter(reflect.address, true);
+    reflect.address ?
+        console.log("Reflect Token successfully deployed at %s", reflect.address) :
+        console.log("Reflect Token failed deployment. Check constructor arguments and ensure you have sufficient ETH for transaction fees.");
 
     //------------------------ Staker ---------------------------------
+    console.log("Deploying Staker...");
     const Staker = await ethers.getContractFactory("Staker");
     const staker = await Staker.deploy(...deployArgs["Staker"], demoToken.address, demoToken.address);
     await staker.deployed();
     await token.changeMinter(staker.address, true);
+    staker.address ?
+        console.log("Staker successfully deployed at %s", staker.address) :
+        console.log("Staker failed deployment. Check constructor arguments and ensure you have sufficient ETH for transaction fees.");
 
     //------------------------- NFT -----------------------------------
+    console.log("Deploying NFT Logic...");
     const NFTLogic = await ethers.getContractFactory("FamiliarLogic");
     const NFTProxy = await ethers.getContractFactory("NFTDemo");
     const nftLogic = await NFTLogic.deploy(deployArgs["FamiliarLogic"]);
     await nftLogic.deployed();
+    nftLogic.address ?
+        console.log("NFT Logic successfully deployed at %s", nftLogic.address) :
+        console.log("NFT Logic failed deployment. Check constructor arguments and ensure you have sufficient ETH for transaction fees.");
+
+    console.log("Deploying NFT Proxy...");
     const nftProxy = await NFTProxy.deploy(...deployArgs["NFTDemo"], [admin.address]);
     await nftProxy.deployed();
+    nftProxy.address ?
+        console.log("NFT Proxy successfully deployed at %s", nftProxy.address) :
+        console.log("NFT Proxy failed deployment. Check constructor arguments and ensure you have sufficient ETH for transaction fees.");
+
     let proxy = nftProxy as NFTDemo;
     // Initialization
     // [0]: Version | [1]: Name | [2]: Symbol | [3]: RootURI
@@ -73,7 +111,9 @@ async function main() {
     const symbol: string = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("NFTD"));
     const rootURI: string = ethers.utils.hexlify(ethers.utils.toUtf8Bytes("https://picsum.photos/"));
     const initData: Array<string> = [version, name, symbol, rootURI];
+    console.log("Initializing NFT Demo contract...");
     await proxy.upgradeInit(nftLogic.address, initData);
+    console.log("Deployment procedure complete.");
 };
 
 main().catch(error => {

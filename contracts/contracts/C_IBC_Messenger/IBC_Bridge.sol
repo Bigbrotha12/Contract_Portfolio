@@ -44,10 +44,10 @@ contract IBC_Bridge is EIP712X {
     //--------------------  CONSTRUCTOR ----------------------------------------
 
     /// @notice Initializes bridge endpoint contract with given name and version.
-    /// @param _name           of current contract
-    /// @param _version        of contract being deployed.
-    /// @param _minter         approved Oracle relayer address.
-    /// @param _token          demo token for bridging.
+    /// @param _name of current contract
+    /// @param _version of contract being deployed.
+    /// @param _minter approved Oracle relayer address.
+    /// @param _token demo token for bridging.
     constructor(
         string memory _name,
         string memory _version,
@@ -65,24 +65,30 @@ contract IBC_Bridge is EIP712X {
 
     //-------------------- VIEW FUNCTIONS ----------------------------------
 
+    /// @notice Returns contract's current chain.
     function getChainId() public view returns (uint256) {
         return block.chainid;
     }
 
+    /// @notice Returns contract address.
     function getAddress() public view returns (address) {
         return address(this);
     }
 
+    /// @notice Returns the contract's domain name.
     function getName() public view returns (string memory) {
         return name;
     }
 
+    /// @notice Returns the version of deployed contract.
     function getVersion() public view returns (string memory) {
         return version;
     }
 
     //-------------------- MUTATIVE FUNCTIONS ----------------------------------
 
+    /// @notice Allows contract owner to change Demo Token to be used for test.
+    /// @param _token address of new token conforming to the DemoToken interface.
     function setToken(DemoToken _token) external {
         require(msg.sender == owner(), "IBC_Bridge: Unauthorized.");
         demoToken = _token;
@@ -92,9 +98,9 @@ contract IBC_Bridge is EIP712X {
     /// @dev Captures the user request data to be relayed to another blockchain.
     /// @dev Data is captured by relayer via emitted event. Domain hash needs to match
     /// @dev domain for receiving chain, NOT this contract's domain.
-    /// @param _receiver          Address of the receiving account.
-    /// @param _amount            Amount of tokens to be sent.
-    /// @param _receivingChainId  ID of the destination blockchain.
+    /// @param _receiver Address of the receiving account.
+    /// @param _amount Amount of tokens to be sent.
+    /// @param _receivingChainId ID of the destination blockchain.
     function dataSend(
         address _receiver,
         uint256 _amount,
@@ -125,10 +131,10 @@ contract IBC_Bridge is EIP712X {
     /// @dev The message hash must be computed on-chain based on parameter
     /// @dev input to verify that provided parameters have not been tampered and
     /// @dev signature has not been reused.
-    /// @param _receiver          Address of receiving account.
-    /// @param _sendingChainId    ID of the origin chain.
-    /// @param _amount            Amount of tokens transferred.
-    /// @param _signature         Signature for verification.
+    /// @param _receiver Address of receiving account.
+    /// @param _sendingChainId ID of the origin chain.
+    /// @param _amount Amount of tokens transferred.
+    /// @param _signature Signature for verification.
     function dataReceive(
         address _receiver,
         uint256 _sendingChainId,

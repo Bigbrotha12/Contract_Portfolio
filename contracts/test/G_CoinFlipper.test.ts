@@ -11,13 +11,12 @@ describe("CoinFlipper", function () {
     const [admin, user1, user2, user3] = await ethers.getSigners();
     const name: string = "DemoToken";
     const symbol: string = "DEMO";
-    const limit: number = 1000;
     const whitelist: Array<string> = [admin.address, user1.address];
-    const subscriptionId: number = 1;
+    const keyHash: string = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("Test"));
   
     const token = await (await ethers.getContractFactory("DemoToken")).deploy(name, symbol, whitelist);
     const testOracle = await (await ethers.getContractFactory("TestCoordinator")).deploy();
-    const coinFlip = await (await ethers.getContractFactory("CoinFlipper")).deploy(testOracle.address, token.address, token.address);
+    const coinFlip = await (await ethers.getContractFactory("CoinFlipper")).deploy(testOracle.address, keyHash, token.address, token.address);
     await token.changeMinter(coinFlip.address, true);
 
     const IToken = token as DemoToken;

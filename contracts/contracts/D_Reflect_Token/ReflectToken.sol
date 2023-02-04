@@ -29,7 +29,7 @@ contract ReflectToken is ERC20, Pausable, Ownable {
     uint256 private rTotal;
     uint256 private tFeeTotal;
     uint8 public feeReflectPct;
-    uint256 public mintLimit;
+    uint256 public limit;
     DemoToken public purchaseToken;
     uint256 public price;
 
@@ -42,14 +42,18 @@ contract ReflectToken is ERC20, Pausable, Ownable {
     //--------------------  CONSTRUCTOR ----------------------------------------
 
     /// @notice Sets the values for name, symbol, totalSupply.
-    /// @param _name               token name.
-    /// @param _symbol             token symbol.
-    /// @param _supply             total token supply.
+    /// @param _name token name.
+    /// @param _symbol token symbol.
+    /// @param _supply total token supply.
+    /// @param _limit caps number of tokens to be purchased per request.
+    /// @param _feeReflect percentage to be reflected per transaction.
+    /// @param _price to be paid in DemoToken to get new tokens.
+    /// @param _token contract to be used to purchase new tokens.
     constructor(
         string memory _name,
         string memory _symbol,
         uint256 _supply,
-        uint256 _mintLimit,
+        uint256 _limit,
         uint8 _feeReflect,
         uint256 _price,
         DemoToken _token
@@ -57,7 +61,7 @@ contract ReflectToken is ERC20, Pausable, Ownable {
         tTotal = _supply;
         rTotal = (~uint256(0) - (~uint256(0) % tTotal));
         feeReflectPct = _feeReflect;
-        mintLimit = _mintLimit;
+        limit = _limit;
         tOwned[address(this)] = tTotal;
         rOwned[address(this)] = rTotal;
         purchaseToken = _token;
@@ -66,10 +70,13 @@ contract ReflectToken is ERC20, Pausable, Ownable {
 
     //------------------------ VIEWS -------------------------------------------
 
+    /// @notice Returns price per token in DemoTokens.
     function purchasePrice() public view returns (uint256) {
         return price;
     }
 
+    /// @notice Returns remaining balance available for purchase.
+    /// @dev Contract funds will self-replenish as it receive reflections.
     function remainingBalance() public view returns (uint256) {
         return balanceOf(address(this));
     }
@@ -85,7 +92,7 @@ contract ReflectToken is ERC20, Pausable, Ownable {
     /// @dev tOwned balance is returned since that tracks token balance without
     /// @dev reflections. Otherwise, rOwned balance is returned after scaling down
     /// @dev by reflection rate.
-    /// @param _account              address to be checked for token balance.
+    /// @param _account address to be checked for token balance.
     function balanceOf(
         address _account
     ) public view override returns (uint256) {
@@ -93,18 +100,10 @@ contract ReflectToken is ERC20, Pausable, Ownable {
         return tokenFromReflection(rOwned[_account]);
     }
 
-    /// @notice Number of decimals for token representation.
-    /// @dev Overrides ERC20 decimals function. Value of 4 decimals is required
-    /// @dev to maintain precision of arithmetic operations for reflection fee
-    /// @dev distributions, given a large token supply.
-    function decimals() public pure override returns (uint8) {
-        return 18;
-    }
-
     /// @notice Provides scaled down amount based on current reflection rate.
     /// @dev Helper function for balanceOf function. Scales down a given amount,
     /// @dev inclusive of reflections, by reflection rate.
-    /// @param _rAmount             amount to be scaled down by reflection rate.
+    /// @param _rAmount amount to be scaled down by reflection rate.
     function tokenFromReflection(
         uint256 _rAmount
     ) public view returns (uint256) {
@@ -115,7 +114,7 @@ contract ReflectToken is ERC20, Pausable, Ownable {
 
     /// @notice Allows checking whether an account has been excluded from
     /// @notice receiving reflection distributions.
-    /// @param _account              address to be checked if excluded from reflections.
+    /// @param _account address to be checked if excluded from reflections.
     function isExcludedAct(address _account) public view returns (bool) {
         return isExcluded[_account];
     }
@@ -128,7 +127,7 @@ contract ReflectToken is ERC20, Pausable, Ownable {
 
     /// @dev Calculates the required fees to be deducted for given transaction
     /// @dev amount and transaction type.
-    /// @param _tAmount              amount being transferred by user.
+    /// @param _tAmount amount being transferred by user.
     function _getValues(
         uint256 _tAmount
     ) private view returns (FeeValues memory, FeeValues memory) {
@@ -139,10 +138,9 @@ contract ReflectToken is ERC20, Pausable, Ownable {
         return (tValues, rValues);
     }
 
-    /// @dev Calculates the actual
-    /// @dev reflection fees to be deducted from the
+    /// @dev Calculates the actual reflection fees to be deducted from the
     /// @dev transfer amount.
-    /// @param _tAmount            amount being transferred by user.
+    /// @param _tAmount amount being transferred by user.
     function _getTValues(
         uint256 _tAmount
     ) private view returns (FeeValues memory) {
@@ -157,8 +155,8 @@ contract ReflectToken is ERC20, Pausable, Ownable {
 
     /// @dev Scales up the actual transaction fees {tValues} by reflection
     /// @dev rate to allow proper update of rOwned user balance.
-    /// @param _tValues            actual transfer amount and fees to be deducted.
-    /// @param _currentRate        current reflection rate.
+    /// @param _tValues actual transfer amount and fees to be deducted.
+    /// @param _currentRate current reflection rate.
     function _getRValues(
         FeeValues memory _tValues,
         uint256 _currentRate
@@ -200,8 +198,9 @@ contract ReflectToken is ERC20, Pausable, Ownable {
 
     //-------------------- MUTATIVE FUNCTIONS ----------------------------------
 
+    /// @notice Purchases new tokens within the limit
     function purchaseTokens(uint256 amount) external {
-        require(amount <= mintLimit, "Reflect: Amount exceeds mint limit.");
+        require(amount <= limit, "Reflect: Amount exceeds mint limit.");
         require(amount <= balanceOf(address(this)), "Reflect: Insufficient balance for sale.");
 
         uint256 requiredTokens = (amount / 1e18) * price;
@@ -301,7 +300,7 @@ contract ReflectToken is ERC20, Pausable, Ownable {
     }
 
     /// @notice Removes address from receiving future reflection distributions.
-    /// @param _account            to be excluded from reflections.
+    /// @param _account to be excluded from reflections.
     function excludeAccount(address _account) external onlyOwner {
         require(
             !isExcluded[_account],
@@ -322,7 +321,7 @@ contract ReflectToken is ERC20, Pausable, Ownable {
     /// @notice distributions in case of erroneously excluded address. NOTE: Included
     /// @notice address will receive all previous reflection distribution it should
     /// @notice have received while address was excluded.
-    /// @param _account             to be re-included to reflections.
+    /// @param _account to be re-included to reflections.
     function includeAccount(address _account) external onlyOwner {
         require(
             isExcluded[_account],

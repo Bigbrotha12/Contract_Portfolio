@@ -27,7 +27,7 @@ contract NFTDemo is Proxy, CommonStorage {
         admin = _routingConfig[0]; 
     }
 
-    /// Access control for proxy functions in line with transparent proxy pattern
+    /// @notice Access control for proxy functions in line with transparent proxy pattern
     modifier ifAdmin() {
         if (msg.sender == admin) {
             _;

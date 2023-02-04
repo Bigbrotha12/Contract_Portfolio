@@ -132,7 +132,7 @@ describe("IBC_Bridge", function () {
       );
     });
   
-    it.only("should execute valid burn requests", async () => {
+    it("should execute valid burn requests", async () => {
       const { IToken, IBridge, admin, user1, user2, user3 } = await loadFixture(DeployFixture);
       const transferAmount = 100;
       const newDomainName: string = "Foreign_Bridge";
@@ -152,16 +152,12 @@ describe("IBC_Bridge", function () {
         let result = blockEvent.pop()?.args;
         if (result)
         {
-          let receiver = result[0];
-          let amount = result[1];
-          let destChain = result[2];
-          let nonce = result[3];
-          console.log("Receiver: %s, amount: %d, destination: %d, nonce: %d", receiver, amount, destChain, nonce);
+          expect(result[0]).to.be.equal(user1.address);
+          expect(result[1]).to.be.equal(transferAmount);
+          expect(result[2]).to.be.equal(newDomainId);
+          expect(result[3]).to.be.equal(0);
         }
-        
-
       }
-      
     });
   });
 
