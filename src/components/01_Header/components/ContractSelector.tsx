@@ -1,25 +1,29 @@
 import React from 'react';
 import Material from '../../../assets/Material';
-import { Contract, ContractName } from '../../../app/Definitions';
+import { AppConnectionData, Contract, ContractName } from '../../../app/Definitions';
+import { ConnectionContext } from '../../../state/AppContext';
+import { Contracts } from '../../../app/Networks';
 
-export default function ContractSelector(props: {title: string, selected: Contract, options: Map<string, Contract>, callback: (contract: ContractName) => void})
+export default function ContractSelector(props: {title: string, setConnection: React.Dispatch<React.SetStateAction<AppConnectionData>>})
 { 
+    const connection = React.useContext<AppConnectionData>(ConnectionContext);
+    
     return (
         <div className='w-[20%]'>
             <Material.FormControl fullWidth>
                 <Material.InputLabel id={props.title}>{props.title}</Material.InputLabel>
                 <Material.Select
                     labelId={props.title}
-                    value={props.selected.name}
+                    value={connection.contract.name}
                     label={props.title}
                     onChange={(e) => {
                         if (validateName(e.target.value)) {
-                            props.callback(e.target.value)
+                            props.setConnection({...connection, contract: Contracts.get(e.target.value)!})
                         }
                     }}
                 >
                 {
-                    Array.from(props.options.keys()).map((name) => {
+                    Array.from(Contracts.keys()).map((name) => {
                         return (<Material.MenuItem key={name} value={name}>{name}</Material.MenuItem>)
                     })
                 }

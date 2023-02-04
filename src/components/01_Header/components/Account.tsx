@@ -1,12 +1,20 @@
 import React from 'react';
+import { AppConnectionData } from '../../../app/Definitions';
 import Material from '../../../assets/Material';
+import { ConnectionContext } from '../../../state/AppContext';
 
-export default function Account(props: {account: string})
+export default function Account(props: {setConnection: React.Dispatch<React.SetStateAction<AppConnectionData>>})
 {
+    const connection = React.useContext<AppConnectionData>(ConnectionContext);
+
+    function disconnect() {
+        props.setConnection({ ...connection, account: '' });
+    }
+
     return (
-        <div className='flex align-middle py-[12px] px-[32px]'>
-            <Material.Button variant='outlined'>
-                <Material.Typography>{shortAddress(props.account)}</Material.Typography>
+        <div className='flex align-middle px-[32px]'>
+            <Material.Button onClick={disconnect}>
+                <Material.Chip label={shortAddress(connection.account)} variant='outlined'/>
             </Material.Button>
         </div>
     )

@@ -1,39 +1,60 @@
 import React from 'react';
 import Material from '../../../assets/Material';
-import { Network } from '../../../app/Definitions';
+import { AppConnectionData, Network, NetworkName } from '../../../app/Definitions';
+import { Networks } from '../../../app/Networks';
+import { ConnectionContext, ControllerContext } from '../../../state/AppContext';
+import IController from '../../../app/IController';
 
-export default function Selector(props: {title: string, selected: {name: string}, options: Array<Network>, callback?: (network: Network) => void})
+export default function Selector(props: {title: string, setConnection: React.Dispatch<React.SetStateAction<AppConnectionData>>})
 { 
-    const [selection, setSelection] = React.useState<number>(0);
-    const handleSelection = (event) =>
+    const controller = React.useContext<IController>(ControllerContext); 
+    const connection = React.useContext<AppConnectionData>(ConnectionContext);
+
+    const handleSelection = async (event) =>
     {
-        let index = event.target.value;
-        if (index < props.options.length)
+        let chain = Networks.get(event.target.value);
+        console.log(chain);
+        if (chain && await controller.ChangeNetwork(chain))
         {
-            setSelection(index);
-            props.callback && props.callback(props.options[index]);
+            props.setConnection({ ...connection, network: chain });
         }
     }
 
     return (
-        <div>
+        <div className='w-[20%]'>
             <Material.FormControl fullWidth>
                 <Material.InputLabel id={props.title}>{props.title}</Material.InputLabel>
                 <Material.Select
                     labelId={props.title}
-                    value={selection}
+                    value={connection.network.name}
                     label={props.title}
                     onChange={handleSelection}
                 >
                     {
-                        props.options.map((option, index) => {
+                        Array.from(Networks.keys()).map((name) => {
                             return (
-                                <Material.MenuItem key={option.name} value={index}>{option.name}</Material.MenuItem>
-                            )
+                                <Material.MenuItem key={name} value={name}>
+                                    <div className='flex'>
+                                        <img className='mr-[6px]' width='32rem' height='32rem' src={Networks.get(name)?.icon} />
+                                        <div className='my-auto align-middle'>{name}</div>
+                                    </div>
+                                </Material.MenuItem>)
                         })
                     }
                 </Material.Select>
             </Material.FormControl>
         </div>
+    )
+}
+
+function NetworkOptions(props: { options: Map<NetworkName, Network>}): JSX.Element {
+    let available: Array<JSX.Element> = [];
+    props.options.forEach((value, key) => {
+        available.push(<Material.MenuItem key={value.id} value={key}>{value.name}</Material.MenuItem>);
+    })
+    return (
+        <>
+            {available.map(value => {return value})}
+        </>
     )
 }
