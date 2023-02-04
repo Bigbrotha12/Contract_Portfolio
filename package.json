@@ -5,7 +5,8 @@
   "main": "src/index.tsx",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "echo \"listening on port 8080\" && webpack serve --config webpack.config.js"
+    "start": "echo \"listening on port 8080\" && webpack serve --config webpack.config.js",
+    "build": "webpack"
   },
   "repository": {
     "type": "git",

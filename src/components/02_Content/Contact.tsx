@@ -34,7 +34,7 @@ export default function Contact(props: {id: string})
                         <Material.TextField sx={{ width: '80%' }} inputProps={{ ...register("message") }} label="Message" multiline minRows={4} placeholder='Type your message here...' />
                     </div>
                     <div className='flex justify-center'>
-                        <Material.Button variant='contained' fullWidth type='submit'>
+                        <Material.Button sx={{width: '80%'}}variant='contained' fullWidth type='submit'>
                             Submit
                         </Material.Button>
                     </div>

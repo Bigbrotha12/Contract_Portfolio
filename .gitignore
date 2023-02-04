@@ -3,6 +3,7 @@ build
 artifacts
 cache
 typechain-types
+dist
 
 #dependencies
 node_modules

@@ -16,6 +16,25 @@ import AboutImage from '../../assets/images/Andorra.png';
 import DAppImage from '../../assets/images/dapp0.jpeg';
 import GameImage from '../../assets/images/VideoGame.jpeg';
 import CodeImage from '../../assets/images/Solidity.jpeg';
+// Icons
+import Solidity from '../../assets/icons/solidity.svg';
+import Hardhat from '../../assets/icons/hardhat-icon.png';
+import EthersJS from '../../assets/icons/ethersjs.svg';
+const Git = "https://user-images.githubusercontent.com/25181517/192108372-f71d70ac-7ae6-4c0d-8395-51d8870c2ef0.png";
+const HTML = "https://user-images.githubusercontent.com/25181517/192158954-f88b5814-d510-4564-b285-dff7d6400dad.png";
+const CSS = "https://user-images.githubusercontent.com/25181517/183898674-75a4a1b1-f960-4ea9-abcb-637170a00a75.png";
+const JS = "https://user-images.githubusercontent.com/25181517/117447155-6a868a00-af3d-11eb-9cfe-245df15c9f3f.png";
+const TS = "https://user-images.githubusercontent.com/25181517/183890598-19a0ac2d-e88a-4005-a8df-1ee36782fde1.png";
+const ReactJS = "https://user-images.githubusercontent.com/25181517/183897015-94a058a6-b86e-4e42-a37f-bf92061753e5.png";
+const TailwindCSS = "https://user-images.githubusercontent.com/25181517/202896760-337261ed-ee92-4979-84c4-d4b829c7355d.png";
+const MaterialUI = "https://user-images.githubusercontent.com/25181517/189716630-fe6c084c-6c66-43af-aa49-64c8aea4a5c2.png";
+const NodeJS = "https://user-images.githubusercontent.com/25181517/183568594-85e280a7-0d7e-4d1a-9028-c8c2209e073c.png";
+const CSharp = "https://user-images.githubusercontent.com/25181517/121405384-444d7300-c95d-11eb-959f-913020d3bf90.png";
+const Rust = "https://user-images.githubusercontent.com/25181517/192599922-3a8ceb1c-ff1d-40bc-b73c-99ea1182d8ad.png";
+const MongoDB = "https://user-images.githubusercontent.com/25181517/182884177-d48a8579-2cd0-447a-b9a6-ffc7cb02560e.png";
+const AWS = "https://user-images.githubusercontent.com/25181517/183896132-54262f2e-6d98-41e3-8888-e40ab5a17326.png";
+const Mocha = "https://user-images.githubusercontent.com/25181517/201476630-f47cfff6-fdee-4ee1-9092-1793b71b1ca3.png";
+
 
 export default function Layout()
 {
@@ -55,13 +74,15 @@ export default function Layout()
         { title: 'Code Repositories', icon: CodeImage, content: 'https://github.com/Bigbrotha12' },
     ]
     const skillContent: Array<Content> = [
-        { title: 'Typescript', icon: null, content: '' },
-        { title: 'C#', icon: null, content: '' },
-        { title: 'Rust', icon: null, content: '' },
-        { title: 'React', icon: null, content: '' },
-        { title: 'MongoDB', icon: 'picture', content: '' },
-        { title: 'AWS', icon: 'picture', content: '' },
-        { title: 'Solidity', icon: 'picture', content: '' },
+        { title: 'Typescript', icon: TS, content: 'Types, Interface' },
+        { title: 'C#', icon: CSharp, content: 'Classes, Multi-threading' },
+        { title: 'Rust', icon: Rust, content: 'Cargo' },
+        { title: 'React', icon: ReactJS, content: 'Functional component, Hooks' },
+        { title: 'MongoDB', icon: MongoDB, content: 'Access, Pipelines' },
+        { title: 'AWS', icon: AWS, content: 'Lambda function, API Gateway, Route 53' },
+        { title: 'Solidity', icon: Solidity, content: 'Compile, Interface, Transparent Proxy, Upgradable contracts' },
+        { title: 'Hardhat', icon: Hardhat, content: 'Compile, Deploy, Test' },
+        { title: 'EthersJS', icon: EthersJS, content: 'Compile, Deploy, Test' },
     ]
 
     return (

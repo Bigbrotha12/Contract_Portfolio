@@ -13,6 +13,7 @@ type Transaction = {
 export default function EventTracker()
 {
     const controller = React.useContext<IController>(ControllerContext);
+    
     const useTransactionListener = () => {
         const [transactions, addTransactions] = React.useState<Array<Transaction>>([]);
         function handleTransactionEvent(type: TransactionStatus, hash: string): void {
@@ -23,7 +24,7 @@ export default function EventTracker()
         }
         React.useEffect(() => {
             controller.AddTransactionListener(handleTransactionEvent);
-            return (() => controller.RemoveTransactionListener());
+            return (() => { controller.RemoveTransactionListener() });
         });
         return transactions;
     };

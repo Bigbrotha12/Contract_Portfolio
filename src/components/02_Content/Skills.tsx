@@ -18,8 +18,13 @@ export default function Skills(props: { title: string, id: string, content: Arra
                     props.content.map(content => {
                         return (
                             <Material.Grid key={content.title} sm={3}>
-                                {content.title}
-                                {content.content}
+                                <div className='flex text-center'>
+                                   <img className='mr-[12px]' src={content.icon || ""} alt='icon' width='30rem' height='30rem' /> 
+                                    <p className='my-auto'>{content.title}</p>
+                                </div>
+                                <ul className='my-[12px] pl-[32px] list-disc text-[#cbcbcb]'>
+                                    {skillList(content.content)}
+                                </ul>
                             </Material.Grid>
                         )
                     })
@@ -28,4 +33,12 @@ export default function Skills(props: { title: string, id: string, content: Arra
             </div>
         </div>
     )
+}
+
+function skillList(content: string): Array<JSX.Element> {
+    let result: Array<JSX.Element> = [];
+    content.split(',').map(item => {
+        result.push(<li>{item}</li>)
+    });
+    return result;
 }

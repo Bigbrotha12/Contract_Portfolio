@@ -7,12 +7,13 @@ import IController from '../../../app/IController';
 import { ControllerContext } from '../../../state/AppContext';
 
 type BridgeTx = {
-    amount: number,
+    amount: string,
     network: Network
 }
 export default function Bridge()
 {
-    const [transferTx, setTransferTx] = React.useState<BridgeTx>({amount: 0, network: Networks[0]});
+    const [transferTx, setTransferTx] = React.useState<BridgeTx>({ amount: '0', network: Networks[0] });
+    const [destination, setDestination] = React.useState<Network>();
     const controller: IController = React.useContext(ControllerContext);
 
     function networkSelection(data: Network) {
@@ -20,7 +21,7 @@ export default function Bridge()
     }
     function bridgeTransfer() {
         if (transferTx.network && transferTx.amount) {
-            controller.BridgeTransferTo(transferTx.network, transferTx.amount);
+            controller.BridgeSendTx(transferTx.network, transferTx.amount);
         }
     }
 
@@ -43,12 +44,12 @@ export default function Bridge()
                     <div className='pb-[12px]'>
                         <Material.TextField fullWidth onChange={(e) => {
                         if (e.target.value && validateAmount(e.target.value)) {
-                            setTransferTx(state => { return { ...state, amount: parseInt(e.target.value) } });
+                            setTransferTx(state => { return { ...state, amount: e.target.value } });
                         }
                     }} label='amount' />
                     </div>
                     <div className='pb-[12px]'>
-                    <NetworkSelector title='Network' selected={{ name: transferTx.network.name }} options={Networks} callback={networkSelection} />
+                    {/*<NetworkSelector title='Network'  /> */}
                     </div>
 
                     <Material.Button sx={{width: '100%'}} onClick={bridgeTransfer} variant='contained' type='button'>Transfer</Material.Button>

@@ -1,18 +1,18 @@
 import React from 'react';
+import { AppConnectionData, Content } from '../../app/Definitions';
+import { ConnectionContext } from '../../state/AppContext';
+
 import Header from '../01_Header/Header';
 import W3Header from '../01_Header/W3Header';
 import InfoBanner from '../02_Content/InfoBanner';
 import ContractInterface from '../02_Content/ContractInterface';
 import EventTracker from '../02_Content/EventTracker';
-import { AppConnectionData, Content } from '../../app/Definitions';
-
 import Airdrop from '../02_Content/contractComponents/Airdrop';
 import Bridge from '../02_Content/contractComponents/Bridge';
 import Flipper from '../02_Content/contractComponents/Flipper';
 import NFTToken from '../02_Content/contractComponents/NFTToken';
 import Reflect from '../02_Content/contractComponents/Reflect';
 import Staker from '../02_Content/contractComponents/Staker';
-import { ConnectionContext } from '../../state/AppContext';
 
 export default function PortfolioBoard(props: {setConnection: React.Dispatch<React.SetStateAction<AppConnectionData>>})
 {
