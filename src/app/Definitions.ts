@@ -21,7 +21,8 @@ export type AppConnectionData =
         contract: Contract
 }
 
-export type ContractName = "Airdrop" | "NFT" | "Staker" | "Reflect" | "Flipper" | "Bridge" | "Token"
+export type ContractName = "Airdrop" | "NFT" | "Staker" | "Reflect" | "Flipper" | "Bridge" | "Token";
+export type NetworkName = "Ethereum" | "Goerli" | "Binance" | "BNB Chain Testnet" | "Polygon" | "PolygonTest";
 
 export type Contract = 
 {
@@ -35,7 +36,8 @@ export type Contract =
 
 export type Network =
 {
-        name: string,
+        name: NetworkName,
+        icon: string,
         id: number,
         hexID: string,
         explorer: string,

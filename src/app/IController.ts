@@ -9,8 +9,11 @@ export default interface IController
     GetTestTokens(amount: number): Promise<boolean>;    // Request test ERC20 tokens from contract.
     AddTransactionListener(callback: (status: TransactionStatus, hash: string) => void): boolean;
     RemoveTransactionListener(): boolean;
-    Subscribe(contract: Contract, event: string, callback: (event) => Promise<boolean>);
-    Unsubscribe(contract: Contract, event: string, callback: (event) => boolean);
+    Subscribe(contract: Contract, event: string, callback: (event) => void);
+    Unsubscribe(contract: Contract, event: string, callback: (event) => void);
+
+    GetTestTokens(): Promise<boolean>
+    GetTestTokenBalance(address?: string): Promise<string | null>
     
     AirdropNewRecipients(recipients: Array<{ to: string, amount: string }>): Promise<boolean>;  // Generates new root and saves to browser.
     AirdropClaim(address: string, amount: string, data: { to: string; amount: string; }[]): Promise<boolean>;     // Generates proof and sends claim transaction.
