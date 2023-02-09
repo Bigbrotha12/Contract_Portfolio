@@ -1,4 +1,4 @@
-import { Network, Contract, TransactionStatus } from "./Definitions";
+import { Network, Contract, TransactionStatus, Web3Transaction } from "./Definitions";
 
 export default interface IController
 {
@@ -15,19 +15,19 @@ export default interface IController
     GetTestTokens(): Promise<boolean>
     GetTestTokenBalance(address?: string): Promise<string | null>
     
-    AirdropNewRecipients(recipients: Array<{ to: string, amount: string }>): Promise<boolean>;  // Generates new root and saves to browser.
-    AirdropClaim(address: string, amount: string, data: { to: string; amount: string; }[]): Promise<boolean>;     // Generates proof and sends claim transaction.
+    AirdropNewRecipients(recipients: Array<{ to: string, amount: string }>, callback: (hash: string, tx: Web3Transaction) => void): Promise<void>;  // Generates new root and saves to browser.
+    AirdropClaim(creator: string, address: string, amount: string, data: { to: string; amount: string; }[], callback: (hash: string, tx: Web3Transaction) => void): Promise<void>;     // Generates proof and sends claim transaction.
     AirdropCheckClaim(address: string, data: { to: string; amount: string; }[]): number | null; // Returns amount claimable by address.
     AirdropHasClaimed(address: string): Promise<boolean | null>; 
 
-    BridgeSendTx(destination: Network, amount: string): Promise<string | null>;
-    BridgePendingTransaction(sendingChain: Network, receivingChain: Network): Promise<boolean>;
-    BridgeCompleteTransfer(signature: string, sendingChain: string, amount: string): Promise<boolean>;
+    BridgeCheckNonce(destination: Network): Promise<boolean | null>;
+    BridgeSendTx(destination: Network, amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<string | null>;
+    BridgeCompleteTransfer(signature: string, sendingChain: string, amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<boolean>;
 
-    FlipperAddFunds(amount: string): Promise<boolean>;
+    FlipperAddFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void>;
     FlipperCheckFunds(): Promise<string | null>;
-    FlipperFlipCoin(): Promise<boolean>;
-    FlipperWithdrawFunds(amount: string): Promise<boolean>;
+    FlipperFlipCoin(callback: (hash: string, tx: Web3Transaction) => void): Promise<void>;
+    FlipperWithdrawFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void>;
 
     ReflectGetToken(amount: string): Promise<boolean>;
     ReflectGetPrice(): Promise<string | null>;

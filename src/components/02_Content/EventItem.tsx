@@ -8,9 +8,9 @@ export default function EventItem(props: {status: TransactionStatus, hash: strin
     const connection = React.useContext<AppConnectionData>(ConnectionContext);
 
     return (
-        <div>
+        <div className='my-[12px]'>
             <Material.Card>
-                <Material.Typography sx={{ paddingLeft: '6px', paddingTop: '6px' }}>Status: {props.status.toString()}</Material.Typography>
+                <Material.Typography sx={{ paddingLeft: '6px', paddingTop: '6px' }}>Status: {statusParser(props.status)}</Material.Typography>
                 
                 <Material.CardContent>
                     {props.hash}
@@ -22,4 +22,17 @@ export default function EventItem(props: {status: TransactionStatus, hash: strin
             </Material.Card>
         </div>
     )
+}
+
+function statusParser(status: TransactionStatus): string {
+    switch (status) {
+        case TransactionStatus.DRAFT:
+            return "Draft";
+        case TransactionStatus.PENDING:
+            return "Pending";
+        case TransactionStatus.CONFIRMED:
+            return "Confirmed";
+        default:
+            return "Unknown";
+    }
 }

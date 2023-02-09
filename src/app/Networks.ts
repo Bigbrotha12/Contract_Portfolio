@@ -1,4 +1,4 @@
-import { Network, Contract, AppConnectionData, ContractName, NetworkName } from "./Definitions";
+import { Network, Contract, AppConnectionData, ContractName, NetworkName, Web3Transaction } from "./Definitions";
 
 import DemoToken from '../../contracts/artifacts/contracts/A_DemoToken/DemoToken.sol/DemoToken.json';
 import Airdrop from '../../contracts/artifacts/contracts/B_Airdrop/AirdropDemo.sol/AirdropDemo.json';
@@ -9,10 +9,13 @@ import Staker from '../../contracts/artifacts/contracts/E_Staker/Staker.sol/Stak
 import NFT from '../../contracts/artifacts/contracts/F_Upgradable_NFT/NFTDemo.sol/NFTDemo.json';
 
 //Icons
+import SolidityIcon from '../assets/icons/solidity.png';
 import EthereumIcon from '../assets/icons/EthereumMain-icon.png';
 import GoerliIcon from '../assets/icons/EthereumTest-icon.png';
 import BNBMainIcon from '../assets/icons/BnbMain-icon.png';
 import BNBTestIcon from '../assets/icons/BnbTest-icon.png';
+import PolygonMainIcon from '../assets/icons/PolygonMain-icon.png';
+import PolygonTestIcon from '../assets/icons/PolygonTest-icon.png';
 
 export const Contracts: Map<ContractName, Contract> = new Map<ContractName, Contract>([
     ["Token", {
@@ -151,6 +154,15 @@ export const Contracts: Map<ContractName, Contract> = new Map<ContractName, Cont
 ]);
 
 export const Networks: Map<NetworkName, Network> = new Map<NetworkName, Network>([
+    ["Not Connected", {
+        name: "Not Connected",
+        icon: SolidityIcon,
+        id: 0,
+        hexID: "0x0",
+        explorer: '',
+        rpcUrl: '',
+        faucet: null
+    }],
     ["Ethereum", {
         name: "Ethereum",
         icon: EthereumIcon,
@@ -169,8 +181,8 @@ export const Networks: Map<NetworkName, Network> = new Map<NetworkName, Network>
         rpcUrl: "https://goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
         faucet: "https://faucetlink.to/goerli"
     }],
-    ["Binance", {
-        name: "Binance",
+    ["Binance Smart Chain", {
+        name: "Binance Smart Chain",
         icon: BNBMainIcon,
         id: 56,
         hexID: "0x38",
@@ -189,16 +201,16 @@ export const Networks: Map<NetworkName, Network> = new Map<NetworkName, Network>
     }],
     ["Polygon", {
         name: "Polygon",
-        icon: '',
+        icon: PolygonMainIcon,
         id: 137,
         hexID: "0x89",
         explorer: "https://explorer.matic.network/",
         rpcUrl: "https://polygon-rpc.com",
         faucet: null
     }],
-    ["PolygonTest", {
-        name: "PolygonTest",
-        icon: '',
+    ["Polygon Mumbai", {
+        name: "Polygon Mumbai",
+        icon: PolygonTestIcon,
         id: 80001,
         hexID: "0x13881",
         explorer: "https://mumbai.polygonscan.com/",
@@ -210,5 +222,6 @@ export const Networks: Map<NetworkName, Network> = new Map<NetworkName, Network>
 export const defaultConnection: AppConnectionData = {
     account: '',
     contract: Contracts.get("Airdrop")!,
-    network: Networks.get("Goerli")!
+    network: Networks.get("Not Connected")!,
+    transactions: new Map<string, Web3Transaction>()
 }

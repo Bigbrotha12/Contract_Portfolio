@@ -3,7 +3,7 @@ import { AppConnectionData } from '../../../app/Definitions';
 import IController from '../../../app/IController';
 import Material from '../../../assets/Material';
 import { ConnectionContext, ControllerContext } from '../../../state/AppContext';
-import { useTestToken } from '../../02_Content/contractComponents/contractHooks';
+import { useTestToken } from '../../../app/ContractHooks';
 
 export default function TestBalance()
 {
@@ -13,9 +13,9 @@ export default function TestBalance()
 
     return (
         <div className='my-auto px-[32px]'>
-            <Material.Chip label={`TestTokens: ${amount}`} variant='outlined' />
+            <Material.Chip label={`DEMO Tokens: ${amount}`} variant='outlined' />
             <Material.Button onClick={() => token.faucet()}>
-                <Material.Chip label={`Get DEMO Tokens`} variant='outlined' />
+                <Material.Chip label={`Get DEMO Tokens`} variant='filled' />
             </Material.Button>
         </div>
     )

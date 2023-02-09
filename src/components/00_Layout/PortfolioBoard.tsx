@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppConnectionData, Content } from '../../app/Definitions';
+import { Action, AppConnectionData, Content } from '../../app/Definitions';
 import { ConnectionContext } from '../../state/AppContext';
 
 import Header from '../01_Header/Header';
@@ -14,7 +14,7 @@ import NFTToken from '../02_Content/contractComponents/NFTToken';
 import Reflect from '../02_Content/contractComponents/Reflect';
 import Staker from '../02_Content/contractComponents/Staker';
 
-export default function PortfolioBoard(props: {setConnection: React.Dispatch<React.SetStateAction<AppConnectionData>>})
+export default function PortfolioBoard(props: {setConnection: React.Dispatch<Action>})
 {
     React.useEffect(() => {
         window.scrollTo(0, 0)
@@ -38,23 +38,23 @@ export default function PortfolioBoard(props: {setConnection: React.Dispatch<Rea
             <W3Header setConnection={props.setConnection} />
             <InfoBanner />
             <div className='flex px-[10%] mx-auto'>
-                <ContractInterface><DisplayContract contractName={connection.contract.name} /></ContractInterface>
+                <ContractInterface><DisplayContract contractName={connection.contract.name} setConnection={props.setConnection} /></ContractInterface>
                 <EventTracker />
             </div>
         </div>
     )
 }
 
-function DisplayContract(props: { contractName: string })
+function DisplayContract(props: { contractName: string, setConnection: React.Dispatch<Action> })
     {
         switch (props.contractName)
         {
             case "Airdrop":
-                return <Airdrop recipientCount={4} />
+                return <Airdrop recipientCount={4} setConnection={props.setConnection}  />
             case "Bridge":
-                return <Bridge />
+                return <Bridge setConnection={props.setConnection} />
             case "Flipper":
-                return <Flipper />
+                return <Flipper setConnection={props.setConnection} />
             case "NFT":
                 return <NFTToken />
             case "Reflect":
@@ -62,6 +62,6 @@ function DisplayContract(props: { contractName: string })
             case "Staker":
                 return <Staker />
             default:
-                return <Airdrop recipientCount={4} />
+                return <Airdrop recipientCount={4} setConnection={props.setConnection} />
         }
     }
