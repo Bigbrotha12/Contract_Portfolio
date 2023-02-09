@@ -1,27 +1,23 @@
 import React from 'react';
-import { AppConnectionData } from '../../../app/Definitions';
+import { Action } from '../../../app/Definitions';
 import IController from '../../../app/IController';
 import Material from '../../../assets/Material';
-import { ConnectionContext, ControllerContext } from '../../../state/AppContext';
+import { ControllerContext } from '../../../state/AppContext';
 
 
-export default function Connector(props: {setConnection: React.Dispatch<React.SetStateAction<AppConnectionData>>})
+export default function Connector(props: {setConnection: React.Dispatch<Action>})
 {
     const controller = React.useContext<IController>(ControllerContext); 
-    const connection = React.useContext<AppConnectionData>(ConnectionContext);
 
     async function walletConnect()
     {
         let address = await controller.RequestConnection();
         let network = await controller.GetNetwork();
 
-        if (address && network)
-        {
-            props.setConnection({...connection, account: address, network: network});
-            console.log("Connected to account: " + address);
-            console.log("Network ID: " + network.hexID);
-        } else
-        {
+        if (address && network) {
+            props.setConnection({ type: "ACCOUNT_CHANGE", payload: address });
+            props.setConnection({ type: "NETWORK_CHANGE", payload: network });
+        } else {
             console.log("Connection error. Account: " + address + "\nNetwork: " + network);    
         }
     }

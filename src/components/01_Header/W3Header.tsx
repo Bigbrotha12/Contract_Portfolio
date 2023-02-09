@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppConnectionData } from '../../app/Definitions';
+import { Action, AppConnectionData } from '../../app/Definitions';
 import { ConnectionContext, ControllerContext } from '../../state/AppContext';
 import IController from '../../app/IController';
 
@@ -10,7 +10,7 @@ import Account from './components/Account';
 import ContractSelector from './components/ContractSelector';
 import NetworkSelector from './components/NetworkSelector';
 
-export default function W3Header(props: {setConnection: React.Dispatch<React.SetStateAction<AppConnectionData>>})
+export default function W3Header(props: {setConnection: React.Dispatch<Action>})
 {
     const controller = React.useContext<IController>(ControllerContext);
     const connection = React.useContext<AppConnectionData>(ConnectionContext);

@@ -2,28 +2,25 @@ import React from 'react';
 import Material from '../../../assets/Material';
 import NetworkSelector from '../../01_Header/components/NetworkSelector';
 import { Networks } from '../../../app/Networks';
-import { AppConnectionData, Network } from '../../../app/Definitions';
+import { Action, AppConnectionData, Network } from '../../../app/Definitions';
 import IController from '../../../app/IController';
-import { ControllerContext } from '../../../state/AppContext';
+import { ConnectionContext, ControllerContext } from '../../../state/AppContext';
+import { useBridge } from '../../../app/ContractHooks';
 
 type BridgeTx = {
     amount: string,
     network: Network
 }
-export default function Bridge()
+export default function Bridge(props: { setConnection: React.Dispatch<Action> })
 {
     const [transferTx, setTransferTx] = React.useState<BridgeTx>({ amount: '0', network: Networks[0] });
-    const [destination, setDestination] = React.useState<Network>();
     const controller: IController = React.useContext(ControllerContext);
-
-    function networkSelection(data: Network) {
-        setTransferTx(state => { return { ...state, network: data } });
-    }
-    function bridgeTransfer() {
-        if (transferTx.network && transferTx.amount) {
-            controller.BridgeSendTx(transferTx.network, transferTx.amount);
-        }
-    }
+    const connection: AppConnectionData = React.useContext(ConnectionContext);
+    const [bridge, transactions] = useBridge(connection.account, connection.network.name, controller);
+    
+    React.useEffect(() => {
+        props.setConnection({ type: "ADD_TRANSACTION", payload: transactions } );
+    }, [transactions])
 
     return (
         <Material.Card sx={{margin: "12px"}}>
@@ -49,10 +46,16 @@ export default function Bridge()
                     }} label='amount' />
                     </div>
                     <div className='pb-[12px]'>
-                    {/*<NetworkSelector title='Network'  /> */}
                     </div>
 
-                    <Material.Button sx={{width: '100%'}} onClick={bridgeTransfer} variant='contained' type='button'>Transfer</Material.Button>
+                <Material.Button
+                    sx={{ width: '100%' }}
+                    onClick={() => bridge.prepareSendTransaction(transferTx.network, transferTx.amount)}
+                    variant='contained'
+                    type='button'
+                >
+                    Transfer
+                </Material.Button>
                 
                 </Material.CardContent>
         </Material.Card>                

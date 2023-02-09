@@ -1,11 +1,11 @@
 import React from 'react';
 import Material from '../../../assets/Material';
-import { AppConnectionData, Network, NetworkName } from '../../../app/Definitions';
+import { Action, AppConnectionData, Network, NetworkName } from '../../../app/Definitions';
 import { Networks } from '../../../app/Networks';
 import { ConnectionContext, ControllerContext } from '../../../state/AppContext';
 import IController from '../../../app/IController';
 
-export default function Selector(props: {title: string, setConnection: React.Dispatch<React.SetStateAction<AppConnectionData>>})
+export default function Selector(props: {title: string, setConnection: React.Dispatch<Action>})
 { 
     const controller = React.useContext<IController>(ControllerContext); 
     const connection = React.useContext<AppConnectionData>(ConnectionContext);
@@ -13,10 +13,9 @@ export default function Selector(props: {title: string, setConnection: React.Dis
     const handleSelection = async (event) =>
     {
         let chain = Networks.get(event.target.value);
-        console.log(chain);
         if (chain && await controller.ChangeNetwork(chain))
         {
-            props.setConnection({ ...connection, network: chain });
+            props.setConnection({ type: "NETWORK_CHANGE", payload: chain });
         }
     }
 
@@ -33,9 +32,9 @@ export default function Selector(props: {title: string, setConnection: React.Dis
                     {
                         Array.from(Networks.keys()).map((name) => {
                             return (
-                                <Material.MenuItem key={name} value={name}>
+                                <Material.MenuItem key={name} value={name} disabled={name === 'Not Connected'}>
                                     <div className='flex'>
-                                        <img className='mr-[6px]' width='32rem' height='32rem' src={Networks.get(name)?.icon} />
+                                        <img className='mr-[6px] w-[2rem] h-[2rem]' src={Networks.get(name)?.icon} />
                                         <div className='my-auto align-middle'>{name}</div>
                                     </div>
                                 </Material.MenuItem>)

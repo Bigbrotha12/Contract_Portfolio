@@ -1,14 +1,14 @@
 import React from 'react';
-import { AppConnectionData } from '../../../app/Definitions';
+import { Action, AppConnectionData } from '../../../app/Definitions';
 import Material from '../../../assets/Material';
 import { ConnectionContext } from '../../../state/AppContext';
 
-export default function Account(props: {setConnection: React.Dispatch<React.SetStateAction<AppConnectionData>>})
+export default function Account(props: {setConnection: React.Dispatch<Action>})
 {
     const connection = React.useContext<AppConnectionData>(ConnectionContext);
 
     function disconnect() {
-        props.setConnection({ ...connection, account: '' });
+        props.setConnection({ type: "ACCOUNT_CHANGE", payload: '' });
     }
 
     return (
@@ -22,5 +22,5 @@ export default function Account(props: {setConnection: React.Dispatch<React.SetS
 
 function shortAddress(address: string)
 {
-    return address.length > 10 ? address.substring(0, 5) + "..." +  address.substring(address.length - 4) : address;
+    return address.length > 10 ? address.substring(0, 6) + "..." +  address.substring(address.length - 5) : address;
 }

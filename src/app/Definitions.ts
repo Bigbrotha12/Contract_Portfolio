@@ -18,11 +18,31 @@ export type AppConnectionData =
 {
         account: string,
         network: Network,
-        contract: Contract
+        contract: Contract,
+        transactions: Map<string, Web3Transaction>
 }
 
+export type Action = {
+        type: "ACCOUNT_CHANGE",
+        payload: string
+        } | {
+        type: "NETWORK_CHANGE",
+        payload: Network
+        } | {
+        type: "CONTRACT_CHANGE",
+        payload: Contract
+        } | {
+        type: "ADD_TRANSACTION",
+        payload: Map<string, Web3Transaction>
+        }
+
+export type Web3Transaction = {
+        network: NetworkName,
+        status: TransactionStatus
+}
+export enum TransactionStatus { DRAFT, PENDING, CONFIRMED };
 export type ContractName = "Airdrop" | "NFT" | "Staker" | "Reflect" | "Flipper" | "Bridge" | "Token";
-export type NetworkName = "Ethereum" | "Goerli" | "Binance" | "BNB Chain Testnet" | "Polygon" | "PolygonTest";
+export type NetworkName = "Not Connected" | "Ethereum" | "Goerli" | "Binance Smart Chain" | "BNB Chain Testnet" | "Polygon" | "Polygon Mumbai";
 
 export type Contract = 
 {
@@ -43,13 +63,6 @@ export type Network =
         explorer: string,
         rpcUrl: string,
         faucet: string | null
-}
-
-export enum TransactionStatus {
-        Null,
-        Pending,
-        Confirmed,
-        Rejected
 }
 
 export enum WalletEvent {

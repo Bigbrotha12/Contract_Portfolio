@@ -1,51 +1,21 @@
 import React from 'react';
 import Material from '../../../assets/Material';
 import IController from '../../../app/IController';
-import { ControllerContext } from '../../../state/AppContext';
-import { Contracts } from '../../../app/Networks';
+import { ConnectionContext, ControllerContext } from '../../../state/AppContext';
+import { useFlipper, WinState } from '../../../app/ContractHooks';
+import { Action, AppConnectionData } from '../../../app/Definitions';
 
-export default function Flipper()
+export default function Flipper(props: {setConnection: React.Dispatch<Action> })
 {
+    const [newBet, setNewBet] = React.useState<string>("0");
     const controller: IController = React.useContext(ControllerContext);
-    const [newBet, setNewBet]: [number, React.Dispatch<React.SetStateAction<number>>] = React.useState(0);
-    const useFlipper = (): [number, string] => {
-        const [pot, setPot] = React.useState<number>(0);
-        const [winState, setWinState] = React.useState<string>("");
-        async function handleFlipperEvent(event) {
-            console.log(event);
-        }
-
-        React.useEffect(() => {
-            if (controller.ConnectionStatus()) {
-                setPot(controller.FlipperCheckFunds());
-            }
-            controller.Subscribe(Contracts.get("Flipper")!, "betPlaced", handleFlipperEvent);
-            controller.Subscribe(Contracts.get("Flipper")!, "betPaidOut", handleFlipperEvent);
-            controller.Subscribe(Contracts.get("Flipper")!, "logNewQueryd", handleFlipperEvent);
-            controller.Subscribe(Contracts.get("Flipper")!, "randomNumber", handleFlipperEvent);
-
-            return (() => {
-                controller.Unsubscribe(Contracts.get("Flipper")!, "betPlaced", handleFlipperEvent);
-                controller.Unsubscribe(Contracts.get("Flipper")!, "betPaidOut", handleFlipperEvent);
-                controller.Unsubscribe(Contracts.get("Flipper")!, "logNewQueryd", handleFlipperEvent);
-                controller.Unsubscribe(Contracts.get("Flipper")!, "randomNumber", handleFlipperEvent);
-            })
-        }, []);
-        return [pot, winState];
-    }
-    const [pot, winState]: [number, string] = useFlipper();
-    function triggerCoinFlip() {
-        controller.FlipperFlipCoin();
-    }
-    function placeBet() {
-        if (newBet) {
-            controller.FlipperAddFunds(newBet);
-        }
-    }
-    function withdrawFunds() {
-        controller.FlipperWithdrawFunds();
-    }
+    const connection: AppConnectionData = React.useContext(ConnectionContext);
+    const [balance, winState, flipper, transactions] = useFlipper(connection.account, connection.network.name, controller);
     
+    React.useEffect(() => {
+        props.setConnection({ type: "ADD_TRANSACTION", payload: transactions });
+    }, [transactions])
+
     return (
         <Material.Card sx={{margin: "12px"}}>
             <Material.CardHeader title="Oracle Flip Contract" />
@@ -55,18 +25,18 @@ export default function Flipper()
                         <Material.Typography sx={{paddingTop: '12px'}}>Coin Betting Game</Material.Typography>
                         <Material.Divider />
                     </div>
-                    <Material.Typography sx={{ marginY: '12px' }}>Current Funds: {pot}</Material.Typography>
-                    <Material.Typography sx={{ marginY: '12px' }}>Outcome: {winState}</Material.Typography>
+                    <Material.Typography sx={{ marginY: '12px' }}>Current Funds: {balance || "0"}</Material.Typography>
+                    <Material.Typography sx={{ marginY: '12px' }}>Outcome: {winStateParse(winState)}</Material.Typography>
                     <Material.Typography sx={{width: '40%', marginY: '12px', fontWeight: 'bold'}}>Enter Betting Amount</Material.Typography>
                     <Material.TextField sx={{ marginY: '12px' }} value={newBet} type='number' onChange={(e) => {
                         if (e.target.value && validateAmount(e.target.value)) {
-                            setNewBet(parseInt(e.target.value));
+                            setNewBet(e.target.value);
                         }
                     }} fullWidth label='Bet' />    
                     <div className='flex justify-center'>
-                        <Material.Button sx={{marginX: '12px'}} fullWidth variant='contained' onClick={placeBet}>Place Bet</Material.Button>
-                        <Material.Button sx={{ marginX: '12px' }} fullWidth variant='contained' onClick={triggerCoinFlip}>Flip Coin</Material.Button>
-                        <Material.Button sx={{marginX: '12px'}} fullWidth variant='contained' onClick={withdrawFunds}>Withdraw</Material.Button>
+                        <Material.Button sx={{marginX: '12px'}} fullWidth variant='contained' onClick={() => flipper.placeBet(newBet)}>Place Bet</Material.Button>
+                        <Material.Button sx={{ marginX: '12px' }} fullWidth variant='contained' onClick={() => flipper.flipCoin()}>Flip Coin</Material.Button>
+                        <Material.Button sx={{marginX: '12px'}} fullWidth variant='contained' onClick={() => flipper.withdrawFunds(newBet)}>Withdraw</Material.Button>
                     </div>
                 </div>
             </Material.CardContent>
@@ -79,4 +49,15 @@ function validateAmount(test: string): boolean {
     let num = parseInt(test);
     if (num !== num) return false;
     return /[0-9]*/.test(test) && num> 0;
+}
+
+function winStateParse(status: WinState): string {
+    switch (status) {
+        case WinState.NONE:
+            return "Not started.";
+        case WinState.WON:
+            return "You've won!";
+        case WinState.LOST:
+            return "Sorry, you've lost...";
+    }
 }

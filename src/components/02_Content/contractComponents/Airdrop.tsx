@@ -3,21 +3,28 @@ import Material from '../../../assets/Material';
 import { useForm } from 'react-hook-form';
 import IController from '../../../app/IController';
 import { ConnectionContext, ControllerContext } from '../../../state/AppContext';
-import { AppConnectionData } from '../../../app/Definitions';
-import { AirdropData, useAirdrop } from './contractHooks';
+import { Action, AppConnectionData } from '../../../app/Definitions';
+import { useAirdrop } from '../../../app/ContractHooks';
 
 const tokenLimit = 1_000;
-export default function Airdrop(props: {recipientCount: number})
-{
+export default function Airdrop(props: { recipientCount: number, setConnection: React.Dispatch<Action> }) {
     const [checkAddress, setCheckAddress] = React.useState<string>('');
     const { register, handleSubmit, setError, formState: { errors } } = useForm();
     const controller: IController = React.useContext(ControllerContext);
     const connection: AppConnectionData = React.useContext(ConnectionContext);
-    const [amount, claimed, airdrop] = useAirdrop(connection.account, connection.network.name, controller);
+    const [amount, claimed, airdrop, transactions] = useAirdrop(connection.account, connection.network.name, controller);
 
     function handleAirdropData(data) {
-        airdrop.createAirdrop({ network: connection.network.name, data: parseAirdropData(data) });
+        if (connection.account) {
+            airdrop.createAirdrop(parseAirdropData(data));
+        } else {
+            console.error("Please unlock your Web3 account.");
+        }
     }
+
+    React.useEffect(() => {
+        props.setConnection({ type: "ADD_TRANSACTION", payload: transactions } );
+    }, [transactions])
 
     return (
         <Material.Card sx={{margin: "12px"}}>
@@ -75,7 +82,7 @@ export default function Airdrop(props: {recipientCount: number})
                         </div>
                         <div className='py-[12px] w-full'>
                             <Material.Button fullWidth variant='contained' type='button' onClick={() => {
-                                airdrop.checkClaim(checkAddress)
+                                airdrop.checkAddress(checkAddress)
                             }}>Check Address</Material.Button>
                         </div>
                     </div>
@@ -103,16 +110,16 @@ export default function Airdrop(props: {recipientCount: number})
     
 }
 
-function parseAirdropData(data: Object): AirdropData['data'] {
+function parseAirdropData(data: Object): Array<{ to: string, amount: string }> {
     const addressZero: string = "0x0000000000000000000000000000000000000000";
     let keys: Array<string> = Object.keys(data);
-    let result: AirdropData['data'] = [];
+    let result: Array<{ to: string, amount: string }> = [];
     for (let i = 0; i < keys.length; i += 2)
     {
         let address: string = validateAddress(data[keys[i]]) ? data[keys[i]] : addressZero;
-        let amount: string = validateAmount(data[keys[i+1]]) ? data[keys[i+1]] : "0";
+        let amount: string = validateAmount(data[keys[i + 1]]) ? data[keys[i + 1]] : "0";
         if (!address) { address = addressZero; }
-        if (!parseInt(amount)) { amount = "0"; }
+        if (!amount) { amount = "0"; }
         result.push({ to: address, amount: amount });
     }
     return result;
