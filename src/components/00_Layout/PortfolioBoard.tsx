@@ -56,11 +56,11 @@ function DisplayContract(props: { contractName: string, setConnection: React.Dis
             case "Flipper":
                 return <Flipper setConnection={props.setConnection} />
             case "NFT":
-                return <NFTToken />
+                return <NFTToken setConnection={props.setConnection} />
             case "Reflect":
-                return <Reflect />
+                return <Reflect setConnection={props.setConnection} />
             case "Staker":
-                return <Staker />
+                return <Staker setConnection={props.setConnection} />
             default:
                 return <Airdrop recipientCount={4} setConnection={props.setConnection} />
         }

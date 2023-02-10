@@ -1,43 +1,21 @@
 import React from 'react';
 import Material from '../../../assets/Material';
-import { ControllerContext } from '../../../state/AppContext';
+import { ConnectionContext, ControllerContext } from '../../../state/AppContext';
 import IController from '../../../app/IController';
-import { Contracts } from '../../../app/Networks';
+import { Action, AppConnectionData } from '../../../app/Definitions';
+import { useStaker } from '../../../app/ContractHooks';
 
-export default function Staker()
+export default function Staker(props: {setConnection: React.Dispatch<Action> })
 {
-    const [newStake, setNewStake] = React.useState<number>(0);
+    const [newStake, setNewStake] = React.useState<string>("0");
     const controller = React.useContext<IController>(ControllerContext);
-    const useStaker = (): [number, number] => {
-        const [stakedAmount, setStakedAmount] = React.useState<number>(0);
-        const [reward, setReward] = React.useState<number>(0);
+    const connection = React.useContext<AppConnectionData>(ConnectionContext);
 
-        React.useEffect(() => {
-            if (controller.ConnectionStatus()) {
-                setStakedAmount(controller.StakeCheckStake());
-                setReward(controller.StakeCheckReward());
-            }
-            controller.Subscribe(Contracts.get("Staker")!, "Staked", updateStakerBalance);
-            return(() => controller.Unsubscribe(Contracts.get("Staker")!, "Staked", updateStakerBalance))
-        });
-        return [stakedAmount, reward];
-    }
-
-    function stakeTokens() {
-        if (newStake) {
-            controller.StakeAddFunds(newStake);
-        }
-    }
-    function claimReward() {
-        controller.StakeClaimReward();
-    }
-    function withdrawStake() {
-        controller.StakeWithdrawFunds();
-    }
-    async function updateStakerBalance(e) {
-        console.log(e);
-    }
-    const [stakedAmount, reward] = useStaker();
+    const [userBalance, rewardBalance, staker, transactions] = useStaker(connection.account, connection.network.name, controller);
+    
+    React.useEffect(() => {
+        props.setConnection({ type: "ADD_TRANSACTION", payload: transactions });
+    }, [transactions])
     
     return (
         <Material.Card sx={{margin: "12px"}}>
@@ -48,23 +26,23 @@ export default function Staker()
                         <Material.Typography sx={{paddingTop: '12px'}}>Staking Contract</Material.Typography>
                         <Material.Divider />
                     </div>
-                    <Material.Typography sx={{ marginY: '12px' }}>Current Stake: {stakedAmount} DEMO</Material.Typography>
-                    <Material.Typography sx={{ marginY: '12px'}}>Current Reward: {reward} DEMO</Material.Typography>
+                    <Material.Typography sx={{ marginY: '12px' }}>Current Stake: {userBalance} DEMO</Material.Typography>
+                    <Material.Typography sx={{ marginY: '12px'}}>Current Reward: {rewardBalance} DEMO</Material.Typography>
                     <Material.TextField
                         sx={{ marginY: '12px' }}
                         fullWidth
                         onChange={(e) => {
                             if (validateNumber(e.target.value))
                             {
-                                setNewStake(parseInt(e.target.value));
+                                setNewStake(e.target.value);
                             }
                         }}
                         label='Stake Amount'
                     />
                     <div className='flex justify-center'>
-                        <Material.Button sx={{ marginX: '12px' }} onClick={stakeTokens} fullWidth variant='contained'>Stake Tokens</Material.Button>
-                        <Material.Button sx={{ marginX: '12px' }} onClick={claimReward} fullWidth variant='contained'>Claim Rewards</Material.Button>
-                        <Material.Button sx={{ marginX: '12px' }} onClick={withdrawStake} fullWidth variant='contained'>Withdraw Stake</Material.Button>
+                        <Material.Button sx={{ marginX: '12px' }} onClick={() => staker.stakeTokens(newStake)} fullWidth variant='contained'>Stake Tokens</Material.Button>
+                        <Material.Button sx={{ marginX: '12px' }} onClick={() => staker.claimReward()} fullWidth variant='contained'>Claim Rewards</Material.Button>
+                        <Material.Button sx={{ marginX: '12px' }} onClick={() => staker.withdrawStake()} fullWidth variant='contained'>Withdraw Stake</Material.Button>
                     </div> 
                 </div>
                 </Material.CardContent>

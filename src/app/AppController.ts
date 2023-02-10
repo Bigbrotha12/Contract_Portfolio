@@ -1,5 +1,5 @@
 import IController from "./IController";
-import { Network, Contract, TransactionStatus, WalletEvent, ContractName, Web3Transaction } from "./Definitions";
+import { Network, Contract, TransactionStatus, WalletEvent, ContractName, Web3Transaction, NetworkName } from "./Definitions";
 import { Networks, Contracts } from "./Networks";
 import { ContractTransaction, ethers } from 'ethers';
 import Merkle from "../../contracts/scripts/merkleRootCalculator";
@@ -11,7 +11,6 @@ import { ReflectToken } from "../../contracts/typechain-types/contracts/D_Reflec
 import { Staker } from '../../contracts/typechain-types/contracts/E_Staker';
 import { FamiliarLogic as NFTDemo } from '../../contracts/typechain-types/contracts/F_Upgradable_NFT';
 import { CoinFlipper } from '../../contracts/typechain-types/contracts/G_Oracle_Contract';
-import BlockchainWatch from "./BlockchainWatcher";
 
 declare global {
     interface Window {
@@ -102,34 +101,23 @@ export default class AppController implements IController {
         return false;
     }
 
-    async Subscribe(contract: Contract, event: string, callback: (event: any) => void) {
+    async onTransactionStatusChange(transaction: ContractTransaction, network: NetworkName, callback: (hash: string, tx: Web3Transaction) => void): Promise<void> {
+        // Set up provider connection
+        let provider = new ethers.providers.Web3Provider(window.ethereum as any);
+        if (!provider) {
+            console.error("Controller: No injected provider.");
+            return;      
+        }
 
-        return false;
-    }
-
-    Unsubscribe(contract: Contract, event: string, callback: (event: any) => void): boolean {
-        
-        return false;
-    }
-
-    AddTransactionListener(callback: (status: TransactionStatus, hash: string) => void): boolean {
-        
-        return true;
-    }
-
-    RemoveTransactionListener(): boolean {
-        
-        return true;
-    }
-
-    AddConnectionListener(callback: (action: WalletEvent, account: string, network: string) => void): boolean {
-        
-        return true;
-    }
-
-    RemoveConnectionListener(): boolean {
-        
-        return true;
+        if (transaction.confirmations > 0) {
+            // transaction has been mined.
+            callback(transaction.hash, { network: network, status: TransactionStatus.CONFIRMED });
+        } else {
+            // transaction has not been mined yet.
+            callback(transaction.hash, { network: network, status: TransactionStatus.PENDING });
+            await transaction.wait();
+            callback(transaction.hash, { network: network, status: TransactionStatus.CONFIRMED });
+        }
     }
 
     async getWeb3Artifacts(contract: Contract): Promise<[ethers.Signer, Network, ethers.Contract] | null> {
@@ -206,7 +194,7 @@ export default class AppController implements IController {
 
         let root = Merkle.calculateMerkleRoot(Merkle.createLeaves(recipients));
         let tx = await (contract as AirdropDemo).createAirdrop(root);
-        BlockchainWatch.onTransactionStatusChange(tx, network.name, callback);
+        this.onTransactionStatusChange(tx, network.name, callback);
     }
 
     async AirdropClaim(creator: string, address: string, amount: string, data: { to: string; amount: string; }[], callback: (hash: string, tx: Web3Transaction) => void): Promise<void> {
@@ -224,7 +212,7 @@ export default class AppController implements IController {
         }
         let proof = Merkle.calculateProof(Merkle.getLeafAtIndex(index, data), Merkle.createLeaves(data));
         let tx = await (contract as AirdropDemo).claim(creator, address, amount, proof);
-        BlockchainWatch.onTransactionStatusChange(tx, network.name, callback);
+        this.onTransactionStatusChange(tx, network.name, callback);
     }
 
     async AirdropHasClaimed(address: string): Promise<boolean | null> {
@@ -380,7 +368,7 @@ export default class AppController implements IController {
         let [signer, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
 
         let tx = await (contract as CoinFlipper).placeBet(amount);
-        BlockchainWatch.onTransactionStatusChange(tx, network.name, callback);
+        this.onTransactionStatusChange(tx, network.name, callback);
     }
 
     async FlipperCheckFunds(): Promise<string | null> {
@@ -403,7 +391,7 @@ export default class AppController implements IController {
         let [signer, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
 
         let tx = await (contract as CoinFlipper).startCoinFlip();
-        BlockchainWatch.onTransactionStatusChange(tx, network.name, callback);
+        this.onTransactionStatusChange(tx, network.name, callback);
     }
 
     async FlipperWithdrawFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void> {
@@ -415,7 +403,7 @@ export default class AppController implements IController {
         let [signer, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
 
         let tx = await (contract as CoinFlipper).payOut(amount);
-        BlockchainWatch.onTransactionStatusChange(tx, network.name, callback);
+        this.onTransactionStatusChange(tx, network.name, callback);
     }
     
     //--------------------- Staker ---------------------- 

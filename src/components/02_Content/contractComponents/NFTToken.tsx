@@ -1,42 +1,25 @@
 import React from 'react';
 import Material from '../../../assets/Material';
-import { ControllerContext } from '../../../state/AppContext';
+import { ConnectionContext, ControllerContext } from '../../../state/AppContext';
 import IController from '../../../app/IController';
-import { Contracts } from '../../../app/Networks';
+import { Action, AppConnectionData } from '../../../app/Definitions';
+import { useNFTToken } from '../../../app/ContractHooks';
 
 type TransferTx = {
     recipient: string,
-    tokenId: number
+    tokenId: string
 }
-export default function NFTToken()
+export default function NFTToken(props: {setConnection: React.Dispatch<Action> })
 {
-    const [userBalance, setUserBalance] = React.useState<number>(0);
-    const [transfer, setTransfer] = React.useState<TransferTx>({recipient: '', tokenId: 0});
+    const [transfer, setTransfer] = React.useState<TransferTx>({recipient: '', tokenId: '0'});
     const controller = React.useContext<IController>(ControllerContext);
-
-    function mintToken() {
-        if (controller.ConnectionStatus()) {
-            controller.NFTMint();
-        }
-    }
-    function sendTransfer() {
-        if (transfer.recipient && transfer.tokenId) {
-            controller.NFTTransfer(transfer.recipient, transfer.tokenId);
-        }
-    }
-    async function updateUserBalance(event) {
-        console.log(event);
-    }
+    const connection = React.useContext<AppConnectionData>(ConnectionContext);
+    const [balance, nftToken, transactions] = useNFTToken(connection.account, connection.network.name, controller);
 
     React.useEffect(() => {
-        if (controller.ConnectionStatus()) {
-            setUserBalance(controller.NFTBalance());
-        }
-        controller.Subscribe(Contracts.get("NFT")!, "Transfer", updateUserBalance);
-        return (() => controller.Unsubscribe(Contracts.get("NFT")!, "Transfer", updateUserBalance));
-    }, [])
-    
-    
+        props.setConnection({ type: "ADD_TRANSACTION", payload: transactions });
+    }, [transactions]);
+
     return (
         <Material.Card sx={{margin: "12px"}}>
             <Material.CardHeader title="NFT Contract" />
@@ -47,9 +30,15 @@ export default function NFTToken()
                         <Material.Divider />
                     </div>
                     <div className='flex justify-center'>
-                        <Material.Button variant='contained' fullWidth type='button' onClick={mintToken}>Mint Token</Material.Button>
+                        <Material.Button
+                            variant='contained'
+                            fullWidth type='button'
+                            onClick={() => nftToken.mint(connection.account)}
+                        >
+                            Mint Token
+                        </Material.Button>
                     </div>
-                    <Material.Typography sx={{ marginY: '12px' }}>Current NFT Token Balance: {userBalance}</Material.Typography>
+                    <Material.Typography sx={{ marginY: '12px' }}>Current NFT Token Balance: {balance}</Material.Typography>
                     <Material.Typography sx={{ marginY: '12px'}}>Transfer NFT</Material.Typography>
                     <Material.TextField
                         sx={{ marginY: '12px' }}
@@ -65,14 +54,21 @@ export default function NFTToken()
                         sx={{ marginY: '12px' }}
                         onChange={(e) => {
                             if (validateNumber(e.target.value)) {
-                                setTransfer((state) => { return { ...state, tokenId: parseInt(e.target.value) }});   
+                                setTransfer((state) => { return { ...state, tokenId: e.target.value }});   
                             }
                         }}
                         fullWidth
                         label='token ID'
                     />
                     <div className='flex justify-center'>
-                        <Material.Button fullWidth variant='contained' type='button' onClick={sendTransfer}>Transfer</Material.Button>
+                        <Material.Button
+                            fullWidth
+                            variant='contained'
+                            type='button'
+                            onClick={() => nftToken.transfer(transfer.tokenId, transfer.recipient)}
+                        >
+                            Transfer
+                        </Material.Button>
                     </div> 
                 </div>
                 </Material.CardContent>

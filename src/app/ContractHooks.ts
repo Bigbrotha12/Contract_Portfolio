@@ -116,7 +116,7 @@ export const useTestToken = (account: string, network: NetworkName, controller: 
         },
         async balance(address?: string): Promise<string> {
             return await controller.GetTestTokenBalance() || "0";
-        },
+        }
     }
 
     function transactionWatcher(hash: string, transaction: Web3Transaction): void {
@@ -232,4 +232,112 @@ export const useBridge = (account: string, network: NetworkName, controller: ICo
     }, [account, network, transactions]);
 
     return [bridge, transactions];
+}
+
+type NFTTokenInterface = {
+    mint(address: string): Promise<void>;
+    transfer(tokenId: string, recipient: string): Promise<void>;
+    checkOwner(tokenId: string): Promise<string>;
+}
+export const useNFTToken = (account: string, network: NetworkName, controller: IController): [string, NFTTokenInterface, Map<string, Web3Transaction>] => {
+    const [userBalance, setUserBalance] = React.useState<string>("0");
+    const [transactions, setTransactions] = React.useState<Map<string, Web3Transaction>>(new Map<string, Web3Transaction>);
+    const NFTToken: NFTTokenInterface = {
+        async mint(address: string): Promise<void> {
+        },
+        transfer: function (tokenId: string, recipient: string): Promise<void> {
+            throw new Error("Function not implemented.");
+        },
+        checkOwner: function (tokenId: string): Promise<string> {
+            throw new Error("Function not implemented.");
+        }
+    }
+
+    function transactionWatcher(hash: string, transaction: Web3Transaction): void {
+        if (transaction) {
+            let newState = new Map(transactions);
+            setTransactions(newState.set(hash, transaction));
+        }
+    }
+
+    React.useEffect(() => {
+
+    }, [account, network, transactions])
+
+    return [userBalance, NFTToken, transactions];
+}
+
+type ReflectInterface = {
+    purchase(amount: string): Promise<void>;
+    transfer(recipient: string, amount: string): Promise<void>;
+    checkBalance(address: string): Promise<string>;
+}
+export const useReflect = (account: string, network: NetworkName, controller: IController): [string, string, ReflectInterface, Map<string, Web3Transaction>] => {
+    const [userBalance, setUserBalance] = React.useState<string>("0");
+    const [price, setPrice] = React.useState<string>("0");
+    const [transactions, setTransactions] = React.useState<Map<string, Web3Transaction>>(new Map<string, Web3Transaction>);
+    const reflect: ReflectInterface = {
+        async purchase(amount: string): Promise<void> {
+        },
+        transfer: function (recipient: string, amount: string): Promise<void> {
+            throw new Error("Function not implemented.");
+        },
+        checkBalance: function (address: string): Promise<string> {
+            throw new Error("Function not implemented.");
+        }
+    }
+
+    function transactionWatcher(hash: string, transaction: Web3Transaction): void {
+        if (transaction) {
+            let newState = new Map(transactions);
+            setTransactions(newState.set(hash, transaction));
+        }
+    }
+
+    React.useEffect(() => {
+        (async () => {
+            setUserBalance(await controller.ReflectBalance(account) || "0");
+            setPrice(await controller.ReflectGetPrice() || "0");
+        })();
+    }, [account, network, transactions])
+
+    return [userBalance, price, reflect, transactions];
+}
+
+type StakerInterface = {
+    stakeTokens(amount: string): Promise<void>;
+    claimReward(): Promise<void>;
+    withdrawStake(amount?: string): Promise<void>;
+}
+export const useStaker = (account: string, network: NetworkName, controller: IController): [string, string, StakerInterface, Map<string, Web3Transaction>] => {
+    const [userBalance, setUserBalance] = React.useState<string>("0");
+    const [rewardBalance, setRewardBalance] = React.useState<string>("0");
+    const [transactions, setTransactions] = React.useState<Map<string, Web3Transaction>>(new Map<string, Web3Transaction>());
+    const Staker: StakerInterface = {
+        async stakeTokens(amount: string): Promise<void> {
+            await controller.StakeAddFunds(amount);
+        },
+        async claimReward(): Promise<void> {
+            await controller.StakeClaimReward();
+        },
+        async withdrawStake(amount?: string): Promise<void> {
+            await controller.StakeWithdrawFunds(amount || userBalance);
+        }
+    }
+
+    function transactionWatcher(hash: string, transaction: Web3Transaction): void {
+        if (transaction) {
+            let newState = new Map(transactions);
+            setTransactions(newState.set(hash, transaction));
+        }
+    }
+
+    React.useEffect(() => {
+        (async () => {
+            setUserBalance(await controller.StakeCheckStake() || "0");
+            setRewardBalance(await controller.StakeCheckReward() || "0");
+        })();
+    }, [account, network, transactions]);
+
+    return [userBalance, rewardBalance, Staker, transactions];
 }

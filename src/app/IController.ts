@@ -1,4 +1,5 @@
-import { Network, Contract, TransactionStatus, Web3Transaction } from "./Definitions";
+import { ContractTransaction } from "ethers";
+import { Network, Contract, TransactionStatus, Web3Transaction, NetworkName } from "./Definitions";
 
 export default interface IController
 {
@@ -6,11 +7,7 @@ export default interface IController
     RequestConnection(): Promise<string | null>; // Request user unlock wallet and creates signer.
     GetNetwork(): Promise<Network | null>;
     ChangeNetwork(network: Network): Promise<boolean>;
-    GetTestTokens(amount: number): Promise<boolean>;    // Request test ERC20 tokens from contract.
-    AddTransactionListener(callback: (status: TransactionStatus, hash: string) => void): boolean;
-    RemoveTransactionListener(): boolean;
-    Subscribe(contract: Contract, event: string, callback: (event) => void);
-    Unsubscribe(contract: Contract, event: string, callback: (event) => void);
+    onTransactionStatusChange(transaction: ContractTransaction, network: NetworkName, callback: (hash: string, tx: Web3Transaction) => void): Promise<void>
 
     GetTestTokens(): Promise<boolean>
     GetTestTokenBalance(address?: string): Promise<string | null>
