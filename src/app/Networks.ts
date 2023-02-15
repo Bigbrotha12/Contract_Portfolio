@@ -31,7 +31,7 @@ export const Contracts: Map<ContractName, Contract> = new Map<ContractName, Cont
                     address: "0xfB1686D1993508019BbFef53c5065009874cd1a9"
                 },
                 {
-                    network: "PolygonTest",
+                    network: "Polygon Mumbai",
                     address: "0xBb91f367dD50cF80f55EF836c7A46E8dc0D79f55"
                 }
             ],
@@ -50,7 +50,7 @@ export const Contracts: Map<ContractName, Contract> = new Map<ContractName, Cont
                     address: "0x6c755f9644E0ABa078450211aA1320bCbE2647AF"
                 },
                 {
-                    network: "PolygonTest",
+                    network: "Polygon Mumbai",
                     address: "0xfB1686D1993508019BbFef53c5065009874cd1a9"
                 }
             ],
@@ -69,7 +69,7 @@ export const Contracts: Map<ContractName, Contract> = new Map<ContractName, Cont
                 address: "0xB7Eaa855Fa6432D0597F297BaCE4613c33a075d1"
             },
             {
-                network: "PolygonTest",
+                network: "Polygon Mumbai",
                 address: "0x2EF8390d0ED43fD98B785AE414Bb5dd5364d621B"
             }
         ],
@@ -88,7 +88,7 @@ export const Contracts: Map<ContractName, Contract> = new Map<ContractName, Cont
                 address: "0xBb8E8e55a3B9247F46f96B61C5c51f7B2fB21495"
             },
             {
-                network: "PolygonTest",
+                network: "Polygon Mumbai",
                 address: "0x036D097BB3C11DD3a0F6e22fbe521d6b48dc1FBc"
             }
         ],
@@ -107,7 +107,7 @@ export const Contracts: Map<ContractName, Contract> = new Map<ContractName, Cont
                 address: "0x53709dAB3d6d7e64C6BC4d539e6c74E07BA2c711"
             },
             {
-                network: "PolygonTest",
+                network: "Polygon Mumbai",
                 address: "0x28408975393Ba195305EBe5f5936Ce749da67B4A"
             }
         ],
@@ -126,7 +126,7 @@ export const Contracts: Map<ContractName, Contract> = new Map<ContractName, Cont
                 address: "0xf7EC61fA7fd5250d7913D330d0Ae57B5594D0f40"
             },
             {
-                network: "PolygonTest",
+                network: "Polygon Mumbai",
                 address: "0x264847AC7de3b943C8f9BAA050416d6b6211DC03"
             }
         ],
@@ -145,7 +145,7 @@ export const Contracts: Map<ContractName, Contract> = new Map<ContractName, Cont
                 address: "0xd4d1D0238186bED528351851A413a02d7c7c1482"
             },
             {
-                network: "PolygonTest",
+                network: "Polygon Mumbai",
                 address: "0x609E32A30D6F758a2D3513E85B8C6aA5A791Dffb"
             }
         ],

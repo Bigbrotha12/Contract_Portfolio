@@ -48,7 +48,7 @@ export type Contract =
 {
         name: ContractName,
         instances: Array<{
-                network: string,
+                network: NetworkName,
                 address: string
         }>,
         abi: Array<ABIItem>

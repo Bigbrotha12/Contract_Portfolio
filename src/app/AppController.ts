@@ -184,7 +184,6 @@ export default class AppController implements IController {
     //---------------------- Airdrop Demo ---------------
 
     async AirdropNewRecipients(recipients: { to: string; amount: string; }[], callback: (hash: string, tx: Web3Transaction) => void): Promise<void> {
-        console.log(recipients);
         let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Airdrop")!);
         if (!web3Artifact) {
             console.error("Unable to obtain signer / network / contract data.");
@@ -237,47 +236,55 @@ export default class AppController implements IController {
     }
 
     //--------------------- Bridge ----------------------
-    async BridgeCheckNonce(destination: Network): Promise<boolean | null> {
+    async BridgeGetPending(sender: number, name: string, rpc: string): Promise<string | null> {
         let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Bridge")!);
         if (!web3Artifact) {
             console.error("Unable to obtain signer / network / contract data.");
             return null;
         }
         let [signer, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
-
         let userAddress = await signer.getAddress();
-        let sourceNonce = await (contract as IBC_Bridge).nonce(userAddress, network.id, destination.id);
-        let destProvider = new ethers.providers.JsonRpcProvider(destination.rpcUrl);
-        let destAddress = Contracts.get("Bridge")!.instances.find((inst) => inst.network === destination.name)?.address;
-        if (!destAddress) {
+        let sourceContract = contract as IBC_Bridge;
+        let destinationProvider: ethers.providers.Provider | undefined = new ethers.providers.JsonRpcProvider(rpc);
+        let destContractInfo: {network: NetworkName, address: string} | undefined = Contracts.get("Bridge")!.instances.find((inst) => inst.network === name);
+        if (!destContractInfo) {
             console.error("Contract does not exist in destination network.");
             return null;
         }
-        let destContract = contract.attach(destAddress).connect(destProvider) as IBC_Bridge;
-        let destNonce = await destContract.nonce(userAddress, network.id, destination.id);
-        if (!sourceNonce || !destNonce) {
-            console.error("Unable to obtain on-chain nonce.");
+        let destinationContract: ethers.Contract = new ethers.Contract(destContractInfo.address, Contracts.get("Bridge")!.abi, destinationProvider) as IBC_Bridge;
+        
+        let sourceNonce: ethers.BigNumber = await sourceContract.nonce(userAddress, sender, network.id);
+        let destNonce: ethers.BigNumber = await destinationContract.nonce(userAddress, sender, network.id);
+
+        // Transaction pending on source network
+        console.log("Source: %s, nonce: %s", network.name, sourceNonce.toString());
+        console.log("Destination: %s, nonce: %s", name, destNonce.toString());
+        if (sourceNonce.lt(destNonce)) {
+            return sourceNonce.toString();
+        }
+        else {
             return null;
         }
-
-        console.log("Source Nonce: %d, Destination Nonce: %d", sourceNonce, destNonce);
-        return sourceNonce === destNonce;
     }
     
-    async BridgeSendTx(destination: Network, amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<string | null> {
+    async BridgeSendTx(destination: number, amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void> {
         let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Bridge")!);
         if (!web3Artifact) {
             console.error("Unable to obtain signer / network / contract data.");
-            return null;
+            return;
         }
-        let [signer,, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
+        let [signer, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
         
-        let transaction = await (contract as IBC_Bridge).dataSend(await signer.getAddress(), amount, destination.id);
-        let receipt = await transaction.wait(4);  // Wait for 4 confirmation prior to sending to backend.
-        return await this.BridgeGetSignature(receipt);
+        try {
+            let tx = await (contract as IBC_Bridge).dataSend(await signer.getAddress(), amount, destination);
+            this.onTransactionStatusChange(tx, network.name, callback);
+        } catch (error) {
+            console.error(error);
+        }
+        
     }
 
-    async BridgeGetSignature(receipt: ethers.ContractReceipt): Promise<string | null> {
+    async BridgeGetSignature(nonce: string, sender: number): Promise<{ amount: string, signature: string } | null> {
         let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Bridge")!);
         if (!web3Artifact) {
             console.error("Unable to obtain signer / network / contract data.");
@@ -285,28 +292,32 @@ export default class AppController implements IController {
         }
         let [signer, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
         
-        let queryParameters = `?txHash=${receipt.transactionHash}&chainId=${network.id}`;
-        let endpoint = '';
+        let queryParameters = `?receiver=${await signer.getAddress()}&nonce=${nonce}&chainId=${sender}`;
+        let endpoint = 'https://jddcrywwa0.execute-api.us-east-1.amazonaws.com/demo';
         try {
-            let { signature } = await (await fetch(endpoint + queryParameters)).json();
-            return signature ? signature : null;
+            let { amount, signature } = await (await fetch(endpoint + queryParameters)).json();
+            return signature && amount ? { amount, signature } : null;
         } catch (error) {
             console.error(error);
             return null;
         }
     }
 
-    async BridgeCompleteTransfer(signature: string, sendingChain: string, amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<boolean> {
+    async BridgeCompleteTransfer(sendingChain: number, nonce: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void> {
         let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Bridge")!);
         if (!web3Artifact) {
             console.error("Unable to obtain signer / network / contract data.");
-            return false;
+            return;
         }
         let [signer, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
+        let result = await this.BridgeGetSignature(nonce, sendingChain);
+        if (!result) {
+            console.error("Unable to obtain signature from relay server.");
+            return;
+        }
 
-        await (contract as IBC_Bridge).dataReceive(await signer.getAddress(), sendingChain, amount, signature);
-        
-        return true;
+        let tx = await (contract as IBC_Bridge).dataReceive(await signer.getAddress(), sendingChain, result.amount, result.signature);
+        this.onTransactionStatusChange(tx, network.name, callback);
     }
 
     //--------------------- Reflect ----------------------
@@ -379,7 +390,7 @@ export default class AppController implements IController {
         }
         let [signer, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
 
-        return await (contract as CoinFlipper).getBalance().toString();
+        return await (await (contract as CoinFlipper).getBalance()).toString();
     }
 
     async FlipperFlipCoin(callback: (hash: string, tx: Web3Transaction) => void): Promise<void> {
@@ -469,7 +480,7 @@ export default class AppController implements IController {
     }
 
     //--------------------- NFT ---------------------- 
-    async NFTMint(message: string): Promise<boolean> {
+    async NFTMint(message: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<boolean> {
         let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Staker")!);
         if (!web3Artifact) {
             console.error("Unable to obtain signer / network / contract data.");
@@ -505,7 +516,20 @@ export default class AppController implements IController {
         return await (contract as NFTDemo).ownerOf(tokenId);
     }
 
-    async NFTTransfer(recipient: string, tokenId: string): Promise<boolean> {
+    async NFTGetMetadata(tokenId: string): Promise<{ url: string, message: string } | null> {
+        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Staker")!);
+        if (!web3Artifact) {
+            console.error("Unable to obtain signer / network / contract data.");
+            return null;
+        }
+        let [signer, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
+
+        let url = await (contract as NFTDemo).tokenURI(tokenId);
+        let message = await (contract as NFTDemo).getTokenBlueprint(tokenId);
+        return { url, message };
+    }
+
+    async NFTTransfer(recipient: string, tokenId: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<boolean> {
         let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Staker")!);
         if (!web3Artifact) {
             console.error("Unable to obtain signer / network / contract data.");
@@ -525,27 +549,25 @@ export default class AppController implements IController {
         }
         let [signer, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
 
-        let filterReceipt: ethers.EventFilter = contract.filters.Transfer(null, address || await signer.getAddress());
-        let filterSent: ethers.EventFilter = contract.filters.Transfer(address || await signer.getAddress());
-        let eventReceipt: ethers.Event[] = await contract.queryFilter(filterReceipt);
-        let eventSent: ethers.Event[] = await contract.queryFilter(filterSent);
+        let userAddress: string = address || await signer.getAddress();
+        let currentBlock: number | undefined = await signer.provider?.getBlockNumber();
+        if (!currentBlock) {
+            console.error("Failed to fetch block number.");
+            return null;
+        }
+        let filterReceipt: ethers.EventFilter = contract.filters.Transfer(null, userAddress);
+        let eventReceipt: ethers.Event[] = await contract.queryFilter(filterReceipt, currentBlock - 2000);
         let tokensOwned: Array<string> = [];
 
-        // Add all received tokens.
-        eventReceipt.forEach(receiptEvent => {
+        // Check all received tokens.
+        eventReceipt.forEach(async receiptEvent => {
             let id = receiptEvent.args?.[2];
-            if(id) { tokensOwned.push(receiptEvent.args?.[2]); }
-        });
-
-        // Remove all sent tokens.
-        eventSent.forEach(sentEvent => {
-            let id = sentEvent.args?.[2];
-            if (id) {
-                tokensOwned = tokensOwned.filter(token => token !== id);
+            console.log("Checkind id: %s", id.toString());
+            if (await this.NFTGetOwner(id.toString()) === userAddress) {
+                tokensOwned.push(id.toString());
             }
         });
-        
-        // Return filtered result
+
         return tokensOwned;
     }
 }

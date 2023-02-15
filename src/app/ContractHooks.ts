@@ -1,7 +1,8 @@
+import { ethers } from "ethers";
 import React from "react";
-import { Network, NetworkName, Web3Transaction } from "./Definitions";
+import { Contract, Network, NetworkName, Web3Transaction } from "./Definitions";
 import IController from "./IController";
-import { Networks } from "./Networks";
+import { Contracts, Networks } from "./Networks";
 
 export type AirdropData = Map<NetworkName, Array<{ to: string, amount: string }>>;
 type AirdropInterface = {
@@ -197,23 +198,21 @@ export const useFlipper = (account: string, network: NetworkName, controller: IC
 }
 
 type BridgeInterface = {
-    checkChainNonce(network: Network): Promise<boolean>;
     prepareSendTransaction(destNetwork: Network, amount: string): Promise<void>;
     completeSendTransaction(): Promise<void>;
 }
-export const useBridge = (account: string, network: NetworkName, controller: IController): [BridgeInterface, Map<string, Web3Transaction>] => {
+export const useBridge = (account: string, network: NetworkName, controller: IController): [Map<NetworkName, { source: number, nonce: string }>, BridgeInterface, Map<string, Web3Transaction>] => {
 
+    const [pendingNonces, setPendingNonces] = React.useState<Map<NetworkName, { source: number, nonce: string }>>(new Map<NetworkName, { source: number, nonce: string }>());
     const [transactions, setTransactions] = React.useState<Map<string, Web3Transaction>>(new Map<string, Web3Transaction>());
     
     const bridge: BridgeInterface = {
-        async checkChainNonce(destNetwork: Network): Promise<boolean> {
-            return await controller.BridgeCheckNonce(destNetwork) || false;
-        },
         async prepareSendTransaction(destNetwork: Network, amount: string): Promise<void> {
-            await controller.BridgeSendTx(destNetwork, amount, transactionWatcher) 
+            await controller.BridgeSendTx(destNetwork.id, amount, transactionWatcher) 
         },
         async completeSendTransaction(): Promise<void> {
-            await controller.FlipperFlipCoin(transactionWatcher)
+            let sender = pendingNonces.get(network)!;
+            await controller.BridgeCompleteTransfer(sender.source, sender.nonce, transactionWatcher);
         }
     }
 
@@ -225,31 +224,44 @@ export const useBridge = (account: string, network: NetworkName, controller: ICo
     }
 
     React.useEffect(() => {
-       // check pending transactions whenever account, network, or transactions change.
-        (async () => {
-           
-        })();
+        // check pending transactions whenever account, network, or transactions change.
+        // check every network for pending transactions
+        if (!pendingNonces.get(network)) {
+            Contracts.get("Bridge")!.instances.find(async instance => {
+                let chain = Networks.get(instance.network)!;
+                let pendingNonce = await controller.BridgeGetPending(chain.id, chain.name, chain.rpcUrl);
+                if (pendingNonce) {
+                    let newState = new Map(pendingNonces);
+                    setPendingNonces(newState.set(network, { source: chain.id, nonce: pendingNonce }));
+                    return true;
+                } else {
+                    console.log("No pending transactions found between %s and %s", network, instance.network);
+                }
+            });
+        }
     }, [account, network, transactions]);
 
-    return [bridge, transactions];
+    return [pendingNonces, bridge, transactions];
 }
 
 type NFTTokenInterface = {
-    mint(address: string): Promise<void>;
+    mint(message: string): Promise<void>;
     transfer(tokenId: string, recipient: string): Promise<void>;
     checkOwner(tokenId: string): Promise<string>;
 }
-export const useNFTToken = (account: string, network: NetworkName, controller: IController): [string, NFTTokenInterface, Map<string, Web3Transaction>] => {
+export const useNFTToken = (account: string, network: NetworkName, controller: IController): [string, Array<{id: string, url: string, message: string}>, NFTTokenInterface, Map<string, Web3Transaction>] => {
     const [userBalance, setUserBalance] = React.useState<string>("0");
+    const [userTokens, setUserTokens] = React.useState<Array<{id: string, url: string, message: string}>>([]);
     const [transactions, setTransactions] = React.useState<Map<string, Web3Transaction>>(new Map<string, Web3Transaction>);
     const NFTToken: NFTTokenInterface = {
-        async mint(address: string): Promise<void> {
+        async mint(message: string): Promise<void> {
+            await controller.NFTMint(message, transactionWatcher);
         },
-        transfer: function (tokenId: string, recipient: string): Promise<void> {
-            throw new Error("Function not implemented.");
+        async transfer(tokenId: string, recipient: string): Promise<void> {
+            await controller.NFTTransfer(recipient, tokenId, transactionWatcher);
         },
-        checkOwner: function (tokenId: string): Promise<string> {
-            throw new Error("Function not implemented.");
+        async checkOwner(tokenId: string): Promise<string> {
+            return await controller.NFTGetOwner(tokenId) || '';
         }
     }
 
@@ -261,10 +273,23 @@ export const useNFTToken = (account: string, network: NetworkName, controller: I
     }
 
     React.useEffect(() => {
+        // Check NFTs owned by user, fetch message and image.
+        (async () => {
+            let balance = await controller.NFTBalance(account);
+            if (balance) { setUserBalance(balance); }
+            let tokens: Array<string> | null = await controller.NFTFetchAll(account);
+            if (tokens) {
+                let metadata: Array<{ id: string, url: string, message: string }> = [];
+                tokens.forEach(async token => {
+                    let data = await controller.NFTGetMetadata(token);
+                    if (data) { metadata.push({ id: token, url: data.url, message: data.message }); }
+                });
+                setUserTokens(metadata);
+            }
+        })();
+    }, [account, network, transactions]);
 
-    }, [account, network, transactions])
-
-    return [userBalance, NFTToken, transactions];
+    return [userBalance, userTokens, NFTToken, transactions];
 }
 
 type ReflectInterface = {
@@ -278,12 +303,13 @@ export const useReflect = (account: string, network: NetworkName, controller: IC
     const [transactions, setTransactions] = React.useState<Map<string, Web3Transaction>>(new Map<string, Web3Transaction>);
     const reflect: ReflectInterface = {
         async purchase(amount: string): Promise<void> {
+            await controller.ReflectGetToken(amount, transactionWatcher);
         },
-        transfer: function (recipient: string, amount: string): Promise<void> {
-            throw new Error("Function not implemented.");
+        async transfer(recipient: string, amount: string): Promise<void> {
+            await controller.ReflectTransfer(recipient, amount, transactionWatcher);
         },
-        checkBalance: function (address: string): Promise<string> {
-            throw new Error("Function not implemented.");
+        async checkBalance(address: string): Promise<string> {
+            return await controller.ReflectBalance(address) || '';
         }
     }
 
@@ -315,13 +341,13 @@ export const useStaker = (account: string, network: NetworkName, controller: ICo
     const [transactions, setTransactions] = React.useState<Map<string, Web3Transaction>>(new Map<string, Web3Transaction>());
     const Staker: StakerInterface = {
         async stakeTokens(amount: string): Promise<void> {
-            await controller.StakeAddFunds(amount);
+            await controller.StakeAddFunds(amount, transactionWatcher);
         },
         async claimReward(): Promise<void> {
-            await controller.StakeClaimReward();
+            await controller.StakeClaimReward(transactionWatcher);
         },
         async withdrawStake(amount?: string): Promise<void> {
-            await controller.StakeWithdrawFunds(amount || userBalance);
+            await controller.StakeWithdrawFunds(amount || userBalance, transactionWatcher);
         }
     }
 

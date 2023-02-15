@@ -17,28 +17,30 @@ export default interface IController
     AirdropCheckClaim(address: string, data: { to: string; amount: string; }[]): number | null; // Returns amount claimable by address.
     AirdropHasClaimed(address: string): Promise<boolean | null>; 
 
-    BridgeCheckNonce(destination: Network): Promise<boolean | null>;
-    BridgeSendTx(destination: Network, amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<string | null>;
-    BridgeCompleteTransfer(signature: string, sendingChain: string, amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<boolean>;
+    BridgeGetPending(destination: number, name: string, rpc: string): Promise<string | null>;
+    BridgeSendTx(destination: number, amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void>;
+    BridgeCompleteTransfer(sendingChain: number, nonce: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void>;
 
     FlipperAddFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void>;
     FlipperCheckFunds(): Promise<string | null>;
     FlipperFlipCoin(callback: (hash: string, tx: Web3Transaction) => void): Promise<void>;
     FlipperWithdrawFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void>;
 
-    ReflectGetToken(amount: string): Promise<boolean>;
+    ReflectGetToken(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<boolean>;
     ReflectGetPrice(): Promise<string | null>;
     ReflectBalance(address?: string): Promise<string | null>;
-    ReflectTransfer(recipient: string, amount: string): Promise<boolean>;
+    ReflectTransfer(recipient: string, amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<boolean>;
 
-    StakeAddFunds(amount: string): Promise<boolean>;
-    StakeWithdrawFunds(amount: string): Promise<boolean>;
+    StakeAddFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<boolean>;
+    StakeWithdrawFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<boolean>;
     StakeCheckStake(): Promise<string | null>;
     StakeCheckReward(): Promise<string | null>;
-    StakeClaimReward(): Promise<boolean>;
+    StakeClaimReward(callback: (hash: string, tx: Web3Transaction) => void): Promise<boolean>;
 
-    NFTMint(message: string): Promise<boolean>;
+    NFTMint(message: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<boolean>;
     NFTBalance(address?: string): Promise<string | null>;
     NFTGetOwner(tokenId: string): Promise<string | null>;
-    NFTTransfer(recipient: string, tokenId: string): Promise<boolean>;
+    NFTGetMetadata(tokenId: string): Promise<{ url: string, message: string } | null>;
+    NFTFetchAll(address?: string): Promise<Array<string> | null>;
+    NFTTransfer(recipient: string, tokenId: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<boolean>;
 }
