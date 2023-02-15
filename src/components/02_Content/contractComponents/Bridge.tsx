@@ -11,13 +11,19 @@ type BridgeTx = {
     amount: string,
     network: Network
 }
-export default function Bridge(props: { setConnection: React.Dispatch<Action> })
-{
-    const [transferTx, setTransferTx] = React.useState<BridgeTx>({ amount: '0', network: Networks[0] });
+export default function Bridge(props: { setConnection: React.Dispatch<Action>, setInfoBanner: React.Dispatch<React.SetStateAction<string>> }) {
+    const [transferTx, setTransferTx] = React.useState<BridgeTx>({ amount: '0', network: Networks.get('Goerli')!});
     const controller: IController = React.useContext(ControllerContext);
     const connection: AppConnectionData = React.useContext(ConnectionContext);
-    const [bridge, transactions] = useBridge(connection.account, connection.network.name, controller);
+    const [pendingTx, bridge, transactions] = useBridge(connection.account, connection.network.name, controller);
     
+    function handleNetworkSelection(event) {
+        let dest: Network = Networks.get(event.target.value)!;
+        console.log(dest);
+        console.log(event.target.value);
+        setTransferTx(state => { return { ...state, network: dest } });
+    }
+
     React.useEffect(() => {
         props.setConnection({ type: "ADD_TRANSACTION", payload: transactions } );
     }, [transactions])
@@ -32,11 +38,14 @@ export default function Bridge(props: { setConnection: React.Dispatch<Action> })
                     </div>
                     
                     <div className='pb-[12px]'>
-                    {/* <Material.TextField fullWidth onChange={(e) => {
-                        if (e.target.value && validateAddress(e.target.value)) {
-                            setTransferTx(state => { return { ...state, recipient: e.target.value } });
-                        }
-                    }} label='address' /> */}
+                    {pendingTx.get(connection.network.name) ? 
+                        <Material.Button onClick={bridge.completeSendTransaction}>
+                            <Material.Typography>
+                                You have a pending transaction to complete.
+                            </Material.Typography>
+                        </Material.Button> :
+                        <Material.Typography></Material.Typography>
+                    }
                     </div>
                     <div className='pb-[12px]'>
                         <Material.TextField fullWidth onChange={(e) => {
@@ -44,13 +53,28 @@ export default function Bridge(props: { setConnection: React.Dispatch<Action> })
                             setTransferTx(state => { return { ...state, amount: e.target.value } });
                         }
                     }} label='amount' />
+                    <Material.Select
+                    labelId='Destination'
+                    value={transferTx.network.name}
+                    label={'Destination'}
+                    onChange={handleNetworkSelection}>
+                        <Material.MenuItem value='Goerli'>Goerli</Material.MenuItem>
+                        <Material.MenuItem value='BNB Chain Testnet'>BNB Smart Chain Testnet</Material.MenuItem>
+                        <Material.MenuItem value='Polygon Mumbai'>Polygon Mumbai</Material.MenuItem>
+                    </Material.Select>
                     </div>
                     <div className='pb-[12px]'>
                     </div>
 
                 <Material.Button
                     sx={{ width: '100%' }}
-                    onClick={() => bridge.prepareSendTransaction(transferTx.network, transferTx.amount)}
+                    onClick={() => {
+                        if (!transferTx) {
+                            console.error("Missing transaction details.");
+                            return;
+                        }
+                        bridge.prepareSendTransaction(transferTx.network, transferTx.amount)
+                    }}
                     variant='contained'
                     type='button'
                 >

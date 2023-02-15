@@ -5,7 +5,7 @@ import { ConnectionContext, ControllerContext } from '../../../state/AppContext'
 import { useFlipper, WinState } from '../../../app/ContractHooks';
 import { Action, AppConnectionData } from '../../../app/Definitions';
 
-export default function Flipper(props: {setConnection: React.Dispatch<Action> })
+export default function Flipper(props: {setConnection: React.Dispatch<Action>, setInfoBanner: React.Dispatch<React.SetStateAction<string>> })
 {
     const [newBet, setNewBet] = React.useState<string>("0");
     const controller: IController = React.useContext(ControllerContext);
@@ -29,7 +29,7 @@ export default function Flipper(props: {setConnection: React.Dispatch<Action> })
                     <Material.Typography sx={{ marginY: '12px' }}>Outcome: {winStateParse(winState)}</Material.Typography>
                     <Material.Typography sx={{width: '40%', marginY: '12px', fontWeight: 'bold'}}>Enter Betting Amount</Material.Typography>
                     <Material.TextField sx={{ marginY: '12px' }} value={newBet} type='number' onChange={(e) => {
-                        if (e.target.value && validateAmount(e.target.value)) {
+                        if (validateAmount(e.target.value)) {
                             setNewBet(e.target.value);
                         }
                     }} fullWidth label='Bet' />    
@@ -48,7 +48,7 @@ function validateAmount(test: string): boolean {
     if (test === undefined || test === "") return true;
     let num = parseInt(test);
     if (num !== num) return false;
-    return /[0-9]*/.test(test) && num> 0;
+    return /[0-9]*/.test(test) && num >= 0;
 }
 
 function winStateParse(status: WinState): string {

@@ -16,6 +16,7 @@ import Staker from '../02_Content/contractComponents/Staker';
 
 export default function PortfolioBoard(props: {setConnection: React.Dispatch<Action>})
 {
+    const [infoBanner, setInfoBanner] = React.useState<string>('');
     React.useEffect(() => {
         window.scrollTo(0, 0)
     }, []);
@@ -36,32 +37,36 @@ export default function PortfolioBoard(props: {setConnection: React.Dispatch<Act
             
             <Header id='top' items={headerItem} />
             <W3Header setConnection={props.setConnection} />
-            <InfoBanner />
+            <InfoBanner message={infoBanner} />
             <div className='flex px-[10%] mx-auto'>
-                <ContractInterface><DisplayContract contractName={connection.contract.name} setConnection={props.setConnection} /></ContractInterface>
+                <ContractInterface><DisplayContract
+                    contractName={connection.contract.name}
+                    setConnection={props.setConnection}
+                    setInfoBanner={setInfoBanner}
+                /></ContractInterface>
                 <EventTracker />
             </div>
         </div>
     )
 }
 
-function DisplayContract(props: { contractName: string, setConnection: React.Dispatch<Action> })
+function DisplayContract(props: { contractName: string, setConnection: React.Dispatch<Action>, setInfoBanner: React.Dispatch<React.SetStateAction<string>> })
     {
         switch (props.contractName)
         {
             case "Airdrop":
-                return <Airdrop recipientCount={4} setConnection={props.setConnection}  />
+                return <Airdrop recipientCount={4} setConnection={props.setConnection} setInfoBanner={props.setInfoBanner}  />
             case "Bridge":
-                return <Bridge setConnection={props.setConnection} />
+                return <Bridge setConnection={props.setConnection} setInfoBanner={props.setInfoBanner} />
             case "Flipper":
-                return <Flipper setConnection={props.setConnection} />
+                return <Flipper setConnection={props.setConnection} setInfoBanner={props.setInfoBanner} />
             case "NFT":
-                return <NFTToken setConnection={props.setConnection} />
+                return <NFTToken setConnection={props.setConnection} setInfoBanner={props.setInfoBanner} />
             case "Reflect":
-                return <Reflect setConnection={props.setConnection} />
+                return <Reflect setConnection={props.setConnection} setInfoBanner={props.setInfoBanner} />
             case "Staker":
-                return <Staker setConnection={props.setConnection} />
+                return <Staker setConnection={props.setConnection} setInfoBanner={props.setInfoBanner} />
             default:
-                return <Airdrop recipientCount={4} setConnection={props.setConnection} />
+                return <Airdrop recipientCount={4} setConnection={props.setConnection} setInfoBanner={props.setInfoBanner} />
         }
     }

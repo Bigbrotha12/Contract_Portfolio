@@ -7,18 +7,18 @@ import { Action, AppConnectionData } from '../../../app/Definitions';
 import { useAirdrop } from '../../../app/ContractHooks';
 
 const tokenLimit = 1_000;
-export default function Airdrop(props: { recipientCount: number, setConnection: React.Dispatch<Action> }) {
+export default function Airdrop(props: { recipientCount: number, setConnection: React.Dispatch<Action>, setInfoBanner: React.Dispatch<React.SetStateAction<string>> }) {
     const [checkAddress, setCheckAddress] = React.useState<string>('');
     const { register, handleSubmit, setError, formState: { errors } } = useForm();
     const controller: IController = React.useContext(ControllerContext);
     const connection: AppConnectionData = React.useContext(ConnectionContext);
     const [amount, claimed, airdrop, transactions] = useAirdrop(connection.account, connection.network.name, controller);
 
-    function handleAirdropData(data) {
+    async function handleAirdropData(data) {
         if (connection.account) {
-            airdrop.createAirdrop(parseAirdropData(data));
+            await airdrop.createAirdrop(parseAirdropData(data));
         } else {
-            console.error("Please unlock your Web3 account.");
+            props.setInfoBanner("Please unlock your Web3 account.");
         }
     }
 

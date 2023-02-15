@@ -5,7 +5,7 @@ import IController from '../../../app/IController';
 import { Action, AppConnectionData } from '../../../app/Definitions';
 import { useStaker } from '../../../app/ContractHooks';
 
-export default function Staker(props: {setConnection: React.Dispatch<Action> })
+export default function Staker(props: {setConnection: React.Dispatch<Action>, setInfoBanner: React.Dispatch<React.SetStateAction<string>> })
 {
     const [newStake, setNewStake] = React.useState<string>("0");
     const controller = React.useContext<IController>(ControllerContext);

@@ -11,7 +11,7 @@ type ReflectTx = {
     recipient: string,
     transferAmount: string
 }
-export default function Reflect(props: {setConnection: React.Dispatch<Action> })
+export default function Reflect(props: {setConnection: React.Dispatch<Action>, setInfoBanner: React.Dispatch<React.SetStateAction<string>> })
 {
     const [transactionDetails, setTransactionDetails] = React.useState<ReflectTx>({purchaseAmount: "0", recipient: "", transferAmount: "0"});
     const controller = React.useContext<IController>(ControllerContext);
