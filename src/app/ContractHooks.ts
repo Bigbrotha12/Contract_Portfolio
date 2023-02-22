@@ -285,19 +285,27 @@ type NFTTokenInterface = {
     transfer(tokenId: string, recipient: string): Promise<void>;
     checkOwner(tokenId: string): Promise<string>;
 }
-export const useNFTToken = (account: string, network: NetworkName, controller: IController): [string, Array<{id: string, url: string, message: string}>, NFTTokenInterface, Map<string, Web3Transaction>] => {
+export const useNFTToken = (account: string, network: NetworkName, controller: IController): [string, Array<{id: string, url: string, message: string}>, NFTTokenInterface, Map<string, Web3Transaction>, string] => {
     const [userBalance, setUserBalance] = React.useState<string>("0");
-    const [userTokens, setUserTokens] = React.useState<Array<{id: string, url: string, message: string}>>([]);
+    const [userTokens, setUserTokens] = React.useState<Array<{ id: string, url: string, message: string }>>([]);
+    const [error, setError] = React.useState<string>("");
     const [transactions, setTransactions] = React.useState<Map<string, Web3Transaction>>(new Map<string, Web3Transaction>);
     const NFTToken: NFTTokenInterface = {
         async mint(message: string): Promise<void> {
-            await controller.NFTMint(message, transactionWatcher);
+            let tx = await controller.NFTMint(message, transactionWatcher);
+            if (tx instanceof Error) { setError(tx.reason); }
         },
         async transfer(tokenId: string, recipient: string): Promise<void> {
-            await controller.NFTTransfer(recipient, tokenId, transactionWatcher);
+            let tx = await controller.NFTTransfer(recipient, tokenId, transactionWatcher);
+            if (tx instanceof Error) { setError(tx.reason); }
         },
         async checkOwner(tokenId: string): Promise<string> {
-            return await controller.NFTGetOwner(tokenId) || '';
+            let owner = await controller.NFTGetOwner(tokenId);
+            if (owner instanceof Error) {
+                setError(owner.reason);
+                return "";
+            }
+            return owner;
         }
     }
 
@@ -311,37 +319,51 @@ export const useNFTToken = (account: string, network: NetworkName, controller: I
     React.useEffect(() => {
         // Check NFTs owned by user, fetch message and image.
         (async () => {
-            let balance = await controller.NFTBalance(account);
-            if (balance) { setUserBalance(balance); }
-            let tokens: Array<string> | null = await controller.NFTFetchAll(account);
-            if (tokens) {
-                let metadata: Array<{ id: string, url: string, message: string }> = [];
-                tokens.forEach(async token => {
-                    let data = await controller.NFTGetMetadata(token);
-                    if (data) { metadata.push({ id: token, url: data.url, message: data.message }); }
-                });
-                setUserTokens(metadata);
+            let balance: string | Error = await controller.NFTBalance(account);
+            if (balance instanceof Error) {
+                setError(balance.reason);
+                return;
             }
+            setUserBalance(balance);
+            let tokens: Array<string> | Error = await controller.NFTFetchAll(account);
+            if (tokens instanceof Error) {
+                setError(tokens.reason);
+                return;
+            } 
+            
+            let metadata: Array<{ id: string, url: string, message: string }> = [];
+            tokens.forEach(async token => {
+                let data = await controller.NFTGetMetadata(token);
+                if (data instanceof Error) {
+                    setError(data.reason);
+                    return;
+                 }
+                metadata.push({ id: token, url: data.url, message: data.message });
+            });
+            setUserTokens(metadata);
         })();
     }, [account, network, transactions]);
 
-    return [userBalance, userTokens, NFTToken, transactions];
+    return [userBalance, userTokens, NFTToken, transactions, error];
 }
 
 type ReflectInterface = {
     purchase(amount: string): Promise<void>;
     transfer(recipient: string, amount: string): Promise<void>;
 }
-export const useReflect = (account: string, network: NetworkName, controller: IController): [string, string, ReflectInterface, Map<string, Web3Transaction>] => {
+export const useReflect = (account: string, network: NetworkName, controller: IController): [string, string, ReflectInterface, Map<string, Web3Transaction>, string] => {
     const [userBalance, setUserBalance] = React.useState<string>("0");
     const [price, setPrice] = React.useState<string>("0");
+    const [error, setError] = React.useState<string>("");
     const [transactions, setTransactions] = React.useState<Map<string, Web3Transaction>>(new Map<string, Web3Transaction>);
     const reflect: ReflectInterface = {
         async purchase(amount: string): Promise<void> {
-            await controller.ReflectGetToken(amount, transactionWatcher);
+            let tx = await controller.ReflectGetToken(amount, transactionWatcher);
+            if (tx instanceof Error) { setError(tx.reason); }
         },
         async transfer(recipient: string, amount: string): Promise<void> {
-            await controller.ReflectTransfer(recipient, amount, transactionWatcher);
+            let tx = await controller.ReflectTransfer(recipient, amount, transactionWatcher);
+            if (tx instanceof Error) { setError(tx.reason); }
         }
     }
 
@@ -356,12 +378,21 @@ export const useReflect = (account: string, network: NetworkName, controller: IC
         (async () => {
             let balance = await controller.ReflectBalance(account);
             let price = await controller.ReflectGetPrice();
-            if(balance) setUserBalance(formatAmount(balance, 2));
-            if(price) setPrice(formatAmount(price, 2));
+            if (balance instanceof Error) {
+                setError(balance.reason);
+                return;
+            }
+            if (price instanceof Error) {
+                setError(price.reason);
+                return;
+            }
+            
+            setUserBalance(formatAmount(balance, 2));
+            setPrice(formatAmount(price, 2));
         })();
     }, [account, network, transactions]);
 
-    return [userBalance, price, reflect, transactions];
+    return [userBalance, price, reflect, transactions, error];
 }
 
 type StakerInterface = {
@@ -369,19 +400,23 @@ type StakerInterface = {
     claimReward(): Promise<void>;
     withdrawStake(amount?: string): Promise<void>;
 }
-export const useStaker = (account: string, network: NetworkName, controller: IController): [string, string, StakerInterface, Map<string, Web3Transaction>] => {
+export const useStaker = (account: string, network: NetworkName, controller: IController): [string, string, StakerInterface, Map<string, Web3Transaction>, string] => {
     const [userBalance, setUserBalance] = React.useState<string>("0");
     const [rewardBalance, setRewardBalance] = React.useState<string>("0");
+    const [error, setError] = React.useState<string>("");
     const [transactions, setTransactions] = React.useState<Map<string, Web3Transaction>>(new Map<string, Web3Transaction>());
     const Staker: StakerInterface = {
         async stakeTokens(amount: string): Promise<void> {
-            await controller.StakeAddFunds(amount, transactionWatcher);
+            let tx = await controller.StakeAddFunds(amount, transactionWatcher);
+            if (tx instanceof Error) { setError(tx.reason); }
         },
         async claimReward(): Promise<void> {
-            await controller.StakeClaimReward(transactionWatcher);
+            let tx = await controller.StakeClaimReward(transactionWatcher);
+            if (tx instanceof Error) { setError(tx.reason); }
         },
         async withdrawStake(amount?: string): Promise<void> {
-            await controller.StakeWithdrawFunds(amount || userBalance, transactionWatcher);
+            let tx = await controller.StakeWithdrawFunds(amount || userBalance, transactionWatcher);
+            if (tx instanceof Error) { setError(tx.reason); }
         }
     }
 
@@ -396,12 +431,21 @@ export const useStaker = (account: string, network: NetworkName, controller: ICo
         (async () => {
             let uBalance = await controller.StakeCheckStake();
             let rBalance = await controller.StakeCheckReward();
-            if(uBalance) setUserBalance(formatAmount(uBalance, 2));
-            if(rBalance) setRewardBalance(formatAmount(rBalance, 2));
+            if (uBalance instanceof Error) {
+                setError(uBalance.reason);
+                return;
+            }
+            if (rBalance instanceof Error) {
+                setError(rBalance.reason);
+                return;
+            }
+            
+            setUserBalance(formatAmount(uBalance, 2));
+            setRewardBalance(formatAmount(rBalance, 2));
         })();
     }, [account, network, transactions]);
 
-    return [userBalance, rewardBalance, Staker, transactions];
+    return [userBalance, rewardBalance, Staker, transactions, error];
 }
 
 function formatAmount(amount: string, decimals: number): string
