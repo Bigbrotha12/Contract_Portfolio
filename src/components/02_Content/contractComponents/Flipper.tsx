@@ -10,7 +10,7 @@ export default function Flipper(props: {setConnection: React.Dispatch<Action>, s
     const [newBet, setNewBet] = React.useState<string>("0");
     const controller: IController = React.useContext(ControllerContext);
     const connection: AppConnectionData = React.useContext(ConnectionContext);
-    const [balance, winState, flipper, transactions] = useFlipper(connection.account, connection.network.name, controller);
+    const [balance, winState, flipper, transactions, error] = useFlipper(connection.account, connection.network.name, controller);
     
     React.useEffect(() => {
         props.setConnection({ type: "ADD_TRANSACTION", payload: transactions });

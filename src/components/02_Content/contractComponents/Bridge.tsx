@@ -15,7 +15,7 @@ export default function Bridge(props: { setConnection: React.Dispatch<Action>, s
     const [transferTx, setTransferTx] = React.useState<BridgeTx>({ amount: '0', network: Networks.get('Goerli')!});
     const controller: IController = React.useContext(ControllerContext);
     const connection: AppConnectionData = React.useContext(ConnectionContext);
-    const [pendingTx, bridge, transactions] = useBridge(connection.account, connection.network.name, controller);
+    const [pendingTx, bridge, transactions, error] = useBridge(connection.account, connection.network.name, controller);
     
     function handleNetworkSelection(event) {
         let dest: Network = Networks.get(event.target.value)!;

@@ -12,7 +12,7 @@ export default function Airdrop(props: { recipientCount: number, setConnection: 
     const { register, handleSubmit, setError, formState: { errors } } = useForm();
     const controller: IController = React.useContext(ControllerContext);
     const connection: AppConnectionData = React.useContext(ConnectionContext);
-    const [amount, claimed, airdrop, transactions] = useAirdrop(connection.account, connection.network.name, controller);
+    const [amount, claimed, airdrop, transactions, error] = useAirdrop(connection.account, connection.network.name, controller);
 
     async function handleAirdropData(data) {
         if (connection.account) {

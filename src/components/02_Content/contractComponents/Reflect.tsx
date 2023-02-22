@@ -14,13 +14,13 @@ type ReflectTx = {
 export default function Reflect(props: {setConnection: React.Dispatch<Action>, setInfoBanner: React.Dispatch<React.SetStateAction<string>> })
 {
     const [transactionDetails, setTransactionDetails] = React.useState<ReflectTx>({purchaseAmount: "0", recipient: "", transferAmount: "0"});
-    const controller = React.useContext<IController>(ControllerContext);
-    const connection = React.useContext<AppConnectionData>(ConnectionContext);    
-    const [userBalance, price, reflect, transactions] = useReflect(connection.account, connection.network.name, controller);
+    const controller: IController = React.useContext(ControllerContext);
+    const connection: AppConnectionData = React.useContext(ConnectionContext);    
+    const [userBalance, price, reflect, transactions, error] = useReflect(connection.account, connection.network.name, controller);
     
     React.useEffect(() => {
         props.setConnection({ type: "ADD_TRANSACTION", payload: transactions });
-    }, [transactions])
+    }, [transactions]);
 
     return (
         <Material.Card sx={{margin: "12px"}}>

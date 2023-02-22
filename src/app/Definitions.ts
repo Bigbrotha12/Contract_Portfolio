@@ -34,7 +34,10 @@ export type Action = {
         } | {
         type: "ADD_TRANSACTION",
         payload: Map<string, Web3Transaction>
-        }
+        } | { 
+        type: "DISCONNECT_ACCOUNT",
+        payload: null | undefined
+}
 
 export type Web3Transaction = {
         network: NetworkName,

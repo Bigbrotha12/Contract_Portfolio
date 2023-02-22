@@ -7,6 +7,7 @@ import Flipper from '../../contracts/artifacts/contracts/G_Oracle_Contract/CoinF
 import Reflect from '../../contracts/artifacts/contracts/D_Reflect_Token/ReflectToken.sol/ReflectToken.json';
 import Staker from '../../contracts/artifacts/contracts/E_Staker/Staker.sol/Staker.json';
 import NFT from '../../contracts/artifacts/contracts/F_Upgradable_NFT/NFTDemo.sol/NFTDemo.json';
+import NFTLogic from '../../contracts/artifacts/contracts/F_Upgradable_NFT/FamiliarLogic.sol/FamiliarLogic.json';
 
 //Icons
 import SolidityIcon from '../assets/icons/solidity.png';
@@ -149,7 +150,7 @@ export const Contracts: Map<ContractName, Contract> = new Map<ContractName, Cont
                 address: "0x609E32A30D6F758a2D3513E85B8C6aA5A791Dffb"
             }
         ],
-        abi: NFT.abi
+        abi: NFTLogic.abi
     }]
 ]);
 

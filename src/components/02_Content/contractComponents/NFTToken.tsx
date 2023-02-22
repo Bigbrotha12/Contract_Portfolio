@@ -14,7 +14,7 @@ export default function NFTToken(props: {setConnection: React.Dispatch<Action>, 
     const [transfer, setTransfer] = React.useState<TransferTx>({recipient: '', tokenId: '0'});
     const controller = React.useContext<IController>(ControllerContext);
     const connection = React.useContext<AppConnectionData>(ConnectionContext);
-    const [balance, tokens, nftToken, transactions] = useNFTToken(connection.account, connection.network.name, controller);
+    const [balance, tokens, nftToken, transactions, error] = useNFTToken(connection.account, connection.network.name, controller);
 
     React.useEffect(() => {
         props.setConnection({ type: "ADD_TRANSACTION", payload: transactions });

@@ -31,6 +31,8 @@ export default function App()
                 return { ...state, contract: action.payload }
             case "ADD_TRANSACTION":
                 return { ...state, transactions: action.payload }
+            case "DISCONNECT_ACCOUNT":
+                return { ...state, account: '' }
         }
     }
 

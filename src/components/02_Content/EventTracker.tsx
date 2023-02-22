@@ -15,7 +15,6 @@ export default function EventTracker()
                 <Material.CardContent>
                 {
                     Array.from(connection.transactions.entries()).map((tx) => {
-                        console.log(tx);
                         return (
                             connection.network.name === tx[1].network && <EventItem key={tx[0]} status={tx[1].status} hash={tx[0]} />
                         )

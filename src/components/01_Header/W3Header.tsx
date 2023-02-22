@@ -20,7 +20,7 @@ export default function W3Header(props: {setConnection: React.Dispatch<Action>})
             <APIStatus connected={connection.account !== ''} />
             <ContractSelector title='Contract' setConnection={props.setConnection} />
             <div className='m-auto' />
-            <TestBalance />
+            <TestBalance setConnection={props.setConnection} />
             <NetworkSelector title='Network' setConnection={props.setConnection} />
             {
                 connection.account !== '' ? <Account setConnection={props.setConnection} /> : <Connector setConnection={props.setConnection} />

@@ -17,7 +17,9 @@ export default function EventItem(props: {status: TransactionStatus, hash: strin
                 </Material.CardContent>
 
                 <Material.CardActions>
-                    <a href={connection.network.explorer + '/tx/' + props.hash}>View in Explorer</a>
+                    <Material.Button onClick={() => {
+                        window.open(connection.network.explorer + '/tx/' + props.hash, "_blank")?.focus();
+                    }}>View in Explorer</Material.Button>
                 </Material.CardActions>
             </Material.Card>
         </div>

@@ -11,7 +11,7 @@ export default function Staker(props: {setConnection: React.Dispatch<Action>, se
     const controller = React.useContext<IController>(ControllerContext);
     const connection = React.useContext<AppConnectionData>(ConnectionContext);
 
-    const [userBalance, rewardBalance, staker, transactions] = useStaker(connection.account, connection.network.name, controller);
+    const [userBalance, rewardBalance, staker, transactions, error] = useStaker(connection.account, connection.network.name, controller);
     
     React.useEffect(() => {
         props.setConnection({ type: "ADD_TRANSACTION", payload: transactions });
@@ -42,7 +42,7 @@ export default function Staker(props: {setConnection: React.Dispatch<Action>, se
                     <div className='flex justify-center'>
                         <Material.Button sx={{ marginX: '12px' }} onClick={() => staker.stakeTokens(newStake)} fullWidth variant='contained'>Stake Tokens</Material.Button>
                         <Material.Button sx={{ marginX: '12px' }} onClick={() => staker.claimReward()} fullWidth variant='contained'>Claim Rewards</Material.Button>
-                        <Material.Button sx={{ marginX: '12px' }} onClick={() => staker.withdrawStake()} fullWidth variant='contained'>Withdraw Stake</Material.Button>
+                        <Material.Button sx={{ marginX: '12px' }} onClick={() => staker.withdrawStake(newStake)} fullWidth variant='contained'>Withdraw Stake</Material.Button>
                     </div> 
                 </div>
                 </Material.CardContent>
