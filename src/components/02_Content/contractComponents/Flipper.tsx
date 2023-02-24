@@ -5,7 +5,7 @@ import { ConnectionContext, ControllerContext } from '../../../state/AppContext'
 import { useFlipper, WinState } from '../../../app/ContractHooks';
 import { Action, AppConnectionData } from '../../../app/Definitions';
 
-export default function Flipper(props: {setConnection: React.Dispatch<Action>, setInfoBanner: React.Dispatch<React.SetStateAction<string>> })
+export default function Flipper(props: {setConnection: React.Dispatch<Action>, setInfoBanner: React.Dispatch<React.SetStateAction<{message: string, warning: string}>> })
 {
     const [newBet, setNewBet] = React.useState<string>("0");
     const controller: IController = React.useContext(ControllerContext);
@@ -14,7 +14,11 @@ export default function Flipper(props: {setConnection: React.Dispatch<Action>, s
     
     React.useEffect(() => {
         props.setConnection({ type: "ADD_TRANSACTION", payload: transactions });
-    }, [transactions])
+    }, [transactions]);
+
+    React.useEffect(() => {
+        props.setInfoBanner(state => { return { ...state, warning: error } });
+    }, [error]);
 
     return (
         <Material.Card sx={{margin: "12px"}}>

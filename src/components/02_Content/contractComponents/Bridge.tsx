@@ -11,8 +11,8 @@ type BridgeTx = {
     amount: string,
     network: Network
 }
-export default function Bridge(props: { setConnection: React.Dispatch<Action>, setInfoBanner: React.Dispatch<React.SetStateAction<string>> }) {
-    const [transferTx, setTransferTx] = React.useState<BridgeTx>({ amount: '0', network: Networks.get('Goerli')!});
+export default function Bridge(props: { setConnection: React.Dispatch<Action>, setInfoBanner: React.Dispatch<React.SetStateAction<{ message: string, warning: string }>> }) {
+    const [transferTx, setTransferTx] = React.useState<BridgeTx>({ amount: '0', network: Networks.get('Goerli')! });
     const controller: IController = React.useContext(ControllerContext);
     const connection: AppConnectionData = React.useContext(ConnectionContext);
     const [pendingTx, bridge, transactions, error] = useBridge(connection.account, connection.network.name, controller);
@@ -25,8 +25,12 @@ export default function Bridge(props: { setConnection: React.Dispatch<Action>, s
     }
 
     React.useEffect(() => {
-        props.setConnection({ type: "ADD_TRANSACTION", payload: transactions } );
-    }, [transactions])
+        props.setConnection({ type: "ADD_TRANSACTION", payload: transactions });
+    }, [transactions]);
+
+    React.useEffect(() => {
+        props.setInfoBanner(state => { return { ...state, warning: error }});
+    }, [error]);
 
     return (
         <Material.Card sx={{margin: "12px"}}>

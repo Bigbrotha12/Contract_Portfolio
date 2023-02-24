@@ -7,7 +7,7 @@ import { Action, AppConnectionData } from '../../../app/Definitions';
 import { useAirdrop } from '../../../app/ContractHooks';
 
 const tokenLimit = 1_000;
-export default function Airdrop(props: { recipientCount: number, setConnection: React.Dispatch<Action>, setInfoBanner: React.Dispatch<React.SetStateAction<string>> }) {
+export default function Airdrop(props: { recipientCount: number, setConnection: React.Dispatch<Action>, setInfoBanner: React.Dispatch<React.SetStateAction<{message: string, warning: string}>> }) {
     const [checkAddress, setCheckAddress] = React.useState<string>('');
     const { register, handleSubmit, setError, formState: { errors } } = useForm();
     const controller: IController = React.useContext(ControllerContext);
@@ -18,13 +18,17 @@ export default function Airdrop(props: { recipientCount: number, setConnection: 
         if (connection.account) {
             await airdrop.createAirdrop(parseAirdropData(data));
         } else {
-            props.setInfoBanner("Please unlock your Web3 account.");
+            props.setInfoBanner(state => { return { ...state, warning: "Please unlock your Web3 account." } });
         }
     }
 
     React.useEffect(() => {
-        props.setConnection({ type: "ADD_TRANSACTION", payload: transactions } );
-    }, [transactions])
+        props.setConnection({ type: "ADD_TRANSACTION", payload: transactions });
+    }, [transactions]);
+
+    React.useEffect(() => {
+        props.setInfoBanner(state => { return { ...state, warning: error } });
+    }, [error]);
 
     return (
         <Material.Card sx={{margin: "12px"}}>

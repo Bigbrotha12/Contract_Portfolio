@@ -1,4 +1,4 @@
-export class Error {
+export type Error = {
     code: number;
     reason: string;
     stack?: unknown;

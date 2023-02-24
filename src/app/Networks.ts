@@ -151,6 +151,11 @@ export const Contracts: Map<ContractName, Contract> = new Map<ContractName, Cont
             }
         ],
         abi: NFTLogic.abi
+    }],
+    ["Empty", {
+        name: "Empty",
+        instances:[],
+        abi: Staker.abi
     }]
 ]);
 
@@ -222,7 +227,7 @@ export const Networks: Map<NetworkName, Network> = new Map<NetworkName, Network>
 
 export const defaultConnection: AppConnectionData = {
     account: '',
-    contract: Contracts.get("Airdrop")!,
+    contract: Contracts.get("Empty")!,
     network: Networks.get("Not Connected")!,
     transactions: new Map<string, Web3Transaction>()
 }

@@ -35,31 +35,31 @@ export default class AppController implements IController {
      * Function specified by EIP-1102 for requesting user accounts.
      * @returns array of a single blockchain account from user or error message.
      */
-    async RequestConnection(): Promise<string | Error> {
+    async RequestConnection(): Promise<[Error | null, string | null]> {
         
         let web3Provider = new ethers.providers.Web3Provider(window.ethereum as any);
         if (web3Provider) {
             try {
                 await web3Provider.send('eth_requestAccounts', []);
                 let address = await web3Provider.getSigner()?.getAddress();
-                return address;
+                return [null, address];
             } catch (error) {
                 if (error.code === 4001) {
-                    return { code: 10, reason: "Request rejected by user.", stack: error };
+                    return [{ code: 10, reason: "Request rejected by user.", stack: error }, null];
                 }
                 else {
-                    return { code: 11, reason: "JSON-RPC error.", stack: error };
+                    return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
                 }
             }
         }
-        return { code: 1, reason: "Web3 provider not available."};
+        return [{ code: 1, reason: "Web3 provider not available."}, null];
     }
 
     /**
      * Queries connected RPC provider for the current network.
      * @returns the currently connected blockchain network or error.
      */
-    async GetNetwork(): Promise<Network | Error> {
+    async GetNetwork(): Promise<[Error | null, Network | null]> {
         let web3Provider = new ethers.providers.Web3Provider(window.ethereum as any);
         if (web3Provider) {
             try {
@@ -71,12 +71,12 @@ export default class AppController implements IController {
                         network = value;
                     }
                 });
-                return network ? network : { code: 2, reason: "Unknown network."};
+                return network ? [null, network] : [{ code: 2, reason: "Unknown network."}, null];
             } catch (error) {
-                return { code: 11, reason: "JSON-RPC error."};
+                return [{ code: 11, reason: "JSON-RPC error."}, null];
             }
         }
-        return { code: 1, reason: "Web3 provider not available."};
+        return [{ code: 1, reason: "Web3 provider not available."}, null];
     }
 
     /**
@@ -85,7 +85,7 @@ export default class AppController implements IController {
      * @param network blockchain network to be switched to.
      * @returns error if the user rejects request or network switch failed.
      */
-    async ChangeNetwork(network: Network): Promise<void | Error> {
+    async ChangeNetwork(network: Network): Promise<[Error | null]> {
         let web3Provider = new ethers.providers.Web3Provider(window.ethereum as any);
         if (web3Provider) {
             try {
@@ -114,12 +114,13 @@ export default class AppController implements IController {
                         );
                     } catch (addingError) {
                         // handle "add" error
-                        if (addingError.code === 4001) return { code: 10, reason: "Request rejected by user." };
-                        return { code: 11, reason: "JSON-RPC error." };
+                        if (addingError.code === 4001) return [{ code: 10, reason: "Request rejected by user." }];
+                        return [{ code: 11, reason: "JSON-RPC error." }];
                     }
                 }
             }
         }
+        return [null];
     }
 
     /**
@@ -133,11 +134,11 @@ export default class AppController implements IController {
         transaction: ContractTransaction,
         network: NetworkName,
         callback: (hash: string, tx: Web3Transaction) => void
-    ): Promise<void | Error> {
+    ): Promise<[Error | null]> {
 
         // Set up provider connection
         let provider = new ethers.providers.Web3Provider(window.ethereum as any);
-        if (!provider) { return { code: 1, reason: "Web3 provider not available." }; }
+        if (!provider) { return [{ code: 1, reason: "Web3 provider not available." }]; }
 
         if (transaction.confirmations > 0) {
             // transaction has been mined.
@@ -148,6 +149,7 @@ export default class AppController implements IController {
             await transaction.wait();
             callback(transaction.hash, { network: network, status: TransactionStatus.CONFIRMED });
         }
+        return [null];
     }
 
     /**
@@ -155,21 +157,21 @@ export default class AppController implements IController {
      * @param contract smart contract API to be instantiated.
      * @returns Signer account, network information, and contract instance. Error in case any of these are missing.
      */
-    async getWeb3Artifacts(contract: Contract): Promise<[ethers.Signer, Network, ethers.Contract] | Error> {
+    async getWeb3Artifacts(contract: Contract): Promise<[Error | null, [ethers.Signer, Network, ethers.Contract] | null]> {
         let web3Provider = new ethers.providers.Web3Provider(window.ethereum as any);
-        if (!web3Provider) { return { code: 1, reason: "Web3 provider not available." }; }
+        if (!web3Provider) { return [{ code: 1, reason: "Web3 provider not available." }, null]; }
 
         let signer = web3Provider.getSigner();
-        if (!signer) { return { code: 11, reason: "JSON-RPC error." }; }
+        if (!signer) { return [{ code: 11, reason: "JSON-RPC error." }, null]; }
 
-        let network: Network | Error = await this.GetNetwork();
-        if (network instanceof Error) { return network; }
+        let [networkError, network] = await this.GetNetwork();
+        if (network === null) { return [networkError, network]; }
 
         let contractData = contract.instances.find(instance => (network as Network).name === instance.network);
-        if (!contractData) { return { code: 3, reason: "Contract does not exist on this network." } }
+        if (!contractData) { return [{ code: 3, reason: "Contract does not exist on this network." }, null] }
         
         let instance = new ethers.Contract(contractData.address, contract.abi, signer);
-        return [signer, network, instance];
+        return [null, [signer, network, instance]];
     }
 
     //================================================================================================================
@@ -180,18 +182,19 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of RPC-JSON network issues.
      */
-    async GetTestTokens(callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Token")!);
-        if (web3Artifact instanceof Error) { return web3Artifact }
+    async GetTestTokens(callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Token")!);
+        if (web3Artifact === null) { return [web3Error]; }
         
         let [, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
 
         try {
             let tx = await (contract as DemoToken).faucet();
             this.onTransactionStatusChange(tx, network.name, callback);
+            return [null];
         } catch (error) {
-            if (error.code === 4001) return { code: 10, reason: "Request rejected by user." };
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            if (error.code === 4001) return [{ code: 10, reason: "Request rejected by user." }];
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -200,17 +203,17 @@ export default class AppController implements IController {
      * @param address [option] address to be queried. Defaults to user's connected account.
      * @returns token balance.
      */
-    async GetTestTokenBalance(address?: string): Promise<string | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Token")!);
-        if (web3Artifact instanceof Error) { return web3Artifact }
+    async GetTestTokenBalance(address?: string): Promise<[Error | null, string | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Token")!);
+        if (web3Artifact === null) { return [web3Error, null]; }
 
         let [signer, , contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
 
         try {
             let rawBalance = await (contract as DemoToken).balanceOf(address || await signer.getAddress());
-            return ethers.utils.formatEther(rawBalance);
+            return [null, ethers.utils.formatEther(rawBalance)];
         } catch (error) {
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
         }
     }
 
@@ -223,9 +226,9 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of RPC-JSON network issues.
      */
-    async AirdropNewRecipients(recipients: { to: string, amount: string }[], callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Airdrop")!);
-        if (web3Artifact instanceof Error) { return web3Artifact }
+    async AirdropNewRecipients(recipients: { to: string, amount: string }[], callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Airdrop")!);
+        if (web3Artifact === null) { return [web3Error]; }
 
         let [, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
         let parsedRecipients: Array<{ to: string, amount: string }> = recipients.map(entry => {
@@ -238,9 +241,10 @@ export default class AppController implements IController {
         try {
             let tx = await (contract as AirdropDemo).createAirdrop(root);
             this.onTransactionStatusChange(tx, network.name, callback);
+            return [null];
         } catch (error) {
-            if (error.code === 4001) return { code: 10, reason: "Request rejected by user." };
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            if (error.code === 4001) return [{ code: 10, reason: "Request rejected by user." }];
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -253,9 +257,9 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of RPC-JSON network issues.
      */
-    async AirdropClaim(creator: string, address: string, amount: string, data: { to: string; amount: string; }[], callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Airdrop")!);
-        if (web3Artifact instanceof Error) { return web3Artifact }
+    async AirdropClaim(creator: string, address: string, amount: string, data: { to: string; amount: string; }[], callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Airdrop")!);
+        if (web3Artifact === null) { return [web3Error]; }
 
         let [, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
         let parsedAmount = ethers.utils.parseEther(amount).toString();
@@ -266,15 +270,16 @@ export default class AppController implements IController {
             }
         });
         let index = parsedData.findIndex(entry => entry.to === address && entry.amount === amount);
-        if (index === -1) { return { code: 12, reason: "Provided entry not found in recipient list." }}
+        if (index === -1) { return [{ code: 12, reason: "Provided entry not found in recipient list." }]; }
         let proof = Merkle.calculateProof(Merkle.getLeafAtIndex(index, parsedData), Merkle.createLeaves(parsedData));
         
         try {
             let tx = await (contract as AirdropDemo).claim(creator, address, parsedAmount, proof);
             this.onTransactionStatusChange(tx, network.name, callback);
+            return [null];
         } catch (error) {
-            if (error.code === 4001) return { code: 10, reason: "Request rejected by user." };
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }]; }
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -283,16 +288,16 @@ export default class AppController implements IController {
      * @param address address to be queried.
      * @returns whether the given account has claimed airdrop or error in case of JSON-RPC issues.
      */
-    async AirdropHasClaimed(address: string): Promise<boolean | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Airdrop")!);
-        if (web3Artifact instanceof Error) { return web3Artifact }
+    async AirdropHasClaimed(address: string): Promise<[Error | null, boolean | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Airdrop")!);
+        if (web3Artifact === null) { return [web3Error, null]; }
 
         let [signer, , contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
         
         try {
-            return await (contract as AirdropDemo).hasClaimed(await signer.getAddress(), address);
+            return [null, await (contract as AirdropDemo).hasClaimed(await signer.getAddress(), address)];
         } catch (error) {
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
         }
     }
 
@@ -306,9 +311,9 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error if user rejects transaction or JSON-RPC issues.
      */
-    async BridgeSendTx(destination: number, amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Bridge")!);
-        if (web3Artifact instanceof Error) { return web3Artifact }
+    async BridgeSendTx(destination: number, amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Bridge")!);
+        if (web3Artifact === null) { return [web3Error]; }
 
         let [signer, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
         let parsedAmount = ethers.utils.parseEther(amount);
@@ -316,9 +321,10 @@ export default class AppController implements IController {
         try {
             let tx = await (contract as IBC_Bridge).dataSend(await signer.getAddress(), parsedAmount, destination);
             this.onTransactionStatusChange(tx, network.name, callback);
+            return [null];
         } catch (error) {
-            if (error.code === 4001) return { code: 10, reason: "Request rejected by user." };
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }]; }
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -329,20 +335,21 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of JSON-RPC issues.
      */
-    async BridgeCompleteTransfer(sendingChain: number, nonce: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Bridge")!);
-        if (web3Artifact instanceof Error) { return web3Artifact }
+    async BridgeCompleteTransfer(sendingChain: number, nonce: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Bridge")!);
+        if (web3Artifact === null) { return [web3Error]; }
 
         let [signer, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
-        let result = await this.BridgeGetSignature(nonce, sendingChain);
-        if (result instanceof Error) { return result; }
+        let [signError, result] = await this.BridgeGetSignature(nonce, sendingChain);
+        if (result === null) { return [signError]; }
 
         try {
             let tx = await (contract as IBC_Bridge).dataReceive(await signer.getAddress(), sendingChain, result.amount, result.signature);
             this.onTransactionStatusChange(tx, network.name, callback);
+            return [null];
         } catch (error) {
-            if (error.code === 4001) return { code: 10, reason: "Request rejected by user." };
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }]; }
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -352,9 +359,9 @@ export default class AppController implements IController {
      * @param sender chain ID of source blockchain network.
      * @returns object specifying transfer amount and verification signature, or error in case of invalid transaction or network issues.
      */
-    async BridgeGetSignature(nonce: string, sender: number): Promise<{ amount: string, signature: string } | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Bridge")!);
-        if (web3Artifact instanceof Error) { return web3Artifact }
+    async BridgeGetSignature(nonce: string, sender: number): Promise<[Error | null, { amount: string, signature: string } | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Bridge")!);
+        if (web3Artifact === null) { return [web3Error, null]; }
 
         let [signer, ,]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
         
@@ -363,9 +370,9 @@ export default class AppController implements IController {
         
         try {
             let { amount, signature } = await (await fetch(endpoint + queryParameters)).json();
-            return signature && amount ? { amount, signature } : { code: 20, reason: "Could not obtain signature from relay server."};
+            return signature && amount ? [null, { amount, signature }] : [{ code: 20, reason: "Could not obtain signature from relay server."}, null];
         } catch (error) {
-            return { code: 12, reason: "Network error.", stack: error };
+            return [{ code: 12, reason: "Network error.", stack: error }, null];
         }
     }
 
@@ -375,15 +382,15 @@ export default class AppController implements IController {
      * @param rpc JSON-RPC endpoint of source network.
      * @returns true if there are bridge transactions to complete on this network. Error on JSON-RPC issues.
      */
-    async BridgeGetPending(name: NetworkName, rpc: string): Promise<string | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Bridge")!);
-        if (web3Artifact instanceof Error) { return web3Artifact }
+    async BridgeGetPending(name: NetworkName, rpc: string): Promise<[Error | null, string | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Bridge")!);
+        if (web3Artifact === null) { return [web3Error, null]; }
         
         let [signer, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
         
         let sourceProvider: ethers.providers.Provider | undefined = new ethers.providers.JsonRpcProvider(rpc);
         let sourceContractInfo: {network: NetworkName, address: string} | undefined = Contracts.get("Bridge")!.instances.find((inst) => inst.network === name);
-        if (!sourceContractInfo) { return { code: 3, reason: "Contract does not exist on this network." } }
+        if (!sourceContractInfo) { return [{ code: 3, reason: "Contract does not exist on this network." }, null]; }
         let sourceContract: ethers.Contract = new ethers.Contract(sourceContractInfo.address, Contracts.get("Bridge")!.abi, sourceProvider) as IBC_Bridge;
         
         try {
@@ -393,9 +400,9 @@ export default class AppController implements IController {
             let sourceNonce: ethers.BigNumber = await sourceContract.nonce(userAddress, Networks.get(name)!.id, network.id);
 
             // Transaction pending on source network
-            return destinationNonce.lt(sourceNonce) ? destinationNonce.toString() : "";
+            return destinationNonce.lt(sourceNonce) ? [null, destinationNonce.toString()] : [null, null];
         } catch (error) {
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
         }
     }
     
@@ -408,9 +415,9 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of JSON-RPC errors.
      */
-    async ReflectGetToken(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Reflect")!);
-        if (web3Artifact instanceof Error) { return web3Artifact }
+    async ReflectGetToken(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Reflect")!);
+        if (web3Artifact === null) { return [web3Error]; }
 
         let [, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
         let parsedAmount = ethers.utils.parseEther(amount);
@@ -418,9 +425,10 @@ export default class AppController implements IController {
         try {
             let tx = await (contract as ReflectToken).purchaseTokens(parsedAmount);
             this.onTransactionStatusChange(tx, network.name, callback);
+            return [null];
         } catch (error) {
-            if (error.code === 4001) return { code: 10, reason: "Request rejected by user." };
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }]; }
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -431,9 +439,9 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of JSON-RPC issues.
      */
-    async ReflectTransfer(recipient: string, amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Reflect")!);
-        if (web3Artifact instanceof Error) { return web3Artifact }
+    async ReflectTransfer(recipient: string, amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Reflect")!);
+        if (web3Artifact === null) { return [web3Error]; }
 
         let [, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
         let parsedAmount = ethers.utils.parseEther(amount);
@@ -441,9 +449,10 @@ export default class AppController implements IController {
         try {
             let tx = await (contract as ReflectToken).transfer(recipient, parsedAmount);
             this.onTransactionStatusChange(tx, network.name, callback);
+            return [null];
         } catch (error) {
-            if (error.code === 4001) return { code: 10, reason: "Request rejected by user." };
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }]; }
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -451,17 +460,17 @@ export default class AppController implements IController {
      * View function. Queries reflect token price denominated in DEMO tokens.
      * @returns Reflect token price in DEMO, or error in case of JSON-RPC issues.
      */
-    async ReflectGetPrice(): Promise<string | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Reflect")!);
-        if (web3Artifact instanceof Error) { return web3Artifact }
+    async ReflectGetPrice(): Promise<[Error | null, string | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Reflect")!);
+        if (web3Artifact === null) { return [web3Error, null]; }
 
         let [,, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
 
         try {
             let formatPrice = await (contract as ReflectToken).purchasePrice();
-            return ethers.utils.formatEther(formatPrice);
+            return [null, ethers.utils.formatEther(formatPrice)];
         } catch (error) {
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
         }
     }
 
@@ -470,17 +479,17 @@ export default class AppController implements IController {
      * @param address address to be queried.
      * @returns amount of Reflect tokens, or error in case of JSON-RPC issues.
      */
-    async ReflectBalance(address: string): Promise<string | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Reflect")!);
-        if (web3Artifact instanceof Error) { return web3Artifact }
+    async ReflectBalance(address: string): Promise<[Error | null, string | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Reflect")!);
+        if (web3Artifact === null) { return [web3Error, null]; }
 
         let [,, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
         
         try {
             let balance = await (contract as ReflectToken).balanceOf(address);
-            return ethers.utils.formatEther(balance);
+            return [null, ethers.utils.formatEther(balance)];
         } catch (error) {
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
         } 
     }
     
@@ -493,9 +502,9 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of JSON-RPC error.
      */
-    async FlipperAddFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Flipper")!);
-        if (web3Artifact instanceof Error) { return web3Artifact };
+    async FlipperAddFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Flipper")!);
+        if (web3Artifact === null) { return [web3Error]; }
 
         let [, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
         let parsedAmount = ethers.utils.parseEther(amount);
@@ -503,9 +512,10 @@ export default class AppController implements IController {
         try {
             let tx = await (contract as CoinFlipper).placeBet(parsedAmount);
             this.onTransactionStatusChange(tx, network.name, callback);
+            return [null];
         } catch (error) {
-            if (error.code === 4001) return { code: 10, reason: "Request rejected by user." };
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            if (error.code === 4001) return [{ code: 10, reason: "Request rejected by user." }];
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
         } 
     }
 
@@ -514,18 +524,19 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of JSON-RPC issues.
      */
-    async FlipperFlipCoin(callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Flipper")!);
-        if (web3Artifact instanceof Error) { return web3Artifact };
+    async FlipperFlipCoin(callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Flipper")!);
+        if (web3Artifact === null) { return [web3Error]; }
 
         let [, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
 
         try {
             let tx = await (contract as CoinFlipper).startCoinFlip();
             this.onTransactionStatusChange(tx, network.name, callback);
+            return [null];
         } catch (error) {
-            if (error.code === 4001) return { code: 10, reason: "Request rejected by user." };
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }]; }
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -535,9 +546,9 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of JSON-RPC issues.
      */
-    async FlipperWithdrawFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Flipper")!);
-        if (web3Artifact instanceof Error) { return web3Artifact };
+    async FlipperWithdrawFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Flipper")!);
+        if (web3Artifact === null) { return [web3Error]; }
 
         let [, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
         let parsedAmount = ethers.utils.parseEther(amount);
@@ -545,9 +556,10 @@ export default class AppController implements IController {
         try {
             let tx = await (contract as CoinFlipper).payOut(parsedAmount);
             this.onTransactionStatusChange(tx, network.name, callback);
+            return [null];
         } catch (error) {
-            if (error.code === 4001) return { code: 10, reason: "Request rejected by user." };
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }]; }
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -555,17 +567,17 @@ export default class AppController implements IController {
      * View function. Queries amount of DEMO tokens held in contract.
      * @returns current token balance held in CoinFlip contract.
      */
-    async FlipperCheckFunds(): Promise<string | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Flipper")!);
-        if (web3Artifact instanceof Error) { return web3Artifact };
+    async FlipperCheckFunds(): Promise<[Error | null, string | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Flipper")!);
+        if (web3Artifact === null) { return [web3Error, null]; }
 
         let [signer,, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
        
         try {
             let balance = await (contract as CoinFlipper).getPlayerBalance(await signer.getAddress());
-            return ethers.utils.formatEther(balance);
+            return [null, ethers.utils.formatEther(balance)];
         } catch (error) {
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
         }
     }
     
@@ -578,18 +590,19 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of JSON-RPC issues.
      */
-    async StakeAddFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Staker")!);
-        if (web3Artifact instanceof Error) { return web3Artifact };
+    async StakeAddFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Staker")!);
+        if (web3Artifact === null) { return [web3Error]; }
 
         let [, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
         let parsedAmount = ethers.utils.parseEther(amount);
         try {
             let tx = await (contract as Staker).stake(parsedAmount);
             this.onTransactionStatusChange(tx, network.name, callback);
+            return [null];
         } catch (error) {
-            if (error.code === 4001) return { code: 10, reason: "Request rejected by user." };
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }]; }
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -599,9 +612,9 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of JSON-RPC issues.
      */
-    async StakeWithdrawFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Staker")!);
-        if (web3Artifact instanceof Error) { return web3Artifact };
+    async StakeWithdrawFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Staker")!);
+        if (web3Artifact === null) { return [web3Error]; }
 
         let [, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
         let parsedAmount = ethers.utils.formatEther(amount);
@@ -609,9 +622,10 @@ export default class AppController implements IController {
         try {
             let tx = await (contract as Staker).withdraw(parsedAmount);
             this.onTransactionStatusChange(tx, network.name, callback);
+            return [null];
         } catch (error) {
-            if (error.code === 4001) return { code: 10, reason: "Request rejected by user." };
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }] };
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -620,18 +634,19 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of JSON-RPC issues.
      */
-    async StakeClaimReward(callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Staker")!);
-        if (web3Artifact instanceof Error) { return web3Artifact };
+    async StakeClaimReward(callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Staker")!);
+        if (web3Artifact === null) { return [web3Error]; }
 
         let [, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
 
         try {
             let tx = await (contract as Staker).getReward();
             this.onTransactionStatusChange(tx, network.name, callback);
+            return [null];
         } catch (error) {
-            if (error.code === 4001) return { code: 10, reason: "Request rejected by user." };
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }]; }
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -639,18 +654,18 @@ export default class AppController implements IController {
      * View function. Queries contract for balance of DEMO tokens deposited to contract.
      * @returns number of tokens deposited to contract, or error in case of JSON-RPC issues.
      */
-    async StakeCheckStake(): Promise<string | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Staker")!);
-        if (web3Artifact instanceof Error) { return web3Artifact };
+    async StakeCheckStake(): Promise<[Error | null, string | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Staker")!);
+        if (web3Artifact === null) { return [web3Error, null]; }
 
         let [signer,, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
         
         try {
             let balance = await (contract as Staker).balanceOf(await signer.getAddress());
-            return ethers.utils.formatEther(balance);
+            return [null, ethers.utils.formatEther(balance)];
         } catch (error) {
-            if (error.code === 4001) return { code: 10, reason: "Request rejected by user." };
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }, null]; }
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
         }
     }
 
@@ -658,17 +673,17 @@ export default class AppController implements IController {
      * View function. Queries contract for number of tokens earned by user.
      * @returns number of tokens earned by user, or error in case of JSON-RPC issues.
      */
-    async StakeCheckReward(): Promise<string | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("Staker")!);
-        if (web3Artifact instanceof Error) { return web3Artifact };
+    async StakeCheckReward(): Promise<[Error | null, string | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Staker")!);
+        if (web3Artifact === null) { return [web3Error, null]; }
 
         let [signer,, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
 
         try {
             let reward = await (contract as Staker).earned(await signer.getAddress());
-            return ethers.utils.formatEther(reward);
+            return [null, ethers.utils.formatEther(reward)];
         } catch (error) {
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
         }
     }
 
@@ -681,9 +696,9 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of JSON-RPC issues.
      */
-    async NFTMint(message: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("NFT")!);
-        if (web3Artifact instanceof Error) { return web3Artifact };
+    async NFTMint(message: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("NFT")!);
+        if (web3Artifact === null) { return [web3Error]; }
 
         let [signer, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
         let encodedMessage = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(message));
@@ -691,9 +706,10 @@ export default class AppController implements IController {
         try {
             let tx = await (contract as FamiliarLogic).mint(await signer.getAddress(), encodedMessage);
             this.onTransactionStatusChange(tx, network.name, callback);
+            return [null];
         } catch (error) {
-            if (error.code === 4001) return { code: 10, reason: "Request rejected by user." };
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }]; }
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -704,18 +720,19 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of JSON-RPC issues.
      */
-    async NFTTransfer(recipient: string, tokenId: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("NFT")!);
-        if (web3Artifact instanceof Error) { return web3Artifact };
+    async NFTTransfer(recipient: string, tokenId: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("NFT")!);
+        if (web3Artifact === null) { return [web3Error]; }
 
         let [signer, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
 
         try {
             let tx = await (contract as FamiliarLogic).transferFrom(await signer.getAddress(), recipient, tokenId);
             this.onTransactionStatusChange(tx, network.name, callback);
+            return [null];
         } catch (error) {
-            if (error.code === 4001) return { code: 10, reason: "Request rejected by user." };
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }]; }
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -724,17 +741,17 @@ export default class AppController implements IController {
      * @param address address to be queried.
      * @returns number of NFTs owned by address, or error in case of JSON-RPC issues.
      */
-    async NFTBalance(address: string): Promise<string | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("NFT")!);
-        if (web3Artifact instanceof Error) { return web3Artifact };
+    async NFTBalance(address: string): Promise<[Error | null, string | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("NFT")!);
+        if (web3Artifact === null) { return [web3Error, null]; }
 
         let [,, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
 
         try {
             let nftBalance = await (contract as FamiliarLogic).balanceOf(address);
-            return nftBalance.toString();
+            return [null, nftBalance.toString()];
         } catch (error) {
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
         }
     }
 
@@ -743,16 +760,16 @@ export default class AppController implements IController {
      * @param tokenId token ID of NFT to be queried.
      * @returns address of NFT owner, or error in case of JSON-RPC issues.
      */
-    async NFTGetOwner(tokenId: string): Promise<string | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("NFT")!);
-        if (web3Artifact instanceof Error) { return web3Artifact };
+    async NFTGetOwner(tokenId: string): Promise<[Error | null, string | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("NFT")!);
+        if (web3Artifact === null) { return [web3Error, null]; }
 
         let [,, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
 
         try {
-            return await (contract as FamiliarLogic).ownerOf(tokenId);
+            return [null, await (contract as FamiliarLogic).ownerOf(tokenId)];
         } catch (error) {
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
         }
     }
 
@@ -761,18 +778,18 @@ export default class AppController implements IController {
      * @param tokenId token ID of NFT being queried.
      * @returns object with image URI and message string, or error in case of RPC-JSON issues.
      */
-    async NFTGetMetadata(tokenId: string): Promise<{ url: string, message: string } | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("NFT")!);
-        if (web3Artifact instanceof Error) { return web3Artifact };
+    async NFTGetMetadata(tokenId: string): Promise<[Error | null, { url: string, message: string } | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("NFT")!);
+        if (web3Artifact === null) { return [web3Error, null]; }
 
         let [,, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
 
         try {
             let url = await (contract as FamiliarLogic).tokenURI(tokenId);
             let message = await (contract as FamiliarLogic).getTokenBlueprint(tokenId);
-            return { url, message };
+            return [null, { url, message }];
         } catch (error) {
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
         }
     }
 
@@ -782,17 +799,16 @@ export default class AppController implements IController {
      * @param address [option] address to fetch owned NFTs.
      * @returns array of token IDs for NFTs currently owned by address, or error in case of JSON-RPC issues.
      */
-    async NFTFetchAll(address?: string): Promise<Array<string> | Error> {
-        let web3Artifact = await this.getWeb3Artifacts(Contracts.get("NFT")!);
-        if (web3Artifact instanceof Error) { return web3Artifact };
+    async NFTFetchAll(address?: string): Promise<[Error | null, Array<string> | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("NFT")!);
+        if (web3Artifact === null) { return [web3Error, null]; }
 
-        let [signer, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
-
+        let [signer,, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
         let userAddress: string = address || await signer.getAddress();
 
         try {
             let currentBlock: number | undefined = await signer.provider?.getBlockNumber();
-            if (!currentBlock) { return { code: 4, reason: "Failed to fetch block number." }; }
+            if (!currentBlock) { return [{ code: 4, reason: "Failed to fetch block number." }, null]; }
                
             let filterReceipt: ethers.EventFilter = contract.filters.Transfer(null, userAddress);
             let eventReceipt: ethers.Event[] = await contract.queryFilter(filterReceipt, currentBlock - 2000);
@@ -801,14 +817,15 @@ export default class AppController implements IController {
             // Check all received tokens.
             eventReceipt.forEach(async receiptEvent => {
                 let id = receiptEvent.args?.[2];
-                console.log("Checkind id: %s", id.toString());
-                if (await this.NFTGetOwner(id.toString()) === userAddress) {
+                let [, nftOwner] = await this.NFTGetOwner(id.toString());
+                if (nftOwner === null) { return; }
+                if (nftOwner === userAddress) {
                     tokensOwned.push(id.toString());
                 }
             });
-            return tokensOwned;
+            return [null, tokensOwned];
         } catch (error) {
-            return { code: 11, reason: "JSON-RPC error.", stack: error };
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
         }
     }
 }

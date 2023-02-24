@@ -13,14 +13,11 @@ import Flipper from '../02_Content/contractComponents/Flipper';
 import NFTToken from '../02_Content/contractComponents/NFTToken';
 import Reflect from '../02_Content/contractComponents/Reflect';
 import Staker from '../02_Content/contractComponents/Staker';
+import EmptyContract from '../02_Content/contractComponents/EmptyContract';
 
 export default function PortfolioBoard(props: {setConnection: React.Dispatch<Action>})
 {
-    const [infoBanner, setInfoBanner] = React.useState<string>('');
-    React.useEffect(() => {
-        window.scrollTo(0, 0)
-    }, []);
-
+    const [infoBanner, setInfoBanner] = React.useState<{ message: string, warning: string }>({ message: '', warning: '' });
     const connection: AppConnectionData = React.useContext(ConnectionContext); 
     const headerItem: Array<Content> = [
         { title: 'Home', icon: null, content: "/" },
@@ -32,25 +29,35 @@ export default function PortfolioBoard(props: {setConnection: React.Dispatch<Act
         { title: 'Contact', icon: null, content: "/#contact" }
     ]
 
+    React.useEffect(() => {
+        window.scrollTo(0, 0)
+    }, []);
+
+    React.useEffect(() => {
+        setInfoBanner(state => { return { ...state, message: "You have selected " + connection.contract.name } });
+    }, [connection.contract]);
+
     return (
         <div className='w-full min-h-screen bg-gradientBg bg-cover'>
             
             <Header id='top' items={headerItem} />
             <W3Header setConnection={props.setConnection} />
-            <InfoBanner message={infoBanner} />
+            <InfoBanner message={infoBanner.message} warning={infoBanner.warning} />
             <div className='flex px-[10%] mx-auto'>
-                <ContractInterface><DisplayContract
-                    contractName={connection.contract.name}
-                    setConnection={props.setConnection}
-                    setInfoBanner={setInfoBanner}
-                /></ContractInterface>
+                <ContractInterface>
+                    <DisplayContract
+                        contractName={connection.contract.name}
+                        setConnection={props.setConnection}
+                        setInfoBanner={setInfoBanner}
+                    />
+                </ContractInterface>
                 <EventTracker />
             </div>
         </div>
     )
 }
 
-function DisplayContract(props: { contractName: string, setConnection: React.Dispatch<Action>, setInfoBanner: React.Dispatch<React.SetStateAction<string>> })
+function DisplayContract(props: { contractName: string, setConnection: React.Dispatch<Action>, setInfoBanner: React.Dispatch<React.SetStateAction<{message: string, warning: string}>> })
     {
         switch (props.contractName)
         {
@@ -67,6 +74,6 @@ function DisplayContract(props: { contractName: string, setConnection: React.Dis
             case "Staker":
                 return <Staker setConnection={props.setConnection} setInfoBanner={props.setInfoBanner} />
             default:
-                return <Airdrop recipientCount={4} setConnection={props.setConnection} setInfoBanner={props.setInfoBanner} />
+                return <EmptyContract setConnection={props.setConnection} setInfoBanner={props.setInfoBanner} />
         }
     }

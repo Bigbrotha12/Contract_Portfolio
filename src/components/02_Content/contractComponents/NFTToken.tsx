@@ -9,7 +9,7 @@ type TransferTx = {
     recipient: string,
     tokenId: string
 }
-export default function NFTToken(props: {setConnection: React.Dispatch<Action>, setInfoBanner: React.Dispatch<React.SetStateAction<string>> })
+export default function NFTToken(props: {setConnection: React.Dispatch<Action>, setInfoBanner: React.Dispatch<React.SetStateAction<{message: string, warning: string}>> })
 {
     const [transfer, setTransfer] = React.useState<TransferTx>({recipient: '', tokenId: '0'});
     const controller = React.useContext<IController>(ControllerContext);
@@ -19,6 +19,10 @@ export default function NFTToken(props: {setConnection: React.Dispatch<Action>, 
     React.useEffect(() => {
         props.setConnection({ type: "ADD_TRANSACTION", payload: transactions });
     }, [transactions]);
+
+    React.useEffect(() => {
+        props.setInfoBanner(state => { return { ...state, warning: error }});
+    }, [error]);
 
     return (
         <Material.Card sx={{margin: "12px"}}>

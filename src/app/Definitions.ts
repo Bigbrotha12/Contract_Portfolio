@@ -44,7 +44,7 @@ export type Web3Transaction = {
         status: TransactionStatus
 }
 export enum TransactionStatus { DRAFT, PENDING, CONFIRMED };
-export type ContractName = "Airdrop" | "NFT" | "Staker" | "Reflect" | "Flipper" | "Bridge" | "Token";
+export type ContractName = "Airdrop" | "NFT" | "Staker" | "Reflect" | "Flipper" | "Bridge" | "Token" | "Empty";
 export type NetworkName = "Not Connected" | "Ethereum" | "Goerli" | "Binance Smart Chain" | "BNB Chain Testnet" | "Polygon" | "Polygon Mumbai";
 
 export type Contract = 

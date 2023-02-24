@@ -11,7 +11,7 @@ type ReflectTx = {
     recipient: string,
     transferAmount: string
 }
-export default function Reflect(props: {setConnection: React.Dispatch<Action>, setInfoBanner: React.Dispatch<React.SetStateAction<string>> })
+export default function Reflect(props: {setConnection: React.Dispatch<Action>, setInfoBanner: React.Dispatch<React.SetStateAction<{message: string, warning: string}>> })
 {
     const [transactionDetails, setTransactionDetails] = React.useState<ReflectTx>({purchaseAmount: "0", recipient: "", transferAmount: "0"});
     const controller: IController = React.useContext(ControllerContext);
@@ -21,6 +21,10 @@ export default function Reflect(props: {setConnection: React.Dispatch<Action>, s
     React.useEffect(() => {
         props.setConnection({ type: "ADD_TRANSACTION", payload: transactions });
     }, [transactions]);
+
+    React.useEffect(() => {
+        props.setInfoBanner(state => { return { ...state, warning: error } });
+    }, [error]);
 
     return (
         <Material.Card sx={{margin: "12px"}}>

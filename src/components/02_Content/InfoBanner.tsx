@@ -1,7 +1,7 @@
 import React from 'react';
 import Material from '../../assets/Material';
 
-export default function InfoBanner(props: {message: string})
+export default function InfoBanner(props: {message: string, warning: string})
 {
     return (
         <div className='flex justify-center py-[24px]'>
@@ -9,6 +9,7 @@ export default function InfoBanner(props: {message: string})
             <div className=' bg-white rounded-[10px] w-full min-h-[80px] p-[12px]'>
                 <Material.Typography>
                     {props.message}
+                    {props.warning}
                 </Material.Typography>
             </div>
             </div>

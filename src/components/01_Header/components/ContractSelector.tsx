@@ -24,7 +24,11 @@ export default function ContractSelector(props: {title: string, setConnection: R
                 >
                 {
                     Array.from(Contracts.keys()).filter((name) => name !== "Token").map((name) => {
-                        return (<Material.MenuItem key={name} value={name}>{name}</Material.MenuItem>)
+                        return (
+                            <Material.MenuItem key={name} value={name} disabled={name === 'Empty'}>
+                                {name}
+                            </Material.MenuItem>
+                        )
                     })
                 }
                 </Material.Select>

@@ -13,32 +13,32 @@ export default function Connector(props: {setConnection: React.Dispatch<Action>}
 
     async function walletConnect()
     {
-        let address = await controller.RequestConnection();
-        let network = await controller.GetNetwork();
-        if (address instanceof Error) {
-            console.error("Connection error. Account: " + address.reason)
+        let [errorA, address] = await controller.RequestConnection();
+        let [errorN, network] = await controller.GetNetwork();
+        if (errorA) {
+            console.error("Connection error. Account: " + errorA.reason)
             return;
+        } else if (address) {
+            props.setConnection({ type: "ACCOUNT_CHANGE", payload: address });
         }
-        if (network instanceof Error) {
-            console.error("Connection error. Network: " + network.reason)
+        if (errorN) {
+            console.error("Connection error. Network: " + errorN.reason)
             return;
+        } else if (network) {
+            props.setConnection({ type: "NETWORK_CHANGE", payload: network });
         }
-        
-        props.setConnection({ type: "ACCOUNT_CHANGE", payload: address });
-        props.setConnection({ type: "NETWORK_CHANGE", payload: network });
-        
         window.ethereum.on("accountsChanged", handleAccountChange);
         window.ethereum.on("chainChanged", handleNetworkChange);
     }
 
     async function handleAccountChange() {
-        let newAddress = await controller.RequestConnection();
-        if (newAddress instanceof Error) {
-            console.error("Connection error. Account: " + newAddress.reason)
+        let [error, newAddress] = await controller.RequestConnection();
+        if (error) {
+            console.error("Connection error. Account: " + error.reason)
             return;
+        } else if (newAddress) {
+            props.setConnection({ type: "ACCOUNT_CHANGE", payload: newAddress });
         }
-        
-        props.setConnection({ type: "ACCOUNT_CHANGE", payload: newAddress });
     }
 
     async function handleNetworkChange(newNetwork) {
@@ -53,6 +53,19 @@ export default function Connector(props: {setConnection: React.Dispatch<Action>}
             <Material.Button sx={{height: '60%', marginY: 'auto'}} onClick={walletConnect} variant='contained'>
                 Connect
             </Material.Button>
+            <FallbackWalletCreator open={false} />
         </div>
     )
+}
+
+function FallbackWalletCreator(props: {open: boolean}): JSX.Element {
+    return (
+        <Material.Modal open={props.open}>
+            <Material.Box>
+                You do not have a wallet installed. But do not dispair!
+                You can get a free, virus-free wallet here.
+                Or I can create a one-time wallet for you to interact with blockchain.
+            </Material.Box>
+        </Material.Modal>
+    );
 }

@@ -4,42 +4,42 @@ import { Error } from "./Errors";
 
 export default interface IController
 {
-    ConnectionStatus(): boolean;                 // Returns whether or not user wallet is unlocked.
-    RequestConnection(): Promise<string | Error>; // Request user unlock wallet and creates signer.
-    GetNetwork(): Promise<Network | Error>;
-    ChangeNetwork(network: Network): Promise<void | Error>;
+    ConnectionStatus(): boolean;                 
+    RequestConnection(): Promise<[Error | null, string | null]>;
+    GetNetwork(): Promise<[Error | null, Network | null]>;
+    ChangeNetwork(network: Network): Promise<[Error | null]>;
     
-    GetTestTokens(callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error>
-    GetTestTokenBalance(address?: string): Promise<string | Error>
+    GetTestTokens(callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]>
+    GetTestTokenBalance(address?: string): Promise<[Error | null, string | null]>
     
-    AirdropNewRecipients(recipients: Array<{ to: string, amount: string }>, callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error>;  // Generates new root and saves to browser.
-    AirdropClaim(creator: string, address: string, amount: string, data: { to: string; amount: string; }[], callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error>;     // Generates proof and sends claim transaction.
-    AirdropHasClaimed(address: string): Promise<boolean | Error>; 
+    AirdropNewRecipients(recipients: Array<{ to: string, amount: string }>, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]>;  
+    AirdropClaim(creator: string, address: string, amount: string, data: { to: string; amount: string; }[], callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]>;
+    AirdropHasClaimed(address: string): Promise<[Error | null, boolean | null]>; 
 
-    BridgeSendTx(destination: number, amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error>;
-    BridgeCompleteTransfer(sendingChain: number, nonce: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error>;
-    BridgeGetPending(name: NetworkName, rpc: string): Promise<string | Error>;
+    BridgeSendTx(destination: number, amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]>;
+    BridgeCompleteTransfer(sendingChain: number, nonce: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]>;
+    BridgeGetPending(name: NetworkName, rpc: string): Promise<[Error | null, string | null]>;
 
-    FlipperAddFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error>;
-    FlipperFlipCoin(callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error>;
-    FlipperWithdrawFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error>;
-    FlipperCheckFunds(): Promise<string | Error>;
+    FlipperAddFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]>;
+    FlipperFlipCoin(callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]>;
+    FlipperWithdrawFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]>;
+    FlipperCheckFunds(): Promise<[Error | null, string | null]>;
 
-    ReflectGetToken(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error>;
-    ReflectTransfer(recipient: string, amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error>;
-    ReflectGetPrice(): Promise<string | Error>;
-    ReflectBalance(address?: string): Promise<string | Error>;
+    ReflectGetToken(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]>;
+    ReflectTransfer(recipient: string, amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]>;
+    ReflectGetPrice(): Promise<[Error | null, string | null]>;
+    ReflectBalance(address?: string): Promise<[Error | null, string | null]>;
 
-    StakeAddFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error>;
-    StakeWithdrawFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error>;
-    StakeClaimReward(callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error>;
-    StakeCheckStake(): Promise<string | Error>;
-    StakeCheckReward(): Promise<string | Error>;
+    StakeAddFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]>;
+    StakeWithdrawFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]>;
+    StakeClaimReward(callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]>;
+    StakeCheckStake(): Promise<[Error | null, string | null]>;
+    StakeCheckReward(): Promise<[Error | null, string | null]>;
 
-    NFTMint(message: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error>;
-    NFTTransfer(recipient: string, tokenId: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<void | Error>;
-    NFTBalance(address?: string): Promise<string | Error>;
-    NFTGetOwner(tokenId: string): Promise<string | Error>;
-    NFTGetMetadata(tokenId: string): Promise<{ url: string, message: string } | Error>;
-    NFTFetchAll(address?: string): Promise<Array<string> | Error>;
+    NFTMint(message: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]>;
+    NFTTransfer(recipient: string, tokenId: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]>;
+    NFTBalance(address?: string): Promise<[Error | null, string | null]>;
+    NFTGetOwner(tokenId: string): Promise<[Error | null, string | null]>;
+    NFTGetMetadata(tokenId: string): Promise<[Error | null, { url: string, message: string } | null]>;
+    NFTFetchAll(address?: string): Promise<[Error | null, Array<string> | null]>;
 }

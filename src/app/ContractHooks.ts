@@ -40,8 +40,8 @@ export const useAirdrop = (account: string, network: NetworkName, controller: IC
             }
             
             if (data && data.get(network) && /^0x[a-fA-F0-9]{40}$/.test(creator)) {
-                let tx = await controller.AirdropClaim(creator, account, amount, data.get(network)!, transactionWatcher);
-                if (tx instanceof Error) { setError(tx.reason); }
+                let [txError] = await controller.AirdropClaim(creator, account, amount, data.get(network)!, transactionWatcher);
+                if (txError !== null) { setError(txError.reason); }
             } else {
                 setError("Claim attempt failed due to invalid parameters. Ensure your airdrop list has been set for the current network.");
             }
@@ -49,9 +49,9 @@ export const useAirdrop = (account: string, network: NetworkName, controller: IC
         async createAirdrop(data: Array<{ to: string, amount: string }>): Promise<void> {
             let localAirdrop: Array<{ to: string, amount: string }> = data;
             if (localAirdrop) {
-                let tx = await controller.AirdropNewRecipients(localAirdrop, transactionWatcher);
-                if (tx instanceof Error) {
-                    setError(tx.reason);
+                let [txError] = await controller.AirdropNewRecipients(localAirdrop, transactionWatcher);
+                if (txError !== null) {
+                    setError(txError.reason);
                     return;
                 }
 
@@ -60,12 +60,14 @@ export const useAirdrop = (account: string, network: NetworkName, controller: IC
             }
         },
         async hasClaimed(address: string): Promise<boolean> {
-            let status: boolean | Error = await controller.AirdropHasClaimed(address);
-            if (status instanceof Error) {
-                setError(status.reason);
+            let [viewError, status] = await controller.AirdropHasClaimed(address);
+            if (viewError !== null) {
+                setError(viewError.reason);
                 return false;
-            }
-            return status;
+            } else if (status !== null) {
+                return status;
+            }  
+            return false;
         },
         checkAddress(address: string): string {
             let data: AirdropData | null = null;
@@ -121,16 +123,18 @@ export const useTestToken = (account: string, network: NetworkName, controller: 
     
     const testToken: TestTokenInterface = {
         async faucet(): Promise<void> {
-            let tx = await controller.GetTestTokens(transactionWatcher);
-            if (tx instanceof Error) { setError(tx.reason); }
+            let [txError] = await controller.GetTestTokens(transactionWatcher);
+            if (txError) { setError(txError.reason); }
         },
         async balance(address?: string): Promise<string> {
-            let balance = await controller.GetTestTokenBalance();
-            if (balance instanceof Error) {
-                setError(balance.reason);
+            let [viewError, balance] = await controller.GetTestTokenBalance(address);
+            if (viewError !== null) {
+                setError(viewError.reason);
                 return "0";
+            } else if (balance !== null) {
+                return formatAmount(balance, 2);
             }
-            return formatAmount(balance, 2);
+            return "0";
         }
     }
 
@@ -170,26 +174,26 @@ export const useFlipper = (account: string, network: NetworkName, controller: IC
     
     const coinFlipper: CoinFlipperInterface = {
         async placeBet(amount: string): Promise<void> {
-            let tx = await controller.FlipperAddFunds(amount, transactionWatcher);
-            if (tx instanceof Error) { setError(tx.reason); }
+            let [txError] = await controller.FlipperAddFunds(amount, transactionWatcher);
+            if (txError !== null) { setError(txError.reason); }
         },
         async flipCoin(): Promise<void> {
-            let tx = await controller.FlipperFlipCoin(transactionWatcher);
-            if (tx instanceof Error) {
-                setError(tx.reason);
+            let [txError] = await controller.FlipperFlipCoin(transactionWatcher);
+            if (txError !== null) {
+                setError(txError.reason);
                 return;
             }
             winStatePolling();
         },
         async withdrawFunds(amount: string): Promise<void> {
-            let tx = await controller.FlipperWithdrawFunds(amount, transactionWatcher);
-            if (tx instanceof Error) { setError(tx.reason); }
+            let [txError] = await controller.FlipperWithdrawFunds(amount, transactionWatcher);
+            if (txError !== null) { setError(txError.reason); }
         }
     }
 
     async function winStatePolling() {
-        let newBalance = await controller.FlipperCheckFunds();
-        if (!(newBalance instanceof Error)) {
+        let [viewError, newBalance] = await controller.FlipperCheckFunds();
+        if (newBalance) {
             let balanceInt = parseInt(newBalance);
             let fundsInt = parseInt(funds);
             if (balanceInt > fundsInt) {
@@ -203,8 +207,8 @@ export const useFlipper = (account: string, network: NetworkName, controller: IC
                 setTimeout(winStatePolling, 5000);
             }
             setFunds(newBalance);
-        } else {
-            setError(newBalance.reason);
+        } else if(viewError) {
+            setError(viewError.reason);
         }
     }
 
@@ -218,9 +222,9 @@ export const useFlipper = (account: string, network: NetworkName, controller: IC
     React.useEffect(() => {
        // check user funds whenever account, network, or transactions change.
         (async () => {
-            let balance = await controller.FlipperCheckFunds();
-            if (!(balance instanceof Error)) { setFunds(formatAmount(balance, 2)); }
-            else { setError(balance.reason); }
+            let [viewError, balance] = await controller.FlipperCheckFunds();
+            if (balance) { setFunds(formatAmount(balance, 2)); }
+            else if(viewError) { setError(viewError.reason); }
         })();
     }, [account, network, transactions]);
 
@@ -239,13 +243,13 @@ export const useBridge = (account: string, network: NetworkName, controller: ICo
     
     const bridge: BridgeInterface = {
         async prepareSendTransaction(destNetwork: Network, amount: string): Promise<void> {
-            let tx = await controller.BridgeSendTx(destNetwork.id, amount, transactionWatcher);
-            if (tx instanceof Error) { setError(tx.reason); }
+            let [txError] = await controller.BridgeSendTx(destNetwork.id, amount, transactionWatcher);
+            if (txError) { setError(txError.reason); }
         },
         async completeSendTransaction(): Promise<void> {
             let sender = pendingNonces.get(network)!;
-            let tx = await controller.BridgeCompleteTransfer(sender.source, sender.nonce, transactionWatcher);
-            if (tx instanceof Error) { setError(tx.reason); }
+            let [txError] = await controller.BridgeCompleteTransfer(sender.source, sender.nonce, transactionWatcher);
+            if (txError) { setError(txError.reason); }
         }
     }
 
@@ -262,13 +266,13 @@ export const useBridge = (account: string, network: NetworkName, controller: ICo
         if (!pendingNonces.get(network)) {
             Contracts.get("Bridge")!.instances.find(async instance => {
                 let chain = Networks.get(instance.network)!;
-                let pendingNonce = await controller.BridgeGetPending(chain.name, chain.rpcUrl);
-                if (pendingNonce instanceof Error) {
-                    setError(pendingNonce.reason);
+                let [viewError, pendingNonce] = await controller.BridgeGetPending(chain.name, chain.rpcUrl);
+                if (viewError) {
+                    setError(viewError.reason);
                     return false;
                 }
 
-                if (pendingNonce != "") {
+                if (pendingNonce) {
                     let newState = new Map(pendingNonces);
                     setPendingNonces(newState.set(network, { source: chain.id, nonce: pendingNonce }));
                     return true;
@@ -292,20 +296,20 @@ export const useNFTToken = (account: string, network: NetworkName, controller: I
     const [transactions, setTransactions] = React.useState<Map<string, Web3Transaction>>(new Map<string, Web3Transaction>);
     const NFTToken: NFTTokenInterface = {
         async mint(message: string): Promise<void> {
-            let tx = await controller.NFTMint(message, transactionWatcher);
-            if (tx instanceof Error) { setError(tx.reason); }
+            let [txError] = await controller.NFTMint(message, transactionWatcher);
+            if (txError) { setError(txError.reason); }
         },
         async transfer(tokenId: string, recipient: string): Promise<void> {
-            let tx = await controller.NFTTransfer(recipient, tokenId, transactionWatcher);
-            if (tx instanceof Error) { setError(tx.reason); }
+            let [txError] = await controller.NFTTransfer(recipient, tokenId, transactionWatcher);
+            if (txError) { setError(txError.reason); }
         },
         async checkOwner(tokenId: string): Promise<string> {
-            let owner = await controller.NFTGetOwner(tokenId);
-            if (owner instanceof Error) {
-                setError(owner.reason);
+            let [viewError, owner] = await controller.NFTGetOwner(tokenId);
+            if (viewError) {
+                setError(viewError.reason);
                 return "";
-            }
-            return owner;
+            } else if (owner) { return owner; }
+            return "";
         }
     }
 
@@ -319,28 +323,31 @@ export const useNFTToken = (account: string, network: NetworkName, controller: I
     React.useEffect(() => {
         // Check NFTs owned by user, fetch message and image.
         (async () => {
-            let balance: string | Error = await controller.NFTBalance(account);
-            if (balance instanceof Error) {
-                setError(balance.reason);
+            let [viewAError, balance] = await controller.NFTBalance(account);
+            if (viewAError) {
+                setError(viewAError.reason);
                 return;
+            } else if (balance) {
+                setUserBalance(balance);
             }
-            setUserBalance(balance);
-            let tokens: Array<string> | Error = await controller.NFTFetchAll(account);
-            if (tokens instanceof Error) {
-                setError(tokens.reason);
-                return;
-            } 
             
-            let metadata: Array<{ id: string, url: string, message: string }> = [];
-            tokens.forEach(async token => {
-                let data = await controller.NFTGetMetadata(token);
-                if (data instanceof Error) {
-                    setError(data.reason);
-                    return;
-                 }
-                metadata.push({ id: token, url: data.url, message: data.message });
-            });
-            setUserTokens(metadata);
+            let [viewTError, tokens] = await controller.NFTFetchAll(account);
+            if (viewTError) {
+                setError(viewTError.reason);
+                return;
+            } else if (tokens) {
+                let metadata: Array<{ id: string, url: string, message: string }> = [];
+                tokens.forEach(async token => {
+                    let [viewDError, data] = await controller.NFTGetMetadata(token);
+                    if (viewDError) {
+                        setError(viewDError.reason);
+                        return;
+                    } else if (data) {
+                        metadata.push({ id: token, url: data.url, message: data.message });
+                    }
+                });
+                setUserTokens(metadata);
+                }
         })();
     }, [account, network, transactions]);
 
@@ -358,12 +365,12 @@ export const useReflect = (account: string, network: NetworkName, controller: IC
     const [transactions, setTransactions] = React.useState<Map<string, Web3Transaction>>(new Map<string, Web3Transaction>);
     const reflect: ReflectInterface = {
         async purchase(amount: string): Promise<void> {
-            let tx = await controller.ReflectGetToken(amount, transactionWatcher);
-            if (tx instanceof Error) { setError(tx.reason); }
+            let [txError] = await controller.ReflectGetToken(amount, transactionWatcher);
+            if (txError) { setError(txError.reason); }
         },
         async transfer(recipient: string, amount: string): Promise<void> {
-            let tx = await controller.ReflectTransfer(recipient, amount, transactionWatcher);
-            if (tx instanceof Error) { setError(tx.reason); }
+            let [txError] = await controller.ReflectTransfer(recipient, amount, transactionWatcher);
+            if (txError) { setError(txError.reason); }
         }
     }
 
@@ -376,19 +383,20 @@ export const useReflect = (account: string, network: NetworkName, controller: IC
 
     React.useEffect(() => {
         (async () => {
-            let balance = await controller.ReflectBalance(account);
-            let price = await controller.ReflectGetPrice();
-            if (balance instanceof Error) {
-                setError(balance.reason);
+            let [viewBError, balance] = await controller.ReflectBalance(account);
+            let [viewPError, price] = await controller.ReflectGetPrice();
+            if (viewBError) {
+                setError(viewBError.reason);
                 return;
+            } else if (balance) {
+                setUserBalance(formatAmount(balance, 2));
             }
-            if (price instanceof Error) {
-                setError(price.reason);
+            if (viewPError) {
+                setError(viewPError.reason);
                 return;
+            } else if (price) {
+                setPrice(formatAmount(price, 2));
             }
-            
-            setUserBalance(formatAmount(balance, 2));
-            setPrice(formatAmount(price, 2));
         })();
     }, [account, network, transactions]);
 
@@ -407,16 +415,16 @@ export const useStaker = (account: string, network: NetworkName, controller: ICo
     const [transactions, setTransactions] = React.useState<Map<string, Web3Transaction>>(new Map<string, Web3Transaction>());
     const Staker: StakerInterface = {
         async stakeTokens(amount: string): Promise<void> {
-            let tx = await controller.StakeAddFunds(amount, transactionWatcher);
-            if (tx instanceof Error) { setError(tx.reason); }
+            let [txError] = await controller.StakeAddFunds(amount, transactionWatcher);
+            if (txError) { setError(txError.reason); }
         },
         async claimReward(): Promise<void> {
-            let tx = await controller.StakeClaimReward(transactionWatcher);
-            if (tx instanceof Error) { setError(tx.reason); }
+            let [txError] = await controller.StakeClaimReward(transactionWatcher);
+            if (txError) { setError(txError.reason); }
         },
         async withdrawStake(amount?: string): Promise<void> {
-            let tx = await controller.StakeWithdrawFunds(amount || userBalance, transactionWatcher);
-            if (tx instanceof Error) { setError(tx.reason); }
+            let [txError] = await controller.StakeWithdrawFunds(amount || userBalance, transactionWatcher);
+            if (txError) { setError(txError.reason); }
         }
     }
 
@@ -429,19 +437,20 @@ export const useStaker = (account: string, network: NetworkName, controller: ICo
 
     React.useEffect(() => {
         (async () => {
-            let uBalance = await controller.StakeCheckStake();
-            let rBalance = await controller.StakeCheckReward();
-            if (uBalance instanceof Error) {
-                setError(uBalance.reason);
+            let [viewUError, uBalance] = await controller.StakeCheckStake();
+            let [viewRError, rBalance] = await controller.StakeCheckReward();
+            if (viewUError) {
+                setError(viewUError.reason);
                 return;
+            } else if (uBalance) {
+                setUserBalance(formatAmount(uBalance, 2));
             }
-            if (rBalance instanceof Error) {
-                setError(rBalance.reason);
+            if (viewRError) {
+                setError(viewRError.reason);
                 return;
+            } else if (rBalance) {
+                setRewardBalance(formatAmount(rBalance, 2));
             }
-            
-            setUserBalance(formatAmount(uBalance, 2));
-            setRewardBalance(formatAmount(rBalance, 2));
         })();
     }, [account, network, transactions]);
 
