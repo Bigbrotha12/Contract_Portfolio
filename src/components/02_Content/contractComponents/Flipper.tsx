@@ -10,19 +10,32 @@ export default function Flipper(props: {setConnection: React.Dispatch<Action>, s
     const [newBet, setNewBet] = React.useState<string>("0");
     const controller: IController = React.useContext(ControllerContext);
     const connection: AppConnectionData = React.useContext(ConnectionContext);
-    const [balance, winState, flipper, transactions, error] = useFlipper(connection.account, connection.network.name, controller);
+    const [balance, winState, flipper, transactions, error] = useFlipper(connection.account, connection.network.name, controller, connection.walletMnemonics);
     
+    // Event Tracker Update
     React.useEffect(() => {
         props.setConnection({ type: "ADD_TRANSACTION", payload: transactions });
     }, [transactions]);
 
+    // Info Banner Update
+    React.useEffect(() => {
+        let infoMessage = "The Coin Flipper contract is a simple gambling game. You add funds to the contract as a bet, and click Flip Coin. On heads you double your bet, but on tails you lose your bet. \
+        The contract uses DEMO tokens which you can obtain for free. The contract uses Chainlink Oracle network as source of randomness.";
+        props.setInfoBanner(state => { return { ...state, message: infoMessage } });
+    }, []);
     React.useEffect(() => {
         props.setInfoBanner(state => { return { ...state, warning: error } });
     }, [error]);
 
     return (
         <Material.Card sx={{margin: "12px"}}>
-            <Material.CardHeader title="Oracle Flip Contract" />
+            <div className='flex justify-between'>
+            <Material.CardHeader title="Coin Flip Contract" />
+            <Material.Link
+                    sx={{ padding: '12px' }}
+                    onClick={() => window.open('https://github.com/Bigbrotha12/Contract_Portfolio/blob/master/contracts/contracts/G_Oracle_Contract/CoinFlipper.sol')?.focus()}
+                >View Source Code</Material.Link>
+            </div>
             <Material.CardContent>
                 <div className=''>
                     <div className='pb-[12px]'>

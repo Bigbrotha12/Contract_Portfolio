@@ -6,7 +6,7 @@ import { ControllerContext } from './state/AppContext';
 import { ConnectionContext } from './state/AppContext';
 import Layout from './components/00_Layout/Layout';
 import PortfolioBoard from './components/00_Layout/PortfolioBoard';
-import { Action, AppConnectionData, Contract, Network, Web3Transaction } from './app/Definitions';
+import { Action, AppConnectionData } from './app/Definitions';
 import { defaultConnection } from './app/Networks';
 import { useTheme, createTheme } from '@mui/material';
 
@@ -32,7 +32,9 @@ export default function App()
             case "ADD_TRANSACTION":
                 return { ...state, transactions: action.payload }
             case "DISCONNECT_ACCOUNT":
-                return { ...state, account: '' }
+                return { ...state, account: '', walletMnemonics: '' }
+            case "FALLBACK_WALLET":
+                return { ...state, walletMnemonics: action.payload }
         }
     }
 

@@ -3,20 +3,49 @@ import { Action } from '../../../app/Definitions';
 import IController from '../../../app/IController';
 import { Networks } from '../../../app/Networks';
 import Material from '../../../assets/Material';
-import { Error } from '../../../app/Errors';
 import { ControllerContext } from '../../../state/AppContext';
 
 
 export default function Connector(props: {setConnection: React.Dispatch<Action>})
 {
-    const controller = React.useContext<IController>(ControllerContext); 
+    const controller = React.useContext<IController>(ControllerContext);
+    const [openModal, setOpenModal] = React.useState<boolean>(false);
 
-    async function walletConnect()
-    {
+    function walletCreate() {
+        // Check if wallet already exist in local storage
+        let cachedWallet = localStorage.getItem("mnemonic");
+        if (cachedWallet) {
+            let [error, walletAddress] = controller.GetWalletAddress(cachedWallet);
+            if (walletAddress) {
+                props.setConnection({ type: "ACCOUNT_CHANGE", payload: walletAddress });
+                props.setConnection({ type: "FALLBACK_WALLET", payload: cachedWallet });
+            } else if (error) {
+                console.error(error.reason);
+            }
+        // Otherwise create one and stored it.
+        } else {
+            let [error, wallet] = controller.CreateWallet();
+            if (wallet) {
+                props.setConnection({ type: "ACCOUNT_CHANGE", payload: wallet.address });
+                props.setConnection({ type: "FALLBACK_WALLET", payload: wallet.mnemonic });
+                localStorage.setItem("mnemonic", wallet.mnemonic);
+            } else if (error) {
+                console.error(error);
+            } 
+        }
+        console.warn("App starting in fallback mode.");
+    }
+
+    async function walletConnect() {
+        if (!window.ethereum.isMetaMask) {
+            setOpenModal(true);
+            return;
+        }
         let [errorA, address] = await controller.RequestConnection();
         let [errorN, network] = await controller.GetNetwork();
         if (errorA) {
-            console.error("Connection error. Account: " + errorA.reason)
+            if(errorA.code === 11) setOpenModal(true);
+            console.error("Connection error. Account: " + errorA.reason);
             return;
         } else if (address) {
             props.setConnection({ type: "ACCOUNT_CHANGE", payload: address });
@@ -53,19 +82,15 @@ export default function Connector(props: {setConnection: React.Dispatch<Action>}
             <Material.Button sx={{height: '60%', marginY: 'auto'}} onClick={walletConnect} variant='contained'>
                 Connect
             </Material.Button>
-            <FallbackWalletCreator open={false} />
-        </div>
-    )
-}
-
-function FallbackWalletCreator(props: {open: boolean}): JSX.Element {
-    return (
-        <Material.Modal open={props.open}>
-            <Material.Box>
-                You do not have a wallet installed. But do not dispair!
+            
+            <Material.Modal open={openModal}>
+            <Material.Box sx={{position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', bgcolor: 'white', padding: '2rem'}}>
+                You do not have a wallet installed. But do not despair!
                 You can get a free, virus-free wallet here.
                 Or I can create a one-time wallet for you to interact with blockchain.
+                <Material.Button variant="outlined" onClick={walletCreate}>Create Wallet</Material.Button>
             </Material.Box>
         </Material.Modal>
-    );
+        </div>
+    )
 }

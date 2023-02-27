@@ -13,8 +13,9 @@ export default function Selector(props: {title: string, setConnection: React.Dis
     const handleSelection = async (event) =>
     {
         let chain = Networks.get(event.target.value);
-        if (chain && await controller.ChangeNetwork(chain))
+        if (chain)
         {
+            let network = await controller.ChangeNetwork(chain, connection.walletMnemonics);
             props.setConnection({ type: "NETWORK_CHANGE", payload: chain });
         }
     }
@@ -32,7 +33,7 @@ export default function Selector(props: {title: string, setConnection: React.Dis
                     {
                         Array.from(Networks.keys()).map((name) => {
                             return (
-                                <Material.MenuItem key={name} value={name} disabled={name === 'Not Connected'}>
+                                <Material.MenuItem key={name} value={name} hidden={name === 'Not Connected'}>
                                     <div className='flex'>
                                         <img className='mr-[6px] w-[2rem] h-[2rem]' src={Networks.get(name)?.icon} />
                                         <div className='my-auto align-middle'>{name}</div>

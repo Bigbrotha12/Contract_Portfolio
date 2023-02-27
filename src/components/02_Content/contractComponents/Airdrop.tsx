@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 import Material from '../../../assets/Material';
 import { useForm } from 'react-hook-form';
 import IController from '../../../app/IController';
@@ -9,10 +9,10 @@ import { useAirdrop } from '../../../app/ContractHooks';
 const tokenLimit = 1_000;
 export default function Airdrop(props: { recipientCount: number, setConnection: React.Dispatch<Action>, setInfoBanner: React.Dispatch<React.SetStateAction<{message: string, warning: string}>> }) {
     const [checkAddress, setCheckAddress] = React.useState<string>('');
-    const { register, handleSubmit, setError, formState: { errors } } = useForm();
     const controller: IController = React.useContext(ControllerContext);
     const connection: AppConnectionData = React.useContext(ConnectionContext);
-    const [amount, claimed, airdrop, transactions, error] = useAirdrop(connection.account, connection.network.name, controller);
+    const { register, handleSubmit, setError, formState: { errors } } = useForm();
+    const [amount, claimed, airdrop, transactions, error] = useAirdrop(connection.account, connection.network.name, controller, connection.walletMnemonics);
 
     async function handleAirdropData(data) {
         if (connection.account) {
@@ -22,19 +22,32 @@ export default function Airdrop(props: { recipientCount: number, setConnection: 
         }
     }
 
+    // Event Tracker Update
     React.useEffect(() => {
         props.setConnection({ type: "ADD_TRANSACTION", payload: transactions });
     }, [transactions]);
 
+    // Info Banner Update
+    React.useEffect(() => {
+        let infoMessage = "This is an Airdrop contract. It allows you to designate a number of accounts as recipients of DEMO tokens. \
+        This implementation makes use of pull approach, requiring recipients to claim their tokens. The airdrop state is stored as a Merkle root within the smart contract.";
+        props.setInfoBanner(state => { return { ...state, message: infoMessage } });
+    }, []);
     React.useEffect(() => {
         props.setInfoBanner(state => { return { ...state, warning: error } });
     }, [error]);
 
     return (
-        <Material.Card sx={{margin: "12px"}}>
+        <Material.Card sx={{ margin: "12px" }}>
+            <div className='flex justify-between'>
             <Material.CardHeader title="Airdrop Contract" />
+            <Material.Link
+                    sx={{ padding: '12px' }}
+                    onClick={() => window.open('https://github.com/Bigbrotha12/Contract_Portfolio/blob/master/contracts/contracts/B_Airdrop/AirdropDemo.sol')?.focus()}
+                >View Source Code</Material.Link>
+            </div>
             <Material.CardContent>
-                <>
+                <Fragment>
                 {/* Airdrop Recipients Input + Deployment */}
                 <form className='pb-[12px]' onSubmit={handleSubmit(handleAirdropData)}>
                 <Material.Typography sx={{paddingTop: '12px'}}>Recipients</Material.Typography>
@@ -107,7 +120,7 @@ export default function Airdrop(props: { recipientCount: number, setConnection: 
                         </div>
                     </div>
               
-                </>
+                </Fragment>
                 </Material.CardContent>
         </Material.Card>                
     )

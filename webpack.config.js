@@ -12,7 +12,7 @@ const htmlPlugin = new HtmlWebpackPlugin({
 module.exports = {
     entry: path.resolve(__dirname, "./src/index.tsx"),
     mode: "development",
-    devtool: 'inline-source-map',
+    //devtool: 'inline-source-map',
     resolve: {
         extensions: [".js", ".jsx", ".json", ".ts", ".tsx", ".css"],
         // fallback: {
@@ -72,7 +72,7 @@ module.exports = {
         path: path.resolve(__dirname, "dist"),
         filename: "bundle.js",
     },
-    devtool: "source-map",
+    //devtool: "source-map",
     devServer: {
         historyApiFallback: true
     }

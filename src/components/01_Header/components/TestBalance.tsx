@@ -9,24 +9,44 @@ export default function TestBalance(props: {setConnection: React.Dispatch<Action
 {
     const [openMenu, setOpenMenu] = React.useState<boolean>(false);
     const [anchor, setAnchor] = React.useState<HTMLElement>();
+    const [gasBalance, setGasBalance] = React.useState<string>('0');
     const controller = React.useContext<IController>(ControllerContext); 
     const connection = React.useContext<AppConnectionData>(ConnectionContext);
-    const [amount, token, transactions, error] = useTestToken(connection.account, connection.network.name, controller);
+    const [amount, token, transactions, error] = useTestToken(connection.account, connection.network.name, controller, connection.walletMnemonics);
 
     React.useEffect(() => {
         props.setConnection({ type: "ADD_TRANSACTION", payload: transactions });
     }, [transactions]);
 
+    React.useEffect(() => {
+        (async () => {
+            if (!connection.account || !connection.network) { return; }
+            let [error, gas] = await controller.GetGasBalance(connection.walletMnemonics, connection.network.name);
+            if (!gas) {
+                console.error(error);
+                return;
+            }
+            setGasBalance(formatAmount(gas, 4));
+            console.log(gas);
+        })();
+    }, [connection.account, connection.network, connection.transactions]);
+
     return (
         
         <div className='flex my-auto px-[32px]'>
             <Material.ClickAwayListener onClickAway={() => setOpenMenu(false)}>
-                <button onClick={(e) => {
+                <button
+                    className='flex gap-3'
+                    onClick={(e) => {
                     setAnchor(e.target as HTMLElement);
                     setOpenMenu(true);
                 }}>
                     <Material.Chip
                         label={`DEMO Tokens: ${amount}`}
+                        variant='outlined'
+                    />
+                    <Material.Chip
+                        label={`Gas Tokens: ${gasBalance}`}
                         variant='outlined'
                     />
                 </button>
@@ -43,9 +63,16 @@ export default function TestBalance(props: {setConnection: React.Dispatch<Action
                         window.open(connection.network.faucet, "_blank")?.focus();
                     }
                 }}>Get Gas Tokens</Material.MenuItem>
-            </Material.Menu>
-                
+            </Material.Menu>  
         </div>
     )
 }
 
+function formatAmount(amount: string, decimals: number): string
+{
+    let decimalIndex = amount.indexOf(".");
+    if (decimalIndex <= 0) { return amount; }
+    
+    let desiredLength = decimalIndex + decimals + 1;
+    return amount.length > desiredLength ? amount.substring(0, desiredLength) : amount;
+}

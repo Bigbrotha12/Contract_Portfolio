@@ -1,14 +1,11 @@
 import React from 'react';
 import { Content } from '../../app/Definitions';
 import Material from '../../assets/Material';
-import { useForm } from 'react-hook-form';
+import formSpreeIcon from '../../assets/icons/FormSpreeLogo.png';
 
 export default function Contact(props: {id: string})
 {
-    const { register, handleSubmit, setError, formState: { errors } } = useForm();
-    function handleContactData(data) {
-        console.log(data);
-    }
+    
 
     return (
         <div id={props.id} className='pt-[80px] pb-[48px] px-auto'>
@@ -18,28 +15,31 @@ export default function Contact(props: {id: string})
                 </Material.Typography>
             </div>
 
-            <div className='bg-[#ffffff] pb-[32px] px-auto'>
-                <Material.Box sx={{ '& .MuiTextField-root': { m: 1 }}} component='form' onSubmit={handleSubmit(handleContactData)} autoComplete='off'>
+            <form className='bg-[#ffffff] pb-[32px] px-auto' action="https://formspree.io/f/mleaajdb" id="contact-form" method="POST">
+                <Material.Box sx={{ '& .MuiTextField-root': { m: 1 }}}>
                     <div className='flex justify-center'>
-                        <Material.TextField sx={{ width: '40%' }} inputProps={{ ...register("firstName") }} label="First Name" />
-                        <Material.TextField sx={{width: '39%'}} inputProps={{ ...register("lastName") }} label="Last Name" />  
+                        <Material.TextField sx={{ width: '40%' }} inputProps={{ name: 'First_Name' }} label="First Name" />
+                        <Material.TextField sx={{width: '39%'}} inputProps={{ name: 'Last_Name' }} label="Last Name" />  
                     </div>
                     <div className='flex justify-center'>
-                        <Material.TextField sx={{width: '80%'}} inputProps={{ ...register("email") }} label="E-mail Address" />
+                        <Material.TextField sx={{width: '80%'}} inputProps={{ name: 'Email' }} label="E-mail Address" />
                     </div>
                     <div className='flex justify-center'>
-                        <Material.TextField sx={{width: '80%'}} inputProps={{ ...register("subject") }} label="Subject of message" />
+                        <Material.TextField sx={{width: '80%'}} inputProps={{ name: 'Subject' }} label="Subject of message" />
                     </div>
                     <div className='flex justify-center'>
-                        <Material.TextField sx={{ width: '80%' }} inputProps={{ ...register("message") }} label="Message" multiline minRows={4} placeholder='Type your message here...' />
+                        <Material.TextField sx={{ width: '80%' }} inputProps={{ name: 'Message' }} label="Message" multiline minRows={4} placeholder='Type your message here...' />
                     </div>
                     <div className='flex justify-center'>
                         <Material.Button sx={{width: '80%'}}variant='contained' fullWidth type='submit'>
                             Submit
                         </Material.Button>
                     </div>
+                    <div className='flex justify-end pr-[10%] pt-[12px]'>
+                        <small>Powered by <img className='inline-block ml-3' src={formSpreeIcon} width='64rem' height='64rem' alt='FormSpree'/></small>
+                    </div>
                 </Material.Box>
-            </div>
+            </form>
         </div>
     )
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Action, AppConnectionData, Content } from '../../app/Definitions';
 import { ConnectionContext } from '../../state/AppContext';
+import Material from '../../assets/Material';
 
 import Header from '../01_Header/Header';
 import W3Header from '../01_Header/W3Header';
@@ -33,26 +34,32 @@ export default function PortfolioBoard(props: {setConnection: React.Dispatch<Act
         window.scrollTo(0, 0)
     }, []);
 
-    React.useEffect(() => {
-        setInfoBanner(state => { return { ...state, message: "You have selected " + connection.contract.name } });
-    }, [connection.contract]);
-
     return (
         <div className='w-full min-h-screen bg-gradientBg bg-cover'>
             
             <Header id='top' items={headerItem} />
             <W3Header setConnection={props.setConnection} />
-            <InfoBanner message={infoBanner.message} warning={infoBanner.warning} />
-            <div className='flex px-[10%] mx-auto'>
-                <ContractInterface>
-                    <DisplayContract
-                        contractName={connection.contract.name}
-                        setConnection={props.setConnection}
-                        setInfoBanner={setInfoBanner}
-                    />
-                </ContractInterface>
-                <EventTracker />
-            </div>
+            <Material.Grid container spacing={2} justifyContent='center' marginX={'5%'}>
+
+                <Material.Grid md={12}>
+                    <InfoBanner message={infoBanner.message} warning={infoBanner.warning} />
+                </Material.Grid>
+            
+                <Material.Grid md={connection.transactions.size === 0 ? 12 : 9} sm={12}>
+                    <ContractInterface>
+                        <DisplayContract
+                            contractName={connection.contract.name}
+                            setConnection={props.setConnection}
+                            setInfoBanner={setInfoBanner}
+                        />
+                    </ContractInterface>
+                </Material.Grid>
+
+                <Material.Grid md={3} sm={12} visibility={connection.transactions.size === 0 ? 'hidden' : 'visible'}>
+                    <EventTracker />
+                </Material.Grid>
+                
+            </Material.Grid>
         </div>
     )
 }

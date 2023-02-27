@@ -13,7 +13,7 @@ export default function EventItem(props: {status: TransactionStatus, hash: strin
                 <Material.Typography sx={{ paddingLeft: '6px', paddingTop: '6px' }}>Status: {statusParser(props.status)}</Material.Typography>
                 
                 <Material.CardContent>
-                    {props.hash}
+                    {shortAddress(props.hash)}
                 </Material.CardContent>
 
                 <Material.CardActions>
@@ -37,4 +37,8 @@ function statusParser(status: TransactionStatus): string {
         default:
             return "Unknown";
     }
+}
+
+function shortAddress(address: string): string {
+    return address.length > 10 ? address.substring(0, 6) + "..." +  address.substring(address.length - 5) : address;
 }
