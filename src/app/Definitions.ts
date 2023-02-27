@@ -19,7 +19,8 @@ export type AppConnectionData =
         account: string,
         network: Network,
         contract: Contract,
-        transactions: Map<string, Web3Transaction>
+        transactions: Map<string, Web3Transaction>,
+        walletMnemonics?: string
 }
 
 export type Action = {
@@ -37,7 +38,10 @@ export type Action = {
         } | { 
         type: "DISCONNECT_ACCOUNT",
         payload: null | undefined
-}
+        } | {
+        type: "FALLBACK_WALLET",
+        payload: string        
+        }
 
 export type Web3Transaction = {
         network: NetworkName,

@@ -12,7 +12,7 @@ type AirdropInterface = {
     hasClaimed(address: string): Promise<boolean>,
     checkAddress(address: string): string
 }
-export const useAirdrop = (account: string, network: NetworkName, controller: IController): [string, boolean, AirdropInterface, Map<string, Web3Transaction>, string] => {
+export const useAirdrop = (account: string, network: NetworkName, controller: IController, mnemonic?: string): [string, boolean, AirdropInterface, Map<string, Web3Transaction>, string] => {
     
     const [airdropList, setAirdropList] = React.useState<AirdropData>();
     const [claimed, setClaimed] = React.useState<boolean>(false);
@@ -40,7 +40,7 @@ export const useAirdrop = (account: string, network: NetworkName, controller: IC
             }
             
             if (data && data.get(network) && /^0x[a-fA-F0-9]{40}$/.test(creator)) {
-                let [txError] = await controller.AirdropClaim(creator, account, amount, data.get(network)!, transactionWatcher);
+                let [txError] = await controller.AirdropClaim(creator, account, amount, data.get(network)!, transactionWatcher, mnemonic, network);
                 if (txError !== null) { setError(txError.reason); }
             } else {
                 setError("Claim attempt failed due to invalid parameters. Ensure your airdrop list has been set for the current network.");
@@ -49,7 +49,7 @@ export const useAirdrop = (account: string, network: NetworkName, controller: IC
         async createAirdrop(data: Array<{ to: string, amount: string }>): Promise<void> {
             let localAirdrop: Array<{ to: string, amount: string }> = data;
             if (localAirdrop) {
-                let [txError] = await controller.AirdropNewRecipients(localAirdrop, transactionWatcher);
+                let [txError] = await controller.AirdropNewRecipients(localAirdrop, transactionWatcher, mnemonic, network);
                 if (txError !== null) {
                     setError(txError.reason);
                     return;
@@ -60,7 +60,7 @@ export const useAirdrop = (account: string, network: NetworkName, controller: IC
             }
         },
         async hasClaimed(address: string): Promise<boolean> {
-            let [viewError, status] = await controller.AirdropHasClaimed(address);
+            let [viewError, status] = await controller.AirdropHasClaimed(address, mnemonic, network);
             if (viewError !== null) {
                 setError(viewError.reason);
                 return false;
@@ -101,7 +101,6 @@ export const useAirdrop = (account: string, network: NetworkName, controller: IC
         (async () => {
             if (account && network) {
                 let amountChecked = airdrop.checkAddress(account);
-                console.log(amountChecked);
                 setAmount(amountChecked);
                 setClaimed(await airdrop.hasClaimed(account));
             }  
@@ -115,7 +114,7 @@ type TestTokenInterface = {
     faucet(): Promise<void>,
     balance(address?: string): Promise<string>
 }
-export const useTestToken = (account: string, network: NetworkName, controller: IController): [string, TestTokenInterface, Map<string, Web3Transaction>, string] => {
+export const useTestToken = (account: string, network: NetworkName, controller: IController, mnemonic?: string): [string, TestTokenInterface, Map<string, Web3Transaction>, string] => {
     
     const [amount, setAmount] = React.useState<string>('0');
     const [error, setError] = React.useState<string>("");
@@ -123,11 +122,14 @@ export const useTestToken = (account: string, network: NetworkName, controller: 
     
     const testToken: TestTokenInterface = {
         async faucet(): Promise<void> {
-            let [txError] = await controller.GetTestTokens(transactionWatcher);
-            if (txError) { setError(txError.reason); }
+            let [txError] = await controller.GetTestTokens(transactionWatcher, mnemonic, network);
+            if (txError) {
+                console.error(txError);
+                setError(txError.reason);
+            }
         },
         async balance(address?: string): Promise<string> {
-            let [viewError, balance] = await controller.GetTestTokenBalance(address);
+            let [viewError, balance] = await controller.GetTestTokenBalance(address, mnemonic, network);
             if (viewError !== null) {
                 setError(viewError.reason);
                 return "0";
@@ -166,7 +168,7 @@ export enum WinState {
     WON,
     LOST
 }
-export const useFlipper = (account: string, network: NetworkName, controller: IController): [string | undefined, WinState, CoinFlipperInterface, Map<string, Web3Transaction>, string] => {
+export const useFlipper = (account: string, network: NetworkName, controller: IController, mnemonic?: string): [string | undefined, WinState, CoinFlipperInterface, Map<string, Web3Transaction>, string] => {
     const [funds, setFunds] = React.useState<string>("0");
     const [winState, setWinState] = React.useState<WinState>(WinState.NONE);
     const [error, setError] = React.useState<string>("");
@@ -174,11 +176,11 @@ export const useFlipper = (account: string, network: NetworkName, controller: IC
     
     const coinFlipper: CoinFlipperInterface = {
         async placeBet(amount: string): Promise<void> {
-            let [txError] = await controller.FlipperAddFunds(amount, transactionWatcher);
+            let [txError] = await controller.FlipperAddFunds(amount, transactionWatcher, mnemonic, network);
             if (txError !== null) { setError(txError.reason); }
         },
         async flipCoin(): Promise<void> {
-            let [txError] = await controller.FlipperFlipCoin(transactionWatcher);
+            let [txError] = await controller.FlipperFlipCoin(transactionWatcher, mnemonic, network);
             if (txError !== null) {
                 setError(txError.reason);
                 return;
@@ -186,13 +188,13 @@ export const useFlipper = (account: string, network: NetworkName, controller: IC
             winStatePolling();
         },
         async withdrawFunds(amount: string): Promise<void> {
-            let [txError] = await controller.FlipperWithdrawFunds(amount, transactionWatcher);
+            let [txError] = await controller.FlipperWithdrawFunds(amount, transactionWatcher, mnemonic, network);
             if (txError !== null) { setError(txError.reason); }
         }
     }
 
     async function winStatePolling() {
-        let [viewError, newBalance] = await controller.FlipperCheckFunds();
+        let [viewError, newBalance] = await controller.FlipperCheckFunds(mnemonic, network);
         if (newBalance) {
             let balanceInt = parseInt(newBalance);
             let fundsInt = parseInt(funds);
@@ -222,7 +224,7 @@ export const useFlipper = (account: string, network: NetworkName, controller: IC
     React.useEffect(() => {
        // check user funds whenever account, network, or transactions change.
         (async () => {
-            let [viewError, balance] = await controller.FlipperCheckFunds();
+            let [viewError, balance] = await controller.FlipperCheckFunds(mnemonic, network);
             if (balance) { setFunds(formatAmount(balance, 2)); }
             else if(viewError) { setError(viewError.reason); }
         })();
@@ -235,7 +237,7 @@ type BridgeInterface = {
     prepareSendTransaction(destNetwork: Network, amount: string): Promise<void>;
     completeSendTransaction(): Promise<void>;
 }
-export const useBridge = (account: string, network: NetworkName, controller: IController): [Map<NetworkName, { source: number, nonce: string }>, BridgeInterface, Map<string, Web3Transaction>, string] => {
+export const useBridge = (account: string, network: NetworkName, controller: IController, mnemonic?: string): [Map<NetworkName, { source: number, nonce: string }>, BridgeInterface, Map<string, Web3Transaction>, string] => {
 
     const [pendingNonces, setPendingNonces] = React.useState<Map<NetworkName, { source: number, nonce: string }>>(new Map<NetworkName, { source: number, nonce: string }>());
     const [error, setError] = React.useState<string>("");
@@ -243,12 +245,12 @@ export const useBridge = (account: string, network: NetworkName, controller: ICo
     
     const bridge: BridgeInterface = {
         async prepareSendTransaction(destNetwork: Network, amount: string): Promise<void> {
-            let [txError] = await controller.BridgeSendTx(destNetwork.id, amount, transactionWatcher);
+            let [txError] = await controller.BridgeSendTx(destNetwork.id, amount, transactionWatcher, mnemonic, network);
             if (txError) { setError(txError.reason); }
         },
         async completeSendTransaction(): Promise<void> {
             let sender = pendingNonces.get(network)!;
-            let [txError] = await controller.BridgeCompleteTransfer(sender.source, sender.nonce, transactionWatcher);
+            let [txError] = await controller.BridgeCompleteTransfer(sender.source, sender.nonce, transactionWatcher, mnemonic, network);
             if (txError) { setError(txError.reason); }
         }
     }
@@ -266,7 +268,7 @@ export const useBridge = (account: string, network: NetworkName, controller: ICo
         if (!pendingNonces.get(network)) {
             Contracts.get("Bridge")!.instances.find(async instance => {
                 let chain = Networks.get(instance.network)!;
-                let [viewError, pendingNonce] = await controller.BridgeGetPending(chain.name, chain.rpcUrl);
+                let [viewError, pendingNonce] = await controller.BridgeGetPending(chain.name, chain.rpcUrl, mnemonic, network);
                 if (viewError) {
                     setError(viewError.reason);
                     return false;
@@ -289,22 +291,22 @@ type NFTTokenInterface = {
     transfer(tokenId: string, recipient: string): Promise<void>;
     checkOwner(tokenId: string): Promise<string>;
 }
-export const useNFTToken = (account: string, network: NetworkName, controller: IController): [string, Array<{id: string, url: string, message: string}>, NFTTokenInterface, Map<string, Web3Transaction>, string] => {
+export const useNFTToken = (account: string, network: NetworkName, controller: IController, mnemonic?: string): [string, Array<{id: string, url: string, message: string}>, NFTTokenInterface, Map<string, Web3Transaction>, string] => {
     const [userBalance, setUserBalance] = React.useState<string>("0");
     const [userTokens, setUserTokens] = React.useState<Array<{ id: string, url: string, message: string }>>([]);
     const [error, setError] = React.useState<string>("");
     const [transactions, setTransactions] = React.useState<Map<string, Web3Transaction>>(new Map<string, Web3Transaction>);
     const NFTToken: NFTTokenInterface = {
         async mint(message: string): Promise<void> {
-            let [txError] = await controller.NFTMint(message, transactionWatcher);
+            let [txError] = await controller.NFTMint(message, transactionWatcher, mnemonic, network);
             if (txError) { setError(txError.reason); }
         },
         async transfer(tokenId: string, recipient: string): Promise<void> {
-            let [txError] = await controller.NFTTransfer(recipient, tokenId, transactionWatcher);
+            let [txError] = await controller.NFTTransfer(recipient, tokenId, transactionWatcher, mnemonic, network);
             if (txError) { setError(txError.reason); }
         },
         async checkOwner(tokenId: string): Promise<string> {
-            let [viewError, owner] = await controller.NFTGetOwner(tokenId);
+            let [viewError, owner] = await controller.NFTGetOwner(tokenId, mnemonic, network);
             if (viewError) {
                 setError(viewError.reason);
                 return "";
@@ -323,7 +325,7 @@ export const useNFTToken = (account: string, network: NetworkName, controller: I
     React.useEffect(() => {
         // Check NFTs owned by user, fetch message and image.
         (async () => {
-            let [viewAError, balance] = await controller.NFTBalance(account);
+            let [viewAError, balance] = await controller.NFTBalance(account, mnemonic, network);
             if (viewAError) {
                 setError(viewAError.reason);
                 return;
@@ -331,14 +333,14 @@ export const useNFTToken = (account: string, network: NetworkName, controller: I
                 setUserBalance(balance);
             }
             
-            let [viewTError, tokens] = await controller.NFTFetchAll(account);
+            let [viewTError, tokens] = await controller.NFTFetchAll(account, mnemonic, network);
             if (viewTError) {
                 setError(viewTError.reason);
                 return;
             } else if (tokens) {
                 let metadata: Array<{ id: string, url: string, message: string }> = [];
                 tokens.forEach(async token => {
-                    let [viewDError, data] = await controller.NFTGetMetadata(token);
+                    let [viewDError, data] = await controller.NFTGetMetadata(token, mnemonic, network);
                     if (viewDError) {
                         setError(viewDError.reason);
                         return;
@@ -358,18 +360,18 @@ type ReflectInterface = {
     purchase(amount: string): Promise<void>;
     transfer(recipient: string, amount: string): Promise<void>;
 }
-export const useReflect = (account: string, network: NetworkName, controller: IController): [string, string, ReflectInterface, Map<string, Web3Transaction>, string] => {
+export const useReflect = (account: string, network: NetworkName, controller: IController, mnemonic?: string): [string, string, ReflectInterface, Map<string, Web3Transaction>, string] => {
     const [userBalance, setUserBalance] = React.useState<string>("0");
     const [price, setPrice] = React.useState<string>("0");
     const [error, setError] = React.useState<string>("");
     const [transactions, setTransactions] = React.useState<Map<string, Web3Transaction>>(new Map<string, Web3Transaction>);
     const reflect: ReflectInterface = {
         async purchase(amount: string): Promise<void> {
-            let [txError] = await controller.ReflectGetToken(amount, transactionWatcher);
+            let [txError] = await controller.ReflectGetToken(amount, transactionWatcher, mnemonic, network);
             if (txError) { setError(txError.reason); }
         },
         async transfer(recipient: string, amount: string): Promise<void> {
-            let [txError] = await controller.ReflectTransfer(recipient, amount, transactionWatcher);
+            let [txError] = await controller.ReflectTransfer(recipient, amount, transactionWatcher, mnemonic, network);
             if (txError) { setError(txError.reason); }
         }
     }
@@ -383,8 +385,8 @@ export const useReflect = (account: string, network: NetworkName, controller: IC
 
     React.useEffect(() => {
         (async () => {
-            let [viewBError, balance] = await controller.ReflectBalance(account);
-            let [viewPError, price] = await controller.ReflectGetPrice();
+            let [viewBError, balance] = await controller.ReflectBalance(account, mnemonic, network);
+            let [viewPError, price] = await controller.ReflectGetPrice(mnemonic, network);
             if (viewBError) {
                 setError(viewBError.reason);
                 return;
@@ -408,22 +410,22 @@ type StakerInterface = {
     claimReward(): Promise<void>;
     withdrawStake(amount?: string): Promise<void>;
 }
-export const useStaker = (account: string, network: NetworkName, controller: IController): [string, string, StakerInterface, Map<string, Web3Transaction>, string] => {
+export const useStaker = (account: string, network: NetworkName, controller: IController, mnemonic?: string): [string, string, StakerInterface, Map<string, Web3Transaction>, string] => {
     const [userBalance, setUserBalance] = React.useState<string>("0");
     const [rewardBalance, setRewardBalance] = React.useState<string>("0");
     const [error, setError] = React.useState<string>("");
     const [transactions, setTransactions] = React.useState<Map<string, Web3Transaction>>(new Map<string, Web3Transaction>());
     const Staker: StakerInterface = {
         async stakeTokens(amount: string): Promise<void> {
-            let [txError] = await controller.StakeAddFunds(amount, transactionWatcher);
+            let [txError] = await controller.StakeAddFunds(amount, transactionWatcher, mnemonic, network);
             if (txError) { setError(txError.reason); }
         },
         async claimReward(): Promise<void> {
-            let [txError] = await controller.StakeClaimReward(transactionWatcher);
+            let [txError] = await controller.StakeClaimReward(transactionWatcher, mnemonic, network);
             if (txError) { setError(txError.reason); }
         },
         async withdrawStake(amount?: string): Promise<void> {
-            let [txError] = await controller.StakeWithdrawFunds(amount || userBalance, transactionWatcher);
+            let [txError] = await controller.StakeWithdrawFunds(amount || userBalance, transactionWatcher, mnemonic, network);
             if (txError) { setError(txError.reason); }
         }
     }
@@ -437,15 +439,17 @@ export const useStaker = (account: string, network: NetworkName, controller: ICo
 
     React.useEffect(() => {
         (async () => {
-            let [viewUError, uBalance] = await controller.StakeCheckStake();
-            let [viewRError, rBalance] = await controller.StakeCheckReward();
+            let [viewUError, uBalance] = await controller.StakeCheckStake(mnemonic, network);
+            let [viewRError, rBalance] = await controller.StakeCheckReward(mnemonic, network);
             if (viewUError) {
+                console.log("Error attempting to obtain staked balance.");
                 setError(viewUError.reason);
                 return;
             } else if (uBalance) {
                 setUserBalance(formatAmount(uBalance, 2));
             }
             if (viewRError) {
+                console.log("Error attempting to obtain reward balance.");
                 setError(viewRError.reason);
                 return;
             } else if (rBalance) {

@@ -55,6 +55,33 @@ export default class AppController implements IController {
         return [{ code: 1, reason: "Web3 provider not available."}, null];
     }
 
+    CreateWallet(): [Error | null, {address: string, mnemonic: string} | null] {
+        try {
+            let wallet = ethers.Wallet.createRandom();
+            return [null, { address: wallet.address, mnemonic: wallet.mnemonic.phrase }];
+        } catch (error) {
+            return [{ code: 15, reason: "Unable to generate random wallet." }, null];
+        }
+    }
+
+    GetWalletAddress(mnemonic: string): [Error | null, string | null] {
+        let wallet = ethers.Wallet.fromMnemonic(mnemonic);
+        if (wallet) {
+            return [null, wallet.address];
+        } else {
+            return [{code: 16, reason: "Invalid mnemonic phrase."}, null];
+        }
+    }
+
+    GetWallet(mnemonic: string): [Error | null, ethers.Signer | null] {
+        let wallet = ethers.Wallet.fromMnemonic(mnemonic);
+        if (wallet) {
+            return [null, wallet];
+        } else {
+            return [{code: 16, reason: "Invalid mnemonic phrase."}, null];
+        }
+    }
+
     /**
      * Queries connected RPC provider for the current network.
      * @returns the currently connected blockchain network or error.
@@ -85,7 +112,10 @@ export default class AppController implements IController {
      * @param network blockchain network to be switched to.
      * @returns error if the user rejects request or network switch failed.
      */
-    async ChangeNetwork(network: Network): Promise<[Error | null]> {
+    async ChangeNetwork(network: Network, mnemonic?: string): Promise<[Error | null]> {
+        // Fallback mode
+        if (mnemonic) { return [null]; }
+
         let web3Provider = new ethers.providers.Web3Provider(window.ethereum as any);
         if (web3Provider) {
             try {
@@ -157,7 +187,28 @@ export default class AppController implements IController {
      * @param contract smart contract API to be instantiated.
      * @returns Signer account, network information, and contract instance. Error in case any of these are missing.
      */
-    async getWeb3Artifacts(contract: Contract): Promise<[Error | null, [ethers.Signer, Network, ethers.Contract] | null]> {
+    async getWeb3Artifacts(contract: Contract, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null, [ethers.Signer, Network, ethers.Contract] | null]> {
+        if (networkName === "Not Connected") {
+            return [{ code: 5, reason: "No network selected." }, null]
+        }
+        // Fallback mode
+        if (mnemonic && networkName) {
+            let network = Networks.get(networkName)!;
+            let web3Provider = new ethers.providers.JsonRpcProvider(network.rpcUrl);
+            if (!web3Provider) { return [{ code: 1, reason: "Web3 provider not available." }, null]; }
+
+            let [error, signer] = this.GetWallet(mnemonic);
+            if (!signer) { return [error, null]; }
+
+            let contractData = contract.instances.find(instance => network.name === instance.network);
+            if (!contractData) { return [{ code: 3, reason: "Contract does not exist on this network." }, null] }
+
+            let connectedSigner = signer.connect(web3Provider);
+            let instance = new ethers.Contract(contractData.address, contract.abi, connectedSigner);
+            
+            return [null, [connectedSigner, network, instance]];
+        }
+
         let web3Provider = new ethers.providers.Web3Provider(window.ethereum as any);
         if (!web3Provider) { return [{ code: 1, reason: "Web3 provider not available." }, null]; }
 
@@ -167,11 +218,28 @@ export default class AppController implements IController {
         let [networkError, network] = await this.GetNetwork();
         if (network === null) { return [networkError, network]; }
 
+        console.log(network.name);
+        console.log(contract.instances);
         let contractData = contract.instances.find(instance => (network as Network).name === instance.network);
         if (!contractData) { return [{ code: 3, reason: "Contract does not exist on this network." }, null] }
         
         let instance = new ethers.Contract(contractData.address, contract.abi, signer);
         return [null, [signer, network, instance]];
+    }
+
+    async GetGasBalance(mnemonic?: string, networkName?: NetworkName): Promise<[Error | null, string | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Token")!, mnemonic, networkName);
+        if (web3Artifact === null) { return [web3Error, null]; }
+
+        let [signer,,]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
+
+        try {
+            console.log(signer);
+            let gasBalance = await signer.getBalance();
+            return [null, ethers.utils.formatEther(gasBalance)];
+        } catch (error) {
+            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
+        }
     }
 
     //================================================================================================================
@@ -182,8 +250,8 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of RPC-JSON network issues.
      */
-    async GetTestTokens(callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Token")!);
+    async GetTestTokens(callback: (hash: string, tx: Web3Transaction) => void, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Token")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error]; }
         
         let [, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -203,8 +271,8 @@ export default class AppController implements IController {
      * @param address [option] address to be queried. Defaults to user's connected account.
      * @returns token balance.
      */
-    async GetTestTokenBalance(address?: string): Promise<[Error | null, string | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Token")!);
+    async GetTestTokenBalance(address?: string, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null, string | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Token")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error, null]; }
 
         let [signer, , contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -226,8 +294,8 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of RPC-JSON network issues.
      */
-    async AirdropNewRecipients(recipients: { to: string, amount: string }[], callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Airdrop")!);
+    async AirdropNewRecipients(recipients: { to: string, amount: string }[], callback: (hash: string, tx: Web3Transaction) => void, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Airdrop")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error]; }
 
         let [, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -257,8 +325,8 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of RPC-JSON network issues.
      */
-    async AirdropClaim(creator: string, address: string, amount: string, data: { to: string; amount: string; }[], callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Airdrop")!);
+    async AirdropClaim(creator: string, address: string, amount: string, data: { to: string; amount: string; }[], callback: (hash: string, tx: Web3Transaction) => void, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Airdrop")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error]; }
 
         let [, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -288,8 +356,8 @@ export default class AppController implements IController {
      * @param address address to be queried.
      * @returns whether the given account has claimed airdrop or error in case of JSON-RPC issues.
      */
-    async AirdropHasClaimed(address: string): Promise<[Error | null, boolean | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Airdrop")!);
+    async AirdropHasClaimed(address: string, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null, boolean | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Airdrop")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error, null]; }
 
         let [signer, , contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -311,8 +379,8 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error if user rejects transaction or JSON-RPC issues.
      */
-    async BridgeSendTx(destination: number, amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Bridge")!);
+    async BridgeSendTx(destination: number, amount: string, callback: (hash: string, tx: Web3Transaction) => void, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Bridge")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error]; }
 
         let [signer, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -335,8 +403,8 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of JSON-RPC issues.
      */
-    async BridgeCompleteTransfer(sendingChain: number, nonce: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Bridge")!);
+    async BridgeCompleteTransfer(sendingChain: number, nonce: string, callback: (hash: string, tx: Web3Transaction) => void, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Bridge")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error]; }
 
         let [signer, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -359,8 +427,8 @@ export default class AppController implements IController {
      * @param sender chain ID of source blockchain network.
      * @returns object specifying transfer amount and verification signature, or error in case of invalid transaction or network issues.
      */
-    async BridgeGetSignature(nonce: string, sender: number): Promise<[Error | null, { amount: string, signature: string } | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Bridge")!);
+    async BridgeGetSignature(nonce: string, sender: number, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null, { amount: string, signature: string } | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Bridge")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error, null]; }
 
         let [signer, ,]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -382,8 +450,8 @@ export default class AppController implements IController {
      * @param rpc JSON-RPC endpoint of source network.
      * @returns true if there are bridge transactions to complete on this network. Error on JSON-RPC issues.
      */
-    async BridgeGetPending(name: NetworkName, rpc: string): Promise<[Error | null, string | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Bridge")!);
+    async BridgeGetPending(name: NetworkName, rpc: string, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null, string | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Bridge")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error, null]; }
         
         let [signer, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -415,8 +483,8 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of JSON-RPC errors.
      */
-    async ReflectGetToken(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Reflect")!);
+    async ReflectGetToken(amount: string, callback: (hash: string, tx: Web3Transaction) => void, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Reflect")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error]; }
 
         let [, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -439,8 +507,8 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of JSON-RPC issues.
      */
-    async ReflectTransfer(recipient: string, amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Reflect")!);
+    async ReflectTransfer(recipient: string, amount: string, callback: (hash: string, tx: Web3Transaction) => void, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Reflect")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error]; }
 
         let [, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -460,8 +528,8 @@ export default class AppController implements IController {
      * View function. Queries reflect token price denominated in DEMO tokens.
      * @returns Reflect token price in DEMO, or error in case of JSON-RPC issues.
      */
-    async ReflectGetPrice(): Promise<[Error | null, string | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Reflect")!);
+    async ReflectGetPrice(mnemonic?: string, networkName?: NetworkName): Promise<[Error | null, string | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Reflect")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error, null]; }
 
         let [,, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -479,8 +547,8 @@ export default class AppController implements IController {
      * @param address address to be queried.
      * @returns amount of Reflect tokens, or error in case of JSON-RPC issues.
      */
-    async ReflectBalance(address: string): Promise<[Error | null, string | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Reflect")!);
+    async ReflectBalance(address: string, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null, string | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Reflect")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error, null]; }
 
         let [,, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -502,8 +570,8 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of JSON-RPC error.
      */
-    async FlipperAddFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Flipper")!);
+    async FlipperAddFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Flipper")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error]; }
 
         let [, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -524,8 +592,8 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of JSON-RPC issues.
      */
-    async FlipperFlipCoin(callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Flipper")!);
+    async FlipperFlipCoin(callback: (hash: string, tx: Web3Transaction) => void, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Flipper")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error]; }
 
         let [, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -546,8 +614,8 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of JSON-RPC issues.
      */
-    async FlipperWithdrawFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Flipper")!);
+    async FlipperWithdrawFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Flipper")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error]; }
 
         let [, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -567,8 +635,8 @@ export default class AppController implements IController {
      * View function. Queries amount of DEMO tokens held in contract.
      * @returns current token balance held in CoinFlip contract.
      */
-    async FlipperCheckFunds(): Promise<[Error | null, string | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Flipper")!);
+    async FlipperCheckFunds(mnemonic?: string, networkName?: NetworkName): Promise<[Error | null, string | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Flipper")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error, null]; }
 
         let [signer,, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -590,8 +658,8 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of JSON-RPC issues.
      */
-    async StakeAddFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Staker")!);
+    async StakeAddFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Staker")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error]; }
 
         let [, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -612,8 +680,8 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of JSON-RPC issues.
      */
-    async StakeWithdrawFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Staker")!);
+    async StakeWithdrawFunds(amount: string, callback: (hash: string, tx: Web3Transaction) => void, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Staker")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error]; }
 
         let [, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -634,8 +702,8 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of JSON-RPC issues.
      */
-    async StakeClaimReward(callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Staker")!);
+    async StakeClaimReward(callback: (hash: string, tx: Web3Transaction) => void, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Staker")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error]; }
 
         let [, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -654,9 +722,9 @@ export default class AppController implements IController {
      * View function. Queries contract for balance of DEMO tokens deposited to contract.
      * @returns number of tokens deposited to contract, or error in case of JSON-RPC issues.
      */
-    async StakeCheckStake(): Promise<[Error | null, string | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Staker")!);
-        if (web3Artifact === null) { return [web3Error, null]; }
+    async StakeCheckStake(mnemonic?: string, networkName?: NetworkName): Promise<[Error | null, string | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Staker")!, mnemonic, networkName);
+        if (web3Artifact === null) { console.log("Error obtaining web3 artifacts."); return [web3Error, null]; }
 
         let [signer,, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
         
@@ -664,6 +732,7 @@ export default class AppController implements IController {
             let balance = await (contract as Staker).balanceOf(await signer.getAddress());
             return [null, ethers.utils.formatEther(balance)];
         } catch (error) {
+            console.error(error);
             if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }, null]; }
             return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
         }
@@ -673,8 +742,8 @@ export default class AppController implements IController {
      * View function. Queries contract for number of tokens earned by user.
      * @returns number of tokens earned by user, or error in case of JSON-RPC issues.
      */
-    async StakeCheckReward(): Promise<[Error | null, string | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Staker")!);
+    async StakeCheckReward(mnemonic?: string, networkName?: NetworkName): Promise<[Error | null, string | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("Staker")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error, null]; }
 
         let [signer,, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -696,8 +765,8 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of JSON-RPC issues.
      */
-    async NFTMint(message: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("NFT")!);
+    async NFTMint(message: string, callback: (hash: string, tx: Web3Transaction) => void, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("NFT")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error]; }
 
         let [signer, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -720,8 +789,8 @@ export default class AppController implements IController {
      * @param callback transaction event handler.
      * @returns error in case of JSON-RPC issues.
      */
-    async NFTTransfer(recipient: string, tokenId: string, callback: (hash: string, tx: Web3Transaction) => void): Promise<[Error | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("NFT")!);
+    async NFTTransfer(recipient: string, tokenId: string, callback: (hash: string, tx: Web3Transaction) => void, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("NFT")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error]; }
 
         let [signer, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -741,8 +810,8 @@ export default class AppController implements IController {
      * @param address address to be queried.
      * @returns number of NFTs owned by address, or error in case of JSON-RPC issues.
      */
-    async NFTBalance(address: string): Promise<[Error | null, string | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("NFT")!);
+    async NFTBalance(address: string, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null, string | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("NFT")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error, null]; }
 
         let [,, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -760,8 +829,8 @@ export default class AppController implements IController {
      * @param tokenId token ID of NFT to be queried.
      * @returns address of NFT owner, or error in case of JSON-RPC issues.
      */
-    async NFTGetOwner(tokenId: string): Promise<[Error | null, string | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("NFT")!);
+    async NFTGetOwner(tokenId: string, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null, string | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("NFT")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error, null]; }
 
         let [,, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -778,8 +847,8 @@ export default class AppController implements IController {
      * @param tokenId token ID of NFT being queried.
      * @returns object with image URI and message string, or error in case of RPC-JSON issues.
      */
-    async NFTGetMetadata(tokenId: string): Promise<[Error | null, { url: string, message: string } | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("NFT")!);
+    async NFTGetMetadata(tokenId: string, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null, { url: string, message: string } | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("NFT")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error, null]; }
 
         let [,, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
@@ -799,8 +868,8 @@ export default class AppController implements IController {
      * @param address [option] address to fetch owned NFTs.
      * @returns array of token IDs for NFTs currently owned by address, or error in case of JSON-RPC issues.
      */
-    async NFTFetchAll(address?: string): Promise<[Error | null, Array<string> | null]> {
-        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("NFT")!);
+    async NFTFetchAll(address?: string, mnemonic?: string, networkName?: NetworkName): Promise<[Error | null, Array<string> | null]> {
+        let [web3Error, web3Artifact] = await this.getWeb3Artifacts(Contracts.get("NFT")!, mnemonic, networkName);
         if (web3Artifact === null) { return [web3Error, null]; }
 
         let [signer,, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
