@@ -69,20 +69,20 @@ export default function Layout()
         },
     ]
     const portfolioContent: Array<Content> = [
-        { title: 'DApp Demo', icon: DAppImage, content: '/portfolio#top' },
-        { title: 'NFT Game', icon: GameImage, content: 'https://arcane-familiars.netlify.app/' },
+        { title: 'DApp Demo', icon: DAppImage, content: '/portfolio' },
+        { title: 'NFT Game (In Progress)', icon: GameImage, content: 'https://arcane-familiars.netlify.app/' },
         { title: 'Code Repositories', icon: CodeImage, content: 'https://github.com/Bigbrotha12' },
     ]
     const skillContent: Array<Content> = [
-        { title: 'Typescript', icon: TS, content: 'Types, Interface' },
-        { title: 'C#', icon: CSharp, content: 'Classes, Multi-threading' },
-        { title: 'Rust', icon: Rust, content: 'Cargo' },
-        { title: 'React', icon: ReactJS, content: 'Functional component, Hooks' },
-        { title: 'MongoDB', icon: MongoDB, content: 'Access, Pipelines' },
-        { title: 'AWS', icon: AWS, content: 'Lambda function, API Gateway, Route 53' },
-        { title: 'Solidity', icon: Solidity, content: 'Compile, Interface, Transparent Proxy, Upgradable contracts' },
-        { title: 'Hardhat', icon: Hardhat, content: 'Compile, Deploy, Test' },
-        { title: 'EthersJS', icon: EthersJS, content: 'Compile, Deploy, Test' },
+        { title: 'Solidity', icon: Solidity, content: 'Memory layout, Types and Structures, ERC Standards' },
+        { title: 'Hardhat', icon: Hardhat, content: 'Custom Deployment, Automated Testing, Blockchain Forking' },
+        { title: 'Javascript/Typescript', icon: TS, content: 'DOM Manipulation, Asynchronous Programming, Classes/Interfaces' },
+        { title: 'React', icon: ReactJS, content: 'State Management, Functional Components, Advanced/Custom Hooks' },
+        { title: 'EthersJS', icon: EthersJS, content: 'RPC Providers, Smart Contract Interfacing, Cryptographic Functions' },
+        { title: 'C#', icon: CSharp, content: 'Multi-threading, Polymorphism, Design Patterns' },
+        { title: 'Rust', icon: Rust, content: 'Cargo, Ownership Rules, Pattern Matching' },
+        { title: 'MongoDB', icon: MongoDB, content: 'Query construction, Pipelines, Commands' },
+        { title: 'AWS', icon: AWS, content: 'EC2, Cloudfront, Lambda Functions, API Gateway' },
     ]
 
     return (
