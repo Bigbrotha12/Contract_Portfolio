@@ -37,7 +37,7 @@ export default function PortfolioBoard(props: {setConnection: React.Dispatch<Act
     return (
         <div className='w-full min-h-screen bg-gradientBg bg-cover'>
             
-            <Header id='top' items={headerItem} />
+            <Header title='Rafael' id='top' items={headerItem} />
             <W3Header setConnection={props.setConnection} />
             <Material.Grid container spacing={2} justifyContent='center' marginX={'5%'}>
 

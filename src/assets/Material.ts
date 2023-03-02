@@ -33,6 +33,7 @@ import InputLabel from "@mui/material/InputLabel";
 import Icon from '@mui/material/Icon';
 import Select from '@mui/material/Select';
 import Modal from '@mui/material/Modal';
+import Drawer from "@mui/material/Drawer";
 
 import ExpandLessRounded from "@mui/icons-material/ExpandLessRounded";
 import ExpandMoreRounded from "@mui/icons-material/ExpandMoreRounded";
@@ -42,8 +43,10 @@ import PlayArrow from "@mui/icons-material/PlayArrow";
 import Close from "@mui/icons-material/Close";
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import CircleIcon from '@mui/icons-material/Circle';
+import MenuIcon from '@mui/icons-material/Menu';
 
 import styled from '@mui/material/styles/styled';
+
 
 export default {
     Button,
@@ -56,6 +59,7 @@ export default {
     ListItemText,
     ListItemIcon,
     Switch,
+    Drawer,
     Divider,
     Grid,
     Typography,
@@ -90,6 +94,7 @@ export default {
     Close,
     MoreVertIcon,
     CircleIcon,
+    MenuIcon,
 
     styled
 }

@@ -42,7 +42,6 @@ export default function Layout()
         { title: 'Home', icon: null, content: "#head" },
         { title: 'Services', icon: null, content: "#services" },
         { title: 'About', icon: null, content: "#about" },
-        { title: 'Rafael', icon: null, content: "#head" },
         { title: 'Portfolio', icon: null, content: "#portfolio" },
         { title: 'Skills', icon: null, content: "#skills" }, 
         { title: 'Contact', icon: null, content: "#contact" }
@@ -87,7 +86,7 @@ export default function Layout()
 
     return (
         <div className='w-full'>
-            <Header id='top' items={headerItem} />
+            <Header title='Rafael' id='top' items={headerItem} />
             <HeadShot id='head' />
             <Services title='I can help you with...' id='services' content={servicesContent} />
             <About title='About me' id='about' content={aboutContent} />
