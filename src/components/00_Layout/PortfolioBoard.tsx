@@ -35,7 +35,7 @@ export default function PortfolioBoard(props: {setConnection: React.Dispatch<Act
     }, []);
 
     return (
-        <div className='w-full min-h-screen bg-gradientBg bg-cover'>
+        <div className='w-full min-h-screen bg-gray-200'>
             
             <Header title='Rafael' id='top' items={headerItem} />
             <W3Header setConnection={props.setConnection} />

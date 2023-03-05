@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 import Material from '../../../assets/Material';
 import { Action, AppConnectionData, Network, NetworkName } from '../../../app/Definitions';
 import { Networks } from '../../../app/Networks';
@@ -21,7 +21,7 @@ export default function Selector(props: {title: string, setConnection: React.Dis
     }
 
     return (
-        <div className='w-[20%]'>
+        <Fragment>
             <Material.FormControl fullWidth>
                 <Material.InputLabel id={props.title}>{props.title}</Material.InputLabel>
                 <Material.Select
@@ -43,7 +43,7 @@ export default function Selector(props: {title: string, setConnection: React.Dis
                     }
                 </Material.Select>
             </Material.FormControl>
-        </div>
+        </Fragment>
     )
 }
 
@@ -53,8 +53,8 @@ function NetworkOptions(props: { options: Map<NetworkName, Network>}): JSX.Eleme
         available.push(<Material.MenuItem key={value.id} value={key}>{value.name}</Material.MenuItem>);
     })
     return (
-        <>
+        <Fragment>
             {available.map(value => {return value})}
-        </>
+        </Fragment>
     )
 }

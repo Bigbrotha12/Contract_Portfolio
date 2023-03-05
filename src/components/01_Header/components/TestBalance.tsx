@@ -41,14 +41,16 @@ export default function TestBalance(props: {setConnection: React.Dispatch<Action
                     setAnchor(e.target as HTMLElement);
                     setOpenMenu(true);
                 }}>
-                    <Material.Chip
-                        label={`DEMO Tokens: ${amount}`}
-                        variant='outlined'
-                    />
-                    <Material.Chip
-                        label={`Gas Tokens: ${gasBalance}`}
-                        variant='outlined'
-                    />
+                    <Material.Box sx={{border: '1px solid', padding: '6px', minWidth: '160px'}}>
+                        <Material.Typography>{`DEMO Tokens: ${amount}`}</Material.Typography>
+                    </Material.Box>
+
+                    <div className='hidden lg:block'>
+                    <Material.Box sx={{border: '1px solid', padding: '6px', minWidth: '160px'}}>
+                        <Material.Typography>{`Gas Tokens: ${gasBalance}`}</Material.Typography>
+                    </Material.Box>
+                    </div>
+                  
                 </button>
             </Material.ClickAwayListener>
   

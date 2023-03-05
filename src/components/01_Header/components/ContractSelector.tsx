@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 import Material from '../../../assets/Material';
 import { Action, AppConnectionData, Contract, ContractName } from '../../../app/Definitions';
 import { ConnectionContext } from '../../../state/AppContext';
@@ -9,7 +9,7 @@ export default function ContractSelector(props: {title: string, setConnection: R
     const connection = React.useContext<AppConnectionData>(ConnectionContext);
     
     return (
-        <div className='w-[20%]'>
+        <Fragment>
             <Material.FormControl fullWidth>
                 <Material.InputLabel id={props.title}>{props.title}</Material.InputLabel>
                 <Material.Select
@@ -33,7 +33,7 @@ export default function ContractSelector(props: {title: string, setConnection: R
                 }
                 </Material.Select>
             </Material.FormControl>
-        </div>
+        </Fragment>
     )
 }
 

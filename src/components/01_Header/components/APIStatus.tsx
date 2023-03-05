@@ -4,7 +4,7 @@ import Material from '../../../assets/Material';
 export default function APIStatus(props: {connected: boolean})
 {
     return (
-        <div className='flex mr-[12px]'>
+        <div className='hidden lg:flex mr-[12px]'>
             <div className='my-auto px-[12px]'>
                 <Material.Typography fontFamily='inherit'>Status</Material.Typography>
             </div>

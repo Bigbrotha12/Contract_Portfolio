@@ -12,7 +12,7 @@ export default function InfoBanner(props: {message: string, warning: string})
                 </Material.Typography>
                 
                 <Material.Typography sx={{marginY: '12px'}}>
-                    Note: {props.warning}
+                    {props.warning && `Note: {props.warning}`}
                 </Material.Typography>    
             </div>
             </div>
