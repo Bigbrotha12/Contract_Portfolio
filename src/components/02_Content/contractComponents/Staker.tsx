@@ -48,6 +48,7 @@ export default function Staker(props: {setConnection: React.Dispatch<Action>, se
                     <Material.TextField
                         sx={{ marginY: '12px' }}
                         fullWidth
+                        InputProps={{ inputMode: 'numeric' }}
                         onChange={(e) => {
                             if (validateNumber(e.target.value))
                             {

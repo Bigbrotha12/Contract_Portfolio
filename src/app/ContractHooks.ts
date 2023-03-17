@@ -114,7 +114,7 @@ type TestTokenInterface = {
     faucet(): Promise<void>,
     balance(address?: string): Promise<string>
 }
-export const useTestToken = (account: string, network: NetworkName, controller: IController, mnemonic?: string): [string, TestTokenInterface, Map<string, Web3Transaction>, string] => {
+export const useTestToken = (account: string, network: NetworkName, controller: IController, externalTx: Map<string, Web3Transaction>, mnemonic?: string): [string, TestTokenInterface, Map<string, Web3Transaction>, string] => {
     
     const [amount, setAmount] = React.useState<string>('0');
     const [error, setError] = React.useState<string>("");
@@ -153,7 +153,7 @@ export const useTestToken = (account: string, network: NetworkName, controller: 
             setAmount(balance);
         })();
         
-    }, [account, network, transactions]);
+    }, [account, network, transactions, externalTx]);
 
     return [amount, testToken, transactions, error];
 }

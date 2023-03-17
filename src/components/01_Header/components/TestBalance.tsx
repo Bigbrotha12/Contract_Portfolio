@@ -12,7 +12,7 @@ export default function TestBalance(props: {setConnection: React.Dispatch<Action
     const [gasBalance, setGasBalance] = React.useState<string>('0');
     const controller = React.useContext<IController>(ControllerContext); 
     const connection = React.useContext<AppConnectionData>(ConnectionContext);
-    const [amount, token, transactions, error] = useTestToken(connection.account, connection.network.name, controller, connection.walletMnemonics);
+    const [amount, token, transactions, error] = useTestToken(connection.account, connection.network.name, controller, connection.transactions, connection.walletMnemonics);
 
     React.useEffect(() => {
         props.setConnection({ type: "ADD_TRANSACTION", payload: transactions });
@@ -27,7 +27,6 @@ export default function TestBalance(props: {setConnection: React.Dispatch<Action
                 return;
             }
             setGasBalance(formatAmount(gas, 4));
-            console.log(gas);
         })();
     }, [connection.account, connection.network, connection.transactions]);
 
@@ -41,12 +40,12 @@ export default function TestBalance(props: {setConnection: React.Dispatch<Action
                     setAnchor(e.target as HTMLElement);
                     setOpenMenu(true);
                 }}>
-                    <Material.Box sx={{border: '1px solid', padding: '6px', minWidth: '160px'}}>
+                    <Material.Box sx={{border: '1px solid #c5c5c5', padding: '6px', minWidth: '160px'}}>
                         <Material.Typography>{`DEMO Tokens: ${amount}`}</Material.Typography>
                     </Material.Box>
 
                     <div className='hidden lg:block'>
-                    <Material.Box sx={{border: '1px solid', padding: '6px', minWidth: '160px'}}>
+                    <Material.Box sx={{border: '1px solid #c5c5c5', padding: '6px', minWidth: '160px'}}>
                         <Material.Typography>{`Gas Tokens: ${gasBalance}`}</Material.Typography>
                     </Material.Box>
                     </div>

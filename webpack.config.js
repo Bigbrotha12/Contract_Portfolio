@@ -2,7 +2,7 @@ const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const LodashModuleReplacementPlugin = require('lodash-webpack-plugin');
 //const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
-const webpack = require("webpack");
+//const webpack = require("webpack");
 
 const htmlPlugin = new HtmlWebpackPlugin({
     template: "./src/index.html",
@@ -11,6 +11,7 @@ const htmlPlugin = new HtmlWebpackPlugin({
 
 module.exports = {
     entry: path.resolve(__dirname, "./src/index.tsx"),
+    //mode: "production",
     mode: "development",
     //devtool: 'inline-source-map',
     resolve: {

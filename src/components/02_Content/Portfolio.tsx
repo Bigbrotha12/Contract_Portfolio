@@ -13,30 +13,39 @@ export default function Portfolio(props: { title: string, id: string, content: A
                 </Material.Typography>
             </div>
 
-            <div className='py-[32px] px-auto'>
-                <div className='m-auto p-[24px] w-[80%] overflow-y-hidden overflow-x-scroll whitespace-nowrap'>
+            <Material.Grid container sx={{marginX: '24px', paddingY: '32px', paddingX: 'auto'}} spacing={0}>
                     {
                         props.content.map(content => {
                             return (
-                                <Link
-                                    key={content.title}
-                                    to={content.content}
-                                    onClick={() => {
-                                        if (content.content.startsWith('https')) {
-                                            window.location.replace(content.content)
-                                        }
-                                    }}
-                                >
-                                    <Material.Card key={content.title} sx={{ display: 'inline-block', width: '320px', height: '320px', margin: '12px' }}>
+                                <Material.Grid key={content.title} sm={12} md={6}>
+                                
+                                    <Material.Card key={content.title} sx={{maxHeight: '360px', position: 'relative'}}>
                                         <Material.CardHeader title={content.title} titleTypographyProps={{textAlign: 'center', fontFamily: 'inherit'}} />
-                                        <Material.CardMedia component='img' image={content.icon || '' } alt='image' />
+                                        <Material.CardMedia component='img' image={content.icon || ''} alt='image' />
+                                        <Material.CardActions sx={{position: 'absolute', bottom: '12px'}}>
+                                            <Material.Button sx={{backgroundColor: '#242424'}}  variant='contained'>
+                                            <Link
+                                                to={content.content}
+                                                onClick={() => {
+                                                    if (content.content.startsWith('https')) {
+                                                        window.location.replace(content.content)
+                                                    }
+                                                }}
+                                                >
+                                                    Live Site
+                                            </Link>
+                                            </Material.Button>
+                                            <Material.Button sx={{backgroundColor: '#242424'}} variant='contained'>Video Demo</Material.Button>
+                                            <Material.Button sx={{backgroundColor: '#242424'}} variant='contained'>Source Code</Material.Button>
+                                        </Material.CardActions>
                                     </Material.Card>
-                                </Link>
+                                
+                                </Material.Grid>
                             )
                         })
                     }
-                </div>
-            </div>
+                
+            </Material.Grid>
             
         </div>
     )

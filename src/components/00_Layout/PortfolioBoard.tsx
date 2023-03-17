@@ -24,7 +24,6 @@ export default function PortfolioBoard(props: {setConnection: React.Dispatch<Act
         { title: 'Home', icon: null, content: "/" },
         { title: 'Services', icon: null, content: "/#services" },
         { title: 'About', icon: null, content: "/#about" },
-        { title: 'Rafael', icon: null, content: "/#head" },
         { title: 'Portfolio', icon: null, content: "/#portfolio" },
         { title: 'Skills', icon: null, content: "/#skills" }, 
         { title: 'Contact', icon: null, content: "/#contact" }

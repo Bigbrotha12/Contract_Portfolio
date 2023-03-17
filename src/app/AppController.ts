@@ -48,7 +48,7 @@ export default class AppController implements IController {
                     return [{ code: 10, reason: "Request rejected by user.", stack: error }, null];
                 }
                 else {
-                    return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
+                    return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }, null];
                 }
             }
         }
@@ -91,7 +91,6 @@ export default class AppController implements IController {
         if (web3Provider) {
             try {
                 let id: string = await web3Provider.send('eth_chainId', []);
-                console.log("ChainId: %s", id);
                 let network: Network | null = null;
                 Networks.forEach(value => {
                     if (id === value.hexID) {
@@ -100,7 +99,7 @@ export default class AppController implements IController {
                 });
                 return network ? [null, network] : [{ code: 2, reason: "Unknown network."}, null];
             } catch (error) {
-                return [{ code: 11, reason: "JSON-RPC error."}, null];
+                return [{ code: 11, reason: error.reason || "JSON-RPC error."}, null];
             }
         }
         return [{ code: 1, reason: "Web3 provider not available."}, null];
@@ -145,7 +144,7 @@ export default class AppController implements IController {
                     } catch (addingError) {
                         // handle "add" error
                         if (addingError.code === 4001) return [{ code: 10, reason: "Request rejected by user." }];
-                        return [{ code: 11, reason: "JSON-RPC error." }];
+                        return [{ code: 11, reason: addingError.reason || "JSON-RPC error." }];
                     }
                 }
             }
@@ -218,8 +217,6 @@ export default class AppController implements IController {
         let [networkError, network] = await this.GetNetwork();
         if (network === null) { return [networkError, network]; }
 
-        console.log(network.name);
-        console.log(contract.instances);
         let contractData = contract.instances.find(instance => (network as Network).name === instance.network);
         if (!contractData) { return [{ code: 3, reason: "Contract does not exist on this network." }, null] }
         
@@ -234,11 +231,10 @@ export default class AppController implements IController {
         let [signer,,]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
 
         try {
-            console.log(signer);
             let gasBalance = await signer.getBalance();
             return [null, ethers.utils.formatEther(gasBalance)];
         } catch (error) {
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }, null];
         }
     }
 
@@ -262,7 +258,7 @@ export default class AppController implements IController {
             return [null];
         } catch (error) {
             if (error.code === 4001) return [{ code: 10, reason: "Request rejected by user." }];
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -281,7 +277,7 @@ export default class AppController implements IController {
             let rawBalance = await (contract as DemoToken).balanceOf(address || await signer.getAddress());
             return [null, ethers.utils.formatEther(rawBalance)];
         } catch (error) {
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }, null];
         }
     }
 
@@ -312,7 +308,7 @@ export default class AppController implements IController {
             return [null];
         } catch (error) {
             if (error.code === 4001) return [{ code: 10, reason: "Request rejected by user." }];
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -347,7 +343,7 @@ export default class AppController implements IController {
             return [null];
         } catch (error) {
             if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }]; }
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -365,7 +361,7 @@ export default class AppController implements IController {
         try {
             return [null, await (contract as AirdropDemo).hasClaimed(await signer.getAddress(), address)];
         } catch (error) {
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }, null];
         }
     }
 
@@ -392,7 +388,7 @@ export default class AppController implements IController {
             return [null];
         } catch (error) {
             if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }]; }
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -417,7 +413,7 @@ export default class AppController implements IController {
             return [null];
         } catch (error) {
             if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }]; }
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -470,7 +466,7 @@ export default class AppController implements IController {
             // Transaction pending on source network
             return destinationNonce.lt(sourceNonce) ? [null, destinationNonce.toString()] : [null, null];
         } catch (error) {
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }, null];
         }
     }
     
@@ -496,7 +492,7 @@ export default class AppController implements IController {
             return [null];
         } catch (error) {
             if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }]; }
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -520,7 +516,7 @@ export default class AppController implements IController {
             return [null];
         } catch (error) {
             if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }]; }
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -538,7 +534,7 @@ export default class AppController implements IController {
             let formatPrice = await (contract as ReflectToken).purchasePrice();
             return [null, ethers.utils.formatEther(formatPrice)];
         } catch (error) {
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }, null];
         }
     }
 
@@ -557,7 +553,7 @@ export default class AppController implements IController {
             let balance = await (contract as ReflectToken).balanceOf(address);
             return [null, ethers.utils.formatEther(balance)];
         } catch (error) {
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }, null];
         } 
     }
     
@@ -583,7 +579,7 @@ export default class AppController implements IController {
             return [null];
         } catch (error) {
             if (error.code === 4001) return [{ code: 10, reason: "Request rejected by user." }];
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }];
         } 
     }
 
@@ -604,7 +600,7 @@ export default class AppController implements IController {
             return [null];
         } catch (error) {
             if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }]; }
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -627,7 +623,7 @@ export default class AppController implements IController {
             return [null];
         } catch (error) {
             if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }]; }
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -645,7 +641,7 @@ export default class AppController implements IController {
             let balance = await (contract as CoinFlipper).getPlayerBalance(await signer.getAddress());
             return [null, ethers.utils.formatEther(balance)];
         } catch (error) {
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }, null];
         }
     }
     
@@ -670,7 +666,7 @@ export default class AppController implements IController {
             return [null];
         } catch (error) {
             if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }]; }
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -685,7 +681,9 @@ export default class AppController implements IController {
         if (web3Artifact === null) { return [web3Error]; }
 
         let [, network, contract]: [ethers.Signer, Network, ethers.Contract] = web3Artifact;
-        let parsedAmount = ethers.utils.formatEther(amount);
+        console.log(amount);
+        let parsedAmount = ethers.utils.parseEther(amount);
+        console.log(parsedAmount);
         
         try {
             let tx = await (contract as Staker).withdraw(parsedAmount);
@@ -693,7 +691,7 @@ export default class AppController implements IController {
             return [null];
         } catch (error) {
             if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }] };
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -714,7 +712,7 @@ export default class AppController implements IController {
             return [null];
         } catch (error) {
             if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }]; }
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -734,7 +732,7 @@ export default class AppController implements IController {
         } catch (error) {
             console.error(error);
             if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }, null]; }
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }, null];
         }
     }
 
@@ -752,7 +750,7 @@ export default class AppController implements IController {
             let reward = await (contract as Staker).earned(await signer.getAddress());
             return [null, ethers.utils.formatEther(reward)];
         } catch (error) {
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }, null];
         }
     }
 
@@ -778,7 +776,7 @@ export default class AppController implements IController {
             return [null];
         } catch (error) {
             if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }]; }
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -801,7 +799,7 @@ export default class AppController implements IController {
             return [null];
         } catch (error) {
             if (error.code === 4001) { return [{ code: 10, reason: "Request rejected by user." }]; }
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }];
         }
     }
 
@@ -820,7 +818,7 @@ export default class AppController implements IController {
             let nftBalance = await (contract as FamiliarLogic).balanceOf(address);
             return [null, nftBalance.toString()];
         } catch (error) {
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }, null];
         }
     }
 
@@ -838,7 +836,7 @@ export default class AppController implements IController {
         try {
             return [null, await (contract as FamiliarLogic).ownerOf(tokenId)];
         } catch (error) {
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }, null];
         }
     }
 
@@ -858,7 +856,7 @@ export default class AppController implements IController {
             let message = await (contract as FamiliarLogic).getTokenBlueprint(tokenId);
             return [null, { url, message }];
         } catch (error) {
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }, null];
         }
     }
 
@@ -894,7 +892,7 @@ export default class AppController implements IController {
             });
             return [null, tokensOwned];
         } catch (error) {
-            return [{ code: 11, reason: "JSON-RPC error.", stack: error }, null];
+            return [{ code: 11, reason: error.reason || "JSON-RPC error.", stack: error }, null];
         }
     }
 }

@@ -10,12 +10,17 @@ import ContractSelector from './components/ContractSelector';
 import NetworkSelector from './components/NetworkSelector';
 import Material from '../../assets/Material';
 
-export default function W3Header(props: {setConnection: React.Dispatch<Action>})
-{
+export default function W3Header(props: { setConnection: React.Dispatch<Action> }) {
+    const connection = React.useContext<AppConnectionData>(ConnectionContext);
+
     return (
         <Fragment>
             <div className='block md:hidden'><ShortHeader {...props}/></div>
             <div className='hidden md:block'><FullHeader {...props} /></div>
+            { connection.walletMnemonics && <div className='flex gap-3 p-[6px] bg-yellow-300 font-light text-[#303030] text-sm'>
+                <Material.Warning />
+                <p className='my-auto'>You are using a test wallet generated in browser. Never use this wallet in a production environment.</p>
+            </div>}
         </Fragment>
     )
 }

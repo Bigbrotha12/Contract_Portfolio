@@ -17,10 +17,10 @@ export default function About(props: {title: string, id: string, content: Array<
                     {
                         props.content.map((card) => {
                             return (
-                                <Material.Grid key={card.title} sm={4}>
+                                <Material.Grid key={card.title} sm={12} md={4}>
                                     <Material.Card>
                                         {card.icon && <Material.CardMedia component='img' src={card.icon} />}
-                                        <Material.CardContent>{card.content}</Material.CardContent>
+                                        <Material.CardContent sx={{lineHeight: "1.5"}}>{card.content}</Material.CardContent>
                                     </Material.Card>
                                 </Material.Grid>
                             )

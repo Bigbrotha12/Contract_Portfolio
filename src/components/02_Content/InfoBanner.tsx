@@ -11,9 +11,9 @@ export default function InfoBanner(props: {message: string, warning: string})
                     {props.message}
                 </Material.Typography>
                 
-                <Material.Typography sx={{marginY: '12px'}}>
-                    {props.warning && `Note: {props.warning}`}
-                </Material.Typography>    
+                {props.warning && <Material.Typography sx={{ marginY: '12px', padding: '12px', borderRadius: '12px', backgroundColor: '#ff9494'}}>
+                    {"Error: " +  props.warning}
+                </Material.Typography>}  
             </div>
             </div>
             

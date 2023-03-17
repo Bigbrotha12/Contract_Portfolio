@@ -12,7 +12,7 @@ export default function EventItem(props: {status: TransactionStatus, hash: strin
             <Material.Card>
                 <Material.Typography sx={{ paddingLeft: '6px', paddingTop: '6px' }}>Status: {statusParser(props.status)}</Material.Typography>
                 
-                <Material.CardContent>
+                <Material.CardContent sx={{paddingX: 'auto'}}>
                     {shortAddress(props.hash)}
                 </Material.CardContent>
 

@@ -57,30 +57,30 @@ export default function Layout()
     const aboutContent: Array<Content> = [
         {
             title: 'Card 1', icon: null, content:
-                `Born and raised in the Dominican Republic. I studied in the International Business master program at the University of Florida and worked for a large multinational company as Accountant/Controller for the past 7 years. 
+                `I studied in the International Business master program at the University of Florida and worked for a large multinational company as Accountant/Controller for the past 7 years. 
                 Thanks to this I was able to travel and live abroad while learning new cultures and ways of life. So far, I have lived in 5 different countries and visited over 30 different others. If I\'m not coding or traveling, you can find me playing a board game with friends over a cup of coffee.`
         },
-        { title: 'Card 2', icon: AboutImage, content: 'Andorra' },
         {
             title: 'Card 3', icon: null, content:
-                "Once I learned about Blockchain and became involved in the decentralized application space (mainly DeFi), I was intrigued about the possibilities and decided to make a career change into blockchain development. \n \
-                I have been studying all I can about blockchain technology, DeFi space, and Solidity/Web3 development and began my journey into the industry. I truly believe this technology will revolutionize the way we interact with each other and I want to be a part of that."
+                "Once I learned about Blockchain and became involved in the decentralized application space, I was intrigued about the possibilities and decided to make a career change into blockchain development. \n \
+                I enjoy learning all I can about blockchain technology, DeFi space, and Solidity/Web3 development."
         },
+        { title: 'Card 2', icon: AboutImage, content: 'Andorra' },
     ]
     const portfolioContent: Array<Content> = [
-        { title: 'DApp Demo', icon: DAppImage, content: '/portfolio' },
+        { title: 'Smart Contracts Site', icon: DAppImage, content: '/portfolio' },
         { title: 'NFT Game (In Progress)', icon: GameImage, content: 'https://arcane-familiars.netlify.app/' },
         { title: 'Code Repositories', icon: CodeImage, content: 'https://github.com/Bigbrotha12' },
     ]
     const skillContent: Array<Content> = [
-        { title: 'Solidity', icon: Solidity, content: 'Memory layout, Types and Structures, ERC Standards' },
+        { title: 'Solidity', icon: Solidity, content: 'Design Patterns, Memory layout, Types and Structures, ERC Standards' },
         { title: 'Hardhat', icon: Hardhat, content: 'Custom Deployment, Automated Testing, Blockchain Forking' },
-        { title: 'Javascript/Typescript', icon: TS, content: 'DOM Manipulation, Asynchronous Programming, Classes/Interfaces' },
-        { title: 'React', icon: ReactJS, content: 'State Management, Functional Components, Advanced/Custom Hooks' },
-        { title: 'EthersJS', icon: EthersJS, content: 'RPC Providers, Smart Contract Interfacing, Cryptographic Functions' },
+        { title: 'Typescript', icon: TS, content: 'DOM Manipulation, Asynchronous Programming, Classes/Interfaces' },
+        { title: 'React', icon: ReactJS, content: 'State Management, Redux, Functional Components, Advanced/Custom Hooks' },
+        { title: 'EthersJS', icon: EthersJS, content: 'Account Management, RPC Providers, Smart Contract Interfacing, Cryptographic Functions' },
         { title: 'C#', icon: CSharp, content: 'Multi-threading, Polymorphism, Design Patterns' },
         { title: 'Rust', icon: Rust, content: 'Cargo, Ownership Rules, Pattern Matching' },
-        { title: 'MongoDB', icon: MongoDB, content: 'Query construction, Pipelines, Commands' },
+        { title: 'MongoDB', icon: MongoDB, content: 'Query construction, Pipelines, Transactions, Commands' },
         { title: 'AWS', icon: AWS, content: 'EC2, Cloudfront, Lambda Functions, API Gateway' },
     ]
 

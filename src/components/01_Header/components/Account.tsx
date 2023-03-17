@@ -30,6 +30,8 @@ export default function Account(props: {setConnection: React.Dispatch<Action>})
             <Material.ClickAwayListener onClickAway={() => setOpenMenu(false)}>
                 <Material.Button onClick={handleMenu}>
                     <Material.Chip
+                        sx={{padding: '12px'}}
+                        icon={<Material.WalletIcon />}
                         label={shortAddress(connection.account)}
                         variant='outlined' />
                 </Material.Button>

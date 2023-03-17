@@ -24,7 +24,7 @@ function FullHeader(props: { title: string, items: Array<Content>, id: string })
             {
                 props.items.map((headerItem, index) => {
                     return (
-                        <Fragment key={headerItem.title}>
+                        <Fragment key={index}>
 
                             {Math.floor(props.items.length / 2) === index &&
                             <Material.Link
@@ -34,7 +34,7 @@ function FullHeader(props: { title: string, items: Array<Content>, id: string })
                                 color='primary'
                             >
                                 Rafael
-                                </Material.Link>}
+                            </Material.Link>}
                             
                             <Material.Link
                                 sx={{ marginTop: 'auto', color: 'white', fontSize: '16px' }}
@@ -55,17 +55,13 @@ function FullHeader(props: { title: string, items: Array<Content>, id: string })
 
 function DropDownHeader(props: { title: string, items: Array<Content>, id: string }) {
     const [menuToggle, setMenuToggle] = React.useState<boolean>(false);
-    const [menuAnchor, setMenuAnchor] = React.useState<HTMLElement>();
 
     return (
         <div id={props.id} className='bg-[#242424] text-white py-[12px] flex justify-evenly w-full min-h-[48px] sticky top-0 z-10 shadow-md'>
             <Material.ClickAwayListener onClickAway={(() => setMenuToggle(false))}>
             <Material.Button
                 sx={{color: 'white'}} 
-                onClick={(e) => {
-                    setMenuAnchor(e.target as HTMLElement);
-                    setMenuToggle(true);
-                }}
+                onClick={() => setMenuToggle(true)}
                 startIcon={<Material.MenuIcon />}
             >
                 <Material.Typography sx={{fontSize: '32px', fontFamily: 'inherit'}}>{props.title}</Material.Typography>

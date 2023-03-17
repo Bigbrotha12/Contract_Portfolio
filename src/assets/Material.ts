@@ -36,6 +36,7 @@ import Modal from '@mui/material/Modal';
 import Drawer from "@mui/material/Drawer";
 
 import ExpandLessRounded from "@mui/icons-material/ExpandLessRounded";
+import ArrowForward from "@mui/icons-material/ArrowForward";
 import ExpandMoreRounded from "@mui/icons-material/ExpandMoreRounded";
 import DarkModeIcon from '@mui/icons-material/DarkModeRounded';
 import SearchIcon from '@mui/icons-material/Search';
@@ -44,6 +45,8 @@ import Close from "@mui/icons-material/Close";
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import CircleIcon from '@mui/icons-material/Circle';
 import MenuIcon from '@mui/icons-material/Menu';
+import WalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import Warning from '@mui/icons-material/Warning';
 
 import styled from '@mui/material/styles/styled';
 
@@ -87,6 +90,7 @@ export default {
     Modal,
 
     ExpandMoreRounded,
+    ArrowForward,
     ExpandLessRounded,
     DarkModeIcon,
     SearchIcon,
@@ -95,6 +99,8 @@ export default {
     MoreVertIcon,
     CircleIcon,
     MenuIcon,
+    WalletIcon,
+    Warning,
 
     styled
 }
