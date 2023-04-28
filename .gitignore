@@ -12,6 +12,7 @@ node_modules
 Constants
 src/assets/images
 src/assets/icons
+src/assets/References
 
 #config
 truffle-config.js
