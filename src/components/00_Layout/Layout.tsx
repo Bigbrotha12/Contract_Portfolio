@@ -69,7 +69,7 @@ export default function Layout()
     ]
     const portfolioContent: Array<Content> = [
         { title: 'Smart Contracts Site', icon: DAppImage, content: '/portfolio' },
-        { title: 'NFT Game (In Progress)', icon: GameImage, content: 'https://arcane-familiars.netlify.app/' },
+        { title: 'NFT Game', icon: GameImage, content: 'https://keen-meitner-08290b.netlify.app' },
         { title: 'Code Repositories', icon: CodeImage, content: 'https://github.com/Bigbrotha12' },
     ]
     const skillContent: Array<Content> = [
