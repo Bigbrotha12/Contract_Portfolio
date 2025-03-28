@@ -1,0 +1,121 @@
+Headers:
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                IMPORTS
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                               CONTRACTS
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                            STORAGE VARIABLE
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                 EVENTS
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                 ERRORS
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                MODIFIERS
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+Solidity:
+
+Contract elements should be laid out in the following order:
+
+1. Pragma statements
+2. Import statements
+3. Events
+4. Errors
+5. Interfaces
+6. Libraries
+7. Contracts
+
+Inside each contract, library or interface, use the following order:
+
+1. Type declarations
+2. State variables
+3. Events
+4. Errors
+5. Modifiers
+6. Functions
+
+Order of Functions
+Ordering helps readers identify which functions they can call and to find the constructor and fallback definitions easier.
+Functions should be grouped according to their visibility and ordered:
+
+1. constructor
+2. receive function (if exists)
+3. fallback function (if exists)
+4. external
+5. public
+6. internal
+7. private
+
+Indentation
+Use 4 spaces per indentation level.
+
+Tabs or Spaces
+Spaces are the preferred indentation method.
+Mixing tabs and spaces should be avoided.
+
+Blank Lines
+Surround top level declarations in Solidity source with two blank lines.
+Within a contract surround function declarations with a single blank line.
+Blank lines may be omitted between groups of related one-liners (such as stub functions for an abstract contract)
+
+Maximum Line Length
+Maximum suggested line length is 120 characters.
+Wrapped lines should conform to the following guidelines.
+1: The first argument should not be attached to the opening parenthesis.
+2: One, and only one, indent should be used.
+3: Each argument should fall on its own line.
+4: The terminating element, );, should be placed on the final line by itself.
+
+Source File Encoding
+UTF-8 or ASCII encoding is preferred.
+
+Imports
+Import statements should always be placed at the top of the file.
+
+Within a grouping, place the view and pure functions last.
+
+Control Structures
+The braces denoting the body of a contract, library, functions and structs should:
+open on the same line as the declaration
+close on their own line at the same indentation level as the beginning of the declaration.
+The opening brace should be preceded by a single space.
+The same recommendations apply to the control structures if, else, while, and for.
+Additionally there should be a single space between the control structures if, while, and 
+for and the parenthetic block representing the conditional, as well as a single space between 
+the conditional parenthetic block and the opening brace.
+For control structures whose body contains a single statement, omitting the braces is ok if 
+the statement is contained on a single line.
+For if blocks which have an else or else if clause, the else should be placed on the same 
+line as the if’s closing brace. This is an exception compared to the rules of other block-like structures.
+
+Function Declaration
+For short function declarations, it is recommended for the opening brace of the function body to be kept on the same line as the function declaration.
+The closing brace should be at the same indentation level as the function declaration.
+The opening brace should be preceded by a single space.
+The modifier order for a function should be:
+
+1. Visibility
+2. Mutability
+3. Virtual
+4. Override
+5. Custom modifiers
+
+For long function declarations, it is recommended to drop each argument onto its own line at the same indentation level as the function body. 
+The closing parenthesis and opening bracket should be placed on their own line as well at the same indentation level as the function declaration.
+If a long function declaration has modifiers, then each modifier should be dropped to its own line.
