@@ -211,8 +211,8 @@ contract ReflectToken is ERC20, Pausable, Ownable {
         return s_tFeeTotal;
     }
 
-    /// @notice See {IERC20-transfer}.
-    /// @dev Overrides ERC20 _transfer function. Requires 'sender' and
+
+    /// @dev Overrides ERC20 _update function. Requires 'sender' and
     /// @dev 'recipient' to be non-zero address to prevent minting/burning and
     /// @dev non-zero transfer amount. Function determines transaction type 'BUY',
     /// @dev 'SELL', or 'NONE' depending on whether sender or recipient is exchange
@@ -221,13 +221,10 @@ contract ReflectToken is ERC20, Pausable, Ownable {
     /// @param _sender address sending token.
     /// @param _recipient address receiving token.
     /// @param _amount number of tokens being transferred.
-    function _transfer(address _sender,address _recipient,uint256 _amount) internal override whenNotPaused {
+    function _update(address _sender,address _recipient,uint256 _amount) internal override whenNotPaused {
         if(_sender == address(0)) revert ERC20InvalidSender(address(0));
         if(_recipient == address(0)) revert ERC20InvalidReceiver(address(0));
-        require(
-            _amount > 0,
-            "ERC20: transfer amount must be greater than zero"
-        );
+
         uint256 senderBalance = balanceOf(_sender);
         if(senderBalance < _amount) revert ERC20InsufficientBalance(_sender, senderBalance, _amount);
 
