@@ -9,6 +9,7 @@ pragma solidity 0.8.20;
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol"; 
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                               CONTRACTS
@@ -17,7 +18,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 /// @title AirdropClaim
 /// @author Rafael Mendoza
 /// @notice Allows user to claim ERC20 token if part of Merkle Tree within owner-specified deadline.
-contract AirdropClaim {
+contract AirdropClaim is Ownable {
   using SafeERC20 for IERC20;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -47,15 +48,6 @@ contract AirdropClaim {
   error AirdropClaim__InvalidProof();
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                MODIFIERS
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  modifier OnlyOwner {
-    if(msg.sender != s_owner) revert AirdropClaim__Unathorized(msg.sender);
-    _;
-  }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -63,7 +55,7 @@ contract AirdropClaim {
   /// @param _merkleRoot of claimees
   /// @param _tokenAddress address of token to be airdropped
   /// @param _deadline number of blocks airdrop will be active
-  constructor(bytes32 _merkleRoot, address _tokenAddress, uint256 _deadline) {
+  constructor(bytes32 _merkleRoot, address _tokenAddress, uint256 _deadline) Ownable(msg.sender) {
     s_merkleRoot = _merkleRoot;                
     i_airdropToken = IERC20(_tokenAddress);   
     s_deadline = block.number + _deadline;  
@@ -98,7 +90,7 @@ contract AirdropClaim {
   }
   
   /// @notice Allows owner to recover unclaimed ERC20 tokens deposited to contract after airdrop deadline.
-  function recoverERC20() external OnlyOwner() {
+  function recoverERC20() external onlyOwner() {
     if(block.number < s_deadline) revert AirdropClaim__ActiveAirdrop();
 
     uint256 recoverBalance  = i_airdropToken.balanceOf(address(this));
