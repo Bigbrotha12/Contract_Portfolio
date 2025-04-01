@@ -56,12 +56,11 @@ contract AirdropScript is Script {
     }
 
     function run() public {
-        vm.broadcast();
-        
+        vm.startBroadcast();
+
         new AirdropClaim(s_merkleRoot, s_tokenAddress, s_deadline);
 
         vm.stopBroadcast();
-
     }
 }
 
