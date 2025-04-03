@@ -18,25 +18,23 @@ contract AirdropScript is Script {
 
     DemoToken public s_tokenA;
     DemoToken public s_tokenB;
-    uint256 public constant TOKEN_AMOUNT = 1e18;
+    uint256 public constant TOKEN_AMOUNT = 100 ether;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    function setUp() public {}
-
-    function run() public {
-        vm.startBroadcast();
-
+    function run() public returns (Staker staker) {
         address[] memory minters = new address[](1);
         minters[0] = msg.sender;
+
+        vm.startBroadcast();
+
         s_tokenA = new DemoToken("DemoTokenA", "DMTA", minters);
         s_tokenA.mintTo(msg.sender, TOKEN_AMOUNT);
         s_tokenB = new DemoToken("DemoTokenB", "DMTB", minters);
         s_tokenB.mintTo(msg.sender, TOKEN_AMOUNT);
-
-        new Staker(s_tokenA, s_tokenB);
+        staker = new Staker(s_tokenA, s_tokenB);
 
         vm.stopBroadcast();
     }

@@ -17,56 +17,68 @@ library MerkleTreeUtils {
     using Arrays for bytes32[];
     using Math for uint256;
 
-    struct Leaf {
-        address to;
-        uint256 amount;
-    }
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    function createLeaves(Leaf[] memory airdropData) external pure returns (bytes32[] memory) { 
-        bytes32[] memory leaves = new bytes32[](airdropData.length);
+    function createLeaves(
+        address[] memory _recipients, 
+        uint256[] memory _amounts
+    ) 
+    external 
+    pure 
+    returns (bytes32[] memory) 
+    {
+        if(_recipients.length != _amounts.length) revert("Invalid input");
 
-        for(uint8 i = 0; i < airdropData.length; i++)
+        bytes32[] memory leaves = new bytes32[](_recipients.length);
+
+        for(uint8 i = 0; i < _recipients.length; i++)
         {
-            bytes32 hashed = keccak256(abi.encodePacked(airdropData[i].to, airdropData[i].amount));
+            bytes32 hashed = keccak256(abi.encodePacked(_recipients[i], _amounts[i]));
             leaves[i] = hashed; 
         }
 
         return leaves.sort(); 
     }
 
-    function computeProof(bytes32[] memory leaves, Leaf memory leaf) external pure returns (bytes32[] memory) { 
-        if(leaves.length < 1) revert();
+    function computeProof(
+        bytes32[] memory _leaves, 
+        address _address, 
+        uint256 _amount
+    ) 
+    external 
+    pure 
+    returns (bytes32[] memory) 
+    { 
+        if(_leaves.length < 1) revert();
 
-        bytes32 leafHash = keccak256(abi.encodePacked(leaf.to, leaf.amount));
-        uint256 sortedIndex = _indexOf(leaves, leafHash); 
+        bytes32 leafHash = keccak256(abi.encodePacked(_address, _amount));
+        uint256 sortedIndex = _indexOf(_leaves, leafHash); 
         if(sortedIndex == type(uint256).max) revert("Leaf not found");
 
-        uint256 treeDept = _getHeight(leaves.length);
+        uint256 treeDept = _getHeight(_leaves.length);
         bytes32[] memory proof = new bytes32[](treeDept); 
 
         bytes32 sibling;
         bytes32 hashed;
         uint256 insertIndex;
 
-        while(leaves.length >= 2)
+        while(_leaves.length >= 2)
         { 
             if(sortedIndex % 2 == 0)
             {
-                sibling = leaves[sortedIndex+1];
-                hashed = keccak256(abi.encodePacked(leaves[sortedIndex], sibling));
+                sibling = _leaves[sortedIndex+1];
+                hashed = keccak256(abi.encodePacked(_leaves[sortedIndex], sibling));
             } else
             {   
-                sibling = leaves[sortedIndex-1];
-                hashed = keccak256(abi.encodePacked(sibling, leaves[sortedIndex])); 
+                sibling = _leaves[sortedIndex-1];
+                hashed = keccak256(abi.encodePacked(sibling, _leaves[sortedIndex])); 
             }
 
             proof[insertIndex++] = sibling;
-            leaves = _reduceMerkle(leaves);
-            sortedIndex = _indexOf(leaves, hashed); 
+            _leaves = _reduceMerkle(_leaves);
+            sortedIndex = _indexOf(_leaves, hashed); 
         }
         
         return proof; 

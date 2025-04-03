@@ -24,35 +24,32 @@ contract CoinFlipperScript is Script {
 //                                            STORAGE VARIABLE
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    uint96 public baseFee = 1000;
-    uint96 public gasPriceLink = 10;
+    uint96 public baseFee = 1 ether;
+    uint96 public gasPriceLink = 2 ether;
     bytes32 public keyHash = bytes32(0);
     LinkToken public s_linkToken;
     DemoToken public s_token;
-    uint256 public constant TOKEN_AMOUNT = 1e18;
+    uint256 public constant TOKEN_AMOUNT = 100 ether;
     
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    function setUp() public {
+    function run() public returns (CoinFlipper flipper) {
+        address[] memory minters = new address[](1);
+        minters[0] = msg.sender;
         
-    }
-
-    function run() public {
         vm.startBroadcast();
 
         s_linkToken = new LinkToken();
-        address[] memory minters = new address[](1);
-        minters[0] = msg.sender;
         s_token = new DemoToken("DemoToken", "DMT", minters);
         s_token.mintTo(msg.sender, TOKEN_AMOUNT);
 
         VRFCoordinatorMock mockVRF = new VRFCoordinatorMock(baseFee, gasPriceLink); 
         LinkTokenInterface linkToken = LinkTokenInterface(address(s_linkToken));
         
-        new CoinFlipper(address(mockVRF), keyHash, linkToken, s_token);
+        flipper = new CoinFlipper(address(mockVRF), keyHash, linkToken, s_token);
 
         vm.stopBroadcast();
     }

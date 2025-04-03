@@ -19,19 +19,23 @@ import {FamiliarProxy, IERC165} from "./../src/F_Upgradable_NFT/FamiliarProxy.so
 
 contract AirdropScript is Script {
 
-    address public s_adminRole = vm.addr(1);
-    address public s_imxRole = vm.addr(2);
+    address public s_adminRole = makeAddr("ADMIN_ROLE");
+    address public s_imxRole = makeAddr("IMX_ROLE");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    function setUp() public {}
+    function run() public returns (FamiliarLogic logic) {
+        bytes[] memory initData = new bytes[](4);
+        initData[0] = "1.0";    // Version
+        initData[1] = "Familiar";   // Name
+        initData[2] = "FAM";    // Symbol
+        initData[3] = "https://picsum.photos/"; // RootURI
 
-    function run() public {
         vm.startBroadcast();
 
-        FamiliarLogic logic = new FamiliarLogic();  /// <--- NFT Token
+        logic = new FamiliarLogic();  /// <--- NFT Token
         FamiliarAdmin admin = new FamiliarAdmin();
         FamiliarIMX imx = new FamiliarIMX();
         
@@ -40,12 +44,6 @@ contract AirdropScript is Script {
         routingConfig[1] = address(admin);
         routingConfig[2] = s_imxRole;
         routingConfig[3] = address(imx);
-
-        bytes[] memory initData = new bytes[](4);
-        initData[0] = "1.0";    // Version
-        initData[1] = "Familiar";   // Name
-        initData[2] = "FAM";    // Symbol
-        initData[3] = "https://picsum.photos/"; // RootURI
 
         FamiliarProxy proxy = new FamiliarProxy(routingConfig);
         proxy.upgradeInit(IERC165(address(logic)), initData);

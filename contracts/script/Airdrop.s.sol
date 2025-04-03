@@ -24,18 +24,19 @@ contract AirdropScript is Script {
 //                                            STORAGE VARIABLE
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    uint256 public constant AIRDROP_AMOUNT = 100e18;
+    uint256 public constant AIRDROP_AMOUNT = 100 ether;
     bytes32 public s_merkleRoot;
     address public s_tokenAddress;
     uint256 public s_deadline;
 
-    address constant USER_1 = address(100);
-    address constant USER_2 = address(200);
-    address constant USER_3 = address(300);
-    address constant USER_4 = address(400);
-    address constant USER_5 = address(500);
-    uint256 constant REWARD = 10e18;
-    MerkleTreeUtils.Leaf[] public s_airdropData;
+    address public USER_1 = makeAddr("USER_1");
+    address public USER_2 = makeAddr("USER_2");
+    address public USER_3 = makeAddr("USER_3");
+    address public USER_4 = makeAddr("USER_4");
+    address public USER_5 = makeAddr("USER_5");
+    uint256 constant REWARD = 10 ether;
+    address[] public s_recipients;
+    uint256[] public s_amounts;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                FUNCTIONS
@@ -43,15 +44,11 @@ contract AirdropScript is Script {
 
     function setUp() public {
         // User mock data
-        MerkleTreeUtils.Leaf memory player1 = MerkleTreeUtils.Leaf(USER_1, REWARD);
-        MerkleTreeUtils.Leaf memory player2 = MerkleTreeUtils.Leaf(USER_2, REWARD);
-        MerkleTreeUtils.Leaf memory player3 = MerkleTreeUtils.Leaf(USER_3, REWARD);
-        MerkleTreeUtils.Leaf memory player4 = MerkleTreeUtils.Leaf(USER_4, REWARD);
-        MerkleTreeUtils.Leaf memory player5 = MerkleTreeUtils.Leaf(USER_5, REWARD);
-        s_airdropData = [player1, player2, player3, player4, player5];
+        s_recipients = [USER_1, USER_2, USER_3, USER_4, USER_5];
+        s_amounts = [REWARD, REWARD, REWARD, REWARD, REWARD];
 
         // Calculate merkle root
-        bytes32[] memory leaves = MerkleTreeUtils.createLeaves(s_airdropData);
+        bytes32[] memory leaves = MerkleTreeUtils.createLeaves(s_recipients, s_amounts);
         s_merkleRoot = leaves.computeMerkleRoot()[0];
     }
 

@@ -22,23 +22,21 @@ contract AirdropScript is Script {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     DemoToken public s_token;
-    uint256 public constant TOKEN_AMOUNT = 1e18;
+    uint256 public constant TOKEN_AMOUNT = 100 ether;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    function setUp() public {}
-
-    function run() public {
-        vm.startBroadcast();
-
+    function run() public returns (IBC_Bridge bridge) {
         address[] memory minters = new address[](1);
         minters[0] = msg.sender;
+
+        vm.startBroadcast();
+
         s_token = new DemoToken("DemoToken", "DMT", minters);
         s_token.mintTo(msg.sender, TOKEN_AMOUNT);
-
-        new IBC_Bridge("Bridge", "IBC", msg.sender, s_token);
+        bridge = new IBC_Bridge("Bridge", "IBC", msg.sender, s_token);
 
         vm.stopBroadcast();
         
