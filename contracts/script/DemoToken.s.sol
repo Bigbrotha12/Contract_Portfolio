@@ -19,19 +19,29 @@ contract DemoTokenScript is Script {
 //                                            STORAGE VARIABLE
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+    DemoToken public s_token;
+    string public constant NAME = "DemoToken";
+    string public constant SYMBOL = "DMT";
+    address public s_admin = makeAddr("ADMIN");
+    address public s_minter = makeAddr("MINTER");
+    uint256 public constant TOKEN_AMOUNT = 100 ether;
+    uint256 public constant FAUCET_AMOUNT = 10 ether;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    function run(string memory _name, string memory _sym, address[] memory _minter) public returns (DemoToken token) {
+    function setUp() public {
+
+    }
+
+    function run() public returns (DemoToken token) {
         address[] memory minters = new address[](1);
-        minters[0] = msg.sender;
+        minters[0] = s_minter;
 
         vm.startBroadcast();
 
-        token = new DemoToken(_name, _sym, _minter);
+        token = new DemoToken(NAME, SYMBOL, minters, s_admin);
 
         vm.stopBroadcast();
     }

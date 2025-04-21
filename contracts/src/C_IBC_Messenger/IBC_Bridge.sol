@@ -31,12 +31,10 @@ contract IBC_Bridge is EIP712X {
 //                                            STORAGE VARIABLE
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    address public immutable i_minter;
+    address public s_minter;
     mapping(address user => mapping(uint256 senderChain => mapping(uint256 receiverChain => uint256 nonce))) 
         public s_nonce;
-    DemoToken public s_demoToken;
-    string public s_name;
-    string public s_version;
+    DemoToken public s_token;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                 EVENTS
@@ -58,6 +56,16 @@ contract IBC_Bridge is EIP712X {
     error IBC_Bridge__Unathorized(address unathorized);
     error IBC_Bridge__InsufficientFunds(uint256 amount, uint256 required);
     error IBC_Bridge__WrongSignature();
+    error IBC_Bridge__MissingToken();
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                MODIFIERS
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  modifier Initialized() {
+    if(s_token == DemoToken(address(0))) revert IBC_Bridge__MissingToken();
+    _;
+  }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                FUNCTIONS
@@ -66,28 +74,28 @@ contract IBC_Bridge is EIP712X {
     /// @notice Initializes bridge endpoint contract with given name and version.
     /// @param _name name of current contract
     /// @param _version contract version being deployed.
-    /// @param _minter approved Oracle relayer address.
-    /// @param _token demo token for bridging.
+    /// @param _admin address of contract owner
     constructor(
         string memory _name, 
-        string memory _version, 
-        address _minter, 
-        DemoToken _token
+        string memory _version,
+        address _admin
     ) 
     EIP712(_name, _version)
     EIP712X(keccak256("Transaction(address receiver,uint256 receivingChainId,uint256 amount, uint256 nonce)"))
-    Ownable(msg.sender)
+    Ownable(_admin)
     {
-        i_minter = _minter;
-        s_name = _name;
-        s_version = _version;
-        s_demoToken = _token;
     }
 
     /// @notice Allows contract owner to change Demo Token to be used for test.
     /// @param _token address of new token conforming to the DemoToken interface.
     function setToken(DemoToken _token) external onlyOwner {
-        s_demoToken = _token;
+        s_token = _token;
+    }
+
+    /// @notice Allows contract owner to set verifier.
+    /// @param _minter address of new minter.
+    function setMinter(address _minter) external onlyOwner {
+        s_minter = _minter;
     }
 
     /// @notice Initiates data bridge to another chain.
@@ -100,12 +108,12 @@ contract IBC_Bridge is EIP712X {
         bytes32 destinationDomain = getDomainHash(_receivingChainId);
         if(destinationDomain == 0) revert EIP712X__InvalidDomain();
 
-        uint256 balance = s_demoToken.balanceOf(msg.sender);
+        uint256 balance = s_token.balanceOf(msg.sender);
         if(balance < _amount) revert IBC_Bridge__InsufficientFunds(balance, _amount);
 
         uint256 nonce = s_nonce[msg.sender][block.chainid][_receivingChainId]++;
 
-        s_demoToken.burnFrom(msg.sender, _amount);
+        s_token.burnFrom(msg.sender, _amount);
         
         emit DataSent(_receiver, _amount, _receivingChainId, nonce, destinationDomain);
         return true;
@@ -132,9 +140,9 @@ contract IBC_Bridge is EIP712X {
         bytes32 digest = getPrefixedDataHash(structHash);
         address signer = digest.toEthSignedMessageHash().recover(_signature);
         
-        if(signer != i_minter) revert IBC_Bridge__WrongSignature();
+        if(signer != s_minter) revert IBC_Bridge__WrongSignature();
 
-        s_demoToken.mintTo(_receiver, _amount);
+        s_token.mintTo(_receiver, _amount);
         emit DataReceived(_receiver, _amount, _sendingChainId, nonce);
         return true;
     }
@@ -144,18 +152,13 @@ contract IBC_Bridge is EIP712X {
         return block.chainid;
     }
 
-    /// @notice Returns contract address.
-    function getAddress() public view returns (address) {
-        return address(this);
-    }
-
     /// @notice Returns the contract's domain name.
     function getName() public view returns (string memory) {
-        return s_name;
+        return _EIP712Name();
     }
 
     /// @notice Returns the version of deployed contract.
     function getVersion() public view returns (string memory) {
-        return s_version;
+        return _EIP712Version();
     }    
 }

@@ -24,32 +24,33 @@ contract CoinFlipperScript is Script {
 //                                            STORAGE VARIABLE
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    uint96 public baseFee = 1 ether;
-    uint96 public gasPriceLink = 2 ether;
-    bytes32 public keyHash = bytes32(0);
-    LinkToken public s_linkToken;
-    DemoToken public s_token;
+    uint96 constant BASE_FEE = 1 ether;
+    uint96 constant GAS_PRICE = 2 ether;
+    bytes32 constant KEY_HASH = bytes32(0);
     uint256 public constant TOKEN_AMOUNT = 100 ether;
+    address public s_admin = makeAddr("ADMIN");
+    address public s_minter = makeAddr("MINTER");
     
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    function run() public returns (CoinFlipper flipper) {
+    function run() 
+    public 
+    returns (CoinFlipper flipper, DemoToken token, VRFCoordinatorMock mock, LinkTokenInterface IlinkToken) 
+    {
         address[] memory minters = new address[](1);
-        minters[0] = msg.sender;
+        minters[0] = s_minter;
         
         vm.startBroadcast();
 
-        s_linkToken = new LinkToken();
-        s_token = new DemoToken("DemoToken", "DMT", minters);
-        s_token.mintTo(msg.sender, TOKEN_AMOUNT);
-
-        VRFCoordinatorMock mockVRF = new VRFCoordinatorMock(baseFee, gasPriceLink); 
-        LinkTokenInterface linkToken = LinkTokenInterface(address(s_linkToken));
-        
-        flipper = new CoinFlipper(address(mockVRF), keyHash, linkToken, s_token);
+        LinkToken linkToken = new LinkToken();
+        token = new DemoToken("DemoToken", "DMT", minters, s_admin);
+        mock = new VRFCoordinatorMock(BASE_FEE, GAS_PRICE); 
+        IlinkToken = LinkTokenInterface(address(linkToken));
+        flipper = new CoinFlipper(address(mock), KEY_HASH, IlinkToken, token);
+        linkToken.setBalance(address(flipper), TOKEN_AMOUNT);
 
         vm.stopBroadcast();
     }

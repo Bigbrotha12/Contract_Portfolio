@@ -77,7 +77,8 @@ contract Staker is Ownable {
     /// @notice both tokens must implement DemoToken.
     /// @param _stakingToken address of staking token contract.
     /// @param _rewardToken address of reward token contract.
-    constructor(DemoToken _stakingToken, DemoToken _rewardToken) Ownable(msg.sender) {
+    /// @param _admin address of administrator.
+    constructor(DemoToken _stakingToken, DemoToken _rewardToken, address _admin) Ownable(_admin) {
         s_stakingToken = _stakingToken;
         s_rewardsToken = _rewardToken;
     }

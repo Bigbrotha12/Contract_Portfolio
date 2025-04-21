@@ -7,38 +7,48 @@ pragma solidity 0.8.20;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 import {Script} from "forge-std/Script.sol";
-import {DemoToken} from "./../src/A_ERC20/DemoToken.sol";
 import {IBC_Bridge} from "./../src/C_IBC_Messenger/IBC_Bridge.sol";
-import {EIP712X} from "./../src/C_IBC_Messenger/EIP712X.sol";
+import {DemoToken} from "./../src/A_ERC20/DemoToken.sol";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                               CONTRACTS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-contract AirdropScript is Script {
+contract IBC_BridgeScript is Script {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                            STORAGE VARIABLE
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    DemoToken public s_token;
-    uint256 public constant TOKEN_AMOUNT = 100 ether;
+    // Bridge
+    IBC_Bridge public s_bridge;
+    string public constant BRIDGE_NAME = "IBC_DEMO";
+    string public constant BRIDGE_VERSION = "0.0.1";
+
+    // Mock data
+    address immutable i_user = makeAddr("USER");
+    address immutable i_notAdmin = makeAddr("NOT_ADMIN");
+    address immutable i_admin = makeAddr("ADMIN");
+    address immutable i_receiver = makeAddr("RECEIVER");
+    uint256 immutable i_chain = block.chainid;
+    uint256 immutable i_otherChain = 1337;
+    uint256 constant BRIDGE_AMOUNT = 100 ether;
+    uint256 constant INITIAL_NONCE = 1;
+    string constant TYPEDDATAV4_PREFIX = "\x19\x01";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    function run() public returns (IBC_Bridge bridge) {
-        address[] memory minters = new address[](1);
-        minters[0] = msg.sender;
+    function setUp() public {
 
+    }
+
+    function run() public returns (IBC_Bridge bridge) {
         vm.startBroadcast();
 
-        s_token = new DemoToken("DemoToken", "DMT", minters);
-        s_token.mintTo(msg.sender, TOKEN_AMOUNT);
-        bridge = new IBC_Bridge("Bridge", "IBC", msg.sender, s_token);
+        bridge = new IBC_Bridge(BRIDGE_NAME, BRIDGE_VERSION, i_admin);
 
         vm.stopBroadcast();
-        
     }
 }

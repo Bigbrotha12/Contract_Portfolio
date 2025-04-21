@@ -87,12 +87,6 @@ contract CoinFlipper is Ownable, VRFConsumerBaseV2 {
         subscribe();
     }
 
-    /// @notice Allows contract owner to change Demo Token to be used for test.abi
-    /// @param _token address of new token conforming to the DemoToken interface.
-    function setToken(DemoToken _token) external onlyOwner {
-        s_token = _token;
-    }
-
     /// @notice Create new subscription with oracle coordinator and adds itself as consumer.
     function subscribe() public onlyOwner {
         s_subscriptionId = i_coordinator.createSubscription();

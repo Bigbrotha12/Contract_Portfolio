@@ -18,45 +18,49 @@ import {DemoTokenScript} from "./../script/DemoToken.s.sol";
 
 contract TestDemoToken is Script, Test {
 
-    DemoToken public token;
-    DemoTokenScript public deployer;
-    address public constant TEST_ADDRESS = 0xb4c79daB8f259C7Aee6E5b2Aa729821864227e84;
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                            STORAGE VARIABLE
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    DemoToken public s_token;
     string public constant NAME = "DemoToken";
     string public constant SYMBOL = "DMT";
-    address public s_admin = msg.sender;
+    address public s_admin = makeAddr("ADMIN");
     address public s_minter = makeAddr("MINTER");
     uint256 public constant TOKEN_AMOUNT = 100 ether;
     uint256 public constant FAUCET_AMOUNT = 10 ether;
 
-    function setUp() public {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        address[] memory minters = new address[](1);
-        minters[0] = s_minter;
-        deployer = new DemoTokenScript();
-        token = deployer.run(NAME, SYMBOL, minters);
+    function setUp() public {
+        DemoTokenScript deployer = new DemoTokenScript();
+        s_token = deployer.run();
+
         vm.prank(s_minter);
-        token.mintTo(s_minter, TOKEN_AMOUNT);
+        s_token.mintTo(s_minter, TOKEN_AMOUNT);
     }
 
     function testCorrectInitialization() public view {
         // Check name, symbol, minters are correct
-        string memory initialName = token.name();
-        string memory initialSymbol = token.symbol();
+        string memory initialName = s_token.name();
+        string memory initialSymbol = s_token.symbol();
          
         assertEq(initialName, NAME);
         assertEq(initialSymbol, SYMBOL);
-        assertTrue(token.isMinter(s_minter));
+        assertTrue(s_token.isMinter(s_minter));
     }
 
     function testAdminControlWhitelist() public {
         // The admin (test address in this case) add/remove minter accounts
         address additionalMinter = makeAddr("ADDITIONAL_MINTER");
-        assertTrue(!token.isMinter(additionalMinter));
+        assertTrue(!s_token.isMinter(additionalMinter));
 
         vm.prank(s_admin);
-        token.changeMinter(additionalMinter, true);
+        s_token.changeMinter(additionalMinter, true);
 
-        assertTrue(token.isMinter(additionalMinter));
+        assertTrue(s_token.isMinter(additionalMinter));
     }
 
     function testRevertUnauthorizedChangeWhitelist() public {
@@ -66,32 +70,32 @@ contract TestDemoToken is Script, Test {
 
         vm.prank(notAdmin);
         vm.expectRevert();
-        token.changeMinter(additionalMinter, true);
+        s_token.changeMinter(additionalMinter, true);
     }
 
     function testWhitelistAddressCanMint() public {
         // A whitelisted minter can mint new tokens
         address user = makeAddr("USER");
-        assertEq(token.balanceOf(user), 0);
+        assertEq(s_token.balanceOf(user), 0);
 
         vm.prank(s_minter);
-        token.mintTo(user, TOKEN_AMOUNT);
+        s_token.mintTo(user, TOKEN_AMOUNT);
 
-        assertEq(token.balanceOf(user), TOKEN_AMOUNT);
+        assertEq(s_token.balanceOf(user), TOKEN_AMOUNT);
     }
 
     function testWhitelistAddressCanBurn() public {
         // A whitelisted minter can burn tokens from user
         address user = makeAddr("USER");
         vm.prank(s_minter);
-        token.mintTo(user, TOKEN_AMOUNT);
+        s_token.mintTo(user, TOKEN_AMOUNT);
       
-        assertEq(token.balanceOf(user), TOKEN_AMOUNT);
+        assertEq(s_token.balanceOf(user), TOKEN_AMOUNT);
 
         vm.prank(s_minter);
-        token.burnFrom(user, TOKEN_AMOUNT);
+        s_token.burnFrom(user, TOKEN_AMOUNT);
 
-        assertEq(token.balanceOf(user), 0);
+        assertEq(s_token.balanceOf(user), 0);
     }
 
     function testFaucetIsOpenToPublic(address _publicAddress) public {
@@ -100,25 +104,25 @@ contract TestDemoToken is Script, Test {
             return;
         }
 
-        assertEq(token.balanceOf(_publicAddress), 0);
+        assertEq(s_token.balanceOf(_publicAddress), 0);
 
         vm.prank(_publicAddress);
-        token.faucet();
+        s_token.faucet();
 
-        assertEq(token.balanceOf(_publicAddress), FAUCET_AMOUNT);
+        assertEq(s_token.balanceOf(_publicAddress), FAUCET_AMOUNT);
     }
 
     function testRevertUnauthorizedMint(address _notMinter, address _recipient) public {
         // Non-minter cannot call mint function
         vm.prank(_notMinter);
         vm.expectRevert();
-        token.burnFrom(_recipient, TOKEN_AMOUNT);
+        s_token.burnFrom(_recipient, TOKEN_AMOUNT);
     }
 
     function testRevertUnauthorizedBurn(address _notMinter, address _recipient) public {
         // Non-minter cannot call burn function
         vm.prank(_notMinter);
         vm.expectRevert();
-        token.mintTo(_recipient, TOKEN_AMOUNT);
+        s_token.mintTo(_recipient, TOKEN_AMOUNT);
     }
 }

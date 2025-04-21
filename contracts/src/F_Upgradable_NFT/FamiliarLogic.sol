@@ -54,16 +54,6 @@ contract FamiliarLogic is CommonStorage, ERC721, ERC2981, IInitializable {
         s_rootURI_ = string(_data[3]);
     }
 
-    /// @notice Mint function left open for testing and demonstration purposes.
-    /// @param _to token receiver.
-    /// @param _blueprint NFT blueprint to be created.
-    function mint(address _to, bytes memory _blueprint) external {
-        uint256 tokenId = s_supply_++;
-        s_blueprints_[tokenId] = _blueprint;
-        
-        _safeMint(_to, tokenId);
-    }
-
     /// @notice Returns the NFT data associated with given token ID
     /// @param _tokenId Id of token data being queried.
     function getTokenBlueprint(uint256 _tokenId) external view exists(_tokenId) returns (string memory) {

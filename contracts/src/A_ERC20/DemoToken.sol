@@ -55,10 +55,11 @@ contract DemoToken is ERC20 {
     /// @param _name name of token
     /// @param _symbol symbol of token
     /// @param _whitelist address array of demo contracts who can mint/burn tokens
-    constructor(string memory _name, string memory _symbol, address[] memory _whitelist)
+    /// @param _admin address of admin.
+    constructor(string memory _name, string memory _symbol, address[] memory _whitelist, address _admin)
         ERC20(_name, _symbol) 
     {
-        s_owner = msg.sender;
+        s_owner = _admin;
         for (uint256 index = 0; index < _whitelist.length; index++) {
             s_whitelist[_whitelist[index]] = true;
         }
